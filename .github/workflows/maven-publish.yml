@@ -43,4 +43,4 @@ jobs:
       - name: Deploy to GitHub Packages
         env:
           TOKEN_GITHUB_PACKAGES: ${{ secrets.GITHUB_TOKEN }}
-        run: mvn deploy -DskipTests=true -Dmaven.javadoc.skip=true -B -U -P release
+        run: mvn deploy -DskipTests=true -Dmaven.javadoc.skip=true -B
