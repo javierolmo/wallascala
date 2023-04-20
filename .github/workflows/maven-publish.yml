@@ -1,0 +1,33 @@
+name: Deploy to GitHub Packages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: 1.8
+
+      - name: Build with Maven
+        run: mvn package
+
+      - name: Set up Git credentials
+        env:
+          TOKEN_GITHUB_PACKAGES: ${{ secrets.TOKEN_GITHUB_PACKAGES }}
+        run: |
+          mkdir -p ~/.m2
+          echo "<settings><servers><server><id>github</id><username>javierolmo</username><password>\${env.TOKEN_GITHUB_PACKAGES}</password></server></servers></settings>" > ~/.m2/settings.xml
+
+      - name: Deploy to GitHub Packages
+        env:
+          TOKEN_GITHUB_PACKAGES: ${{ secrets.TOKEN_GITHUB_PACKAGES }}
+        run: mvn deploy -DskipTests=true -Dmaven.javadoc.skip=true -B -U -P release
