@@ -6,7 +6,7 @@
 
     <groupId>com.javi.personal</groupId>
     <artifactId>wallascala</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -15,6 +15,14 @@
         <scala.version>2.12.6</scala.version>
         <scala.compat.version>2.12</scala.compat.version>
     </properties>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>Releases</name>
+            <url>https://maven.pkg.github.com/javierolmo/wallascala</url>
+        </repository>
+    </distributionManagement>
 
     <dependencies>
         <!-- Scala -->

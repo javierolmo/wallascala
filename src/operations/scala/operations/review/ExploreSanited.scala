@@ -1,10 +1,12 @@
-package review
+package operations.review
 
 import com.javi.personal.wallascala.catalog.DataCatalog
 import com.javi.personal.wallascala.services.impl.blob.model.ReadConfig
 import com.javi.personal.wallascala.services.{BlobService, SecretService}
+import org.scalatest.Ignore
 import org.scalatest.flatspec.AnyFlatSpec
 
+@Ignore
 class ExploreSanited extends AnyFlatSpec {
 
   "Explorer" should "read pisos" in {
