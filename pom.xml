@@ -108,10 +108,10 @@
                 <version>2.0.0</version>
                 <configuration>
                     <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
-                    <junitxml>.</junitxml>
+                    <!--<junitxml>.</junitxml>-->
                     <filereports>TestSuiteReport.txt</filereports>
                     <!-- Comma separated list of JUnit test class names to execute -->
-                    <jUnitClasses>samples.AppTest</jUnitClasses>
+                    <!--<jUnitClasses>samples.AppTest</jUnitClasses>-->
                 </configuration>
                 <executions>
                     <execution>
