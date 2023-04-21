@@ -28,6 +28,14 @@
             mkdir -p ~/.m2
             echo "<settings><servers><server><id>github</id><username>javierolmo</username><password>\${env.TOKEN_GITHUB_PACKAGES}</password></server></servers></settings>" > ~/.m2/settings.xml
 
+        - name: Copy artifact to databricks
+          uses: databrickslabs/databricks-gradle-plugin/copy-artifact@master
+          with:
+            host: https://adb-8453145539798571.11.azuredatabricks.net/
+            token: ${{ secrets.DATABRICKS_TOKEN }}
+            src: target/wallascala-0.0.2.jar
+            dest: dbfs:/FileStore/jars/wallascala-0.0.2.jar
+
         - name: Deploy to GitHub Packages
           env:
             TOKEN_GITHUB_PACKAGES: ${{ secrets.TOKEN_GITHUB_PACKAGES }}

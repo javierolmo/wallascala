@@ -6,7 +6,6 @@ import com.javi.personal.wallascala.catalog.{CatalogItem, DataCatalog}
 import com.javi.personal.wallascala.extractor.Extractor
 import com.javi.personal.wallascala.extractor.wallapop.model.WallaItem
 import com.javi.personal.wallascala.services.BlobService
-import org.apache.spark.sql.functions.{col, lit, regexp_replace}
 
 import scala.util.{Failure, Success, Try}
 
