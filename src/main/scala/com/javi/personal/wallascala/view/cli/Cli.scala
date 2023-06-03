@@ -1,12 +1,11 @@
 package com.javi.personal.wallascala.view.cli
 
-import com.javi.personal.wallascala.controller.{CleanController, ExtractController}
+import com.javi.personal.wallascala.controller.{CleanController}
 import com.javi.personal.wallascala.view.cli.model.{CLEAN, Config, EXTRACT}
 import scopt.OParser
 
 object Cli {
 
-  val extractController: ExtractController = ExtractController()
   val cleanController: CleanController = CleanController()
 
   val builder = OParser.builder[Config]
@@ -29,7 +28,6 @@ object Cli {
   def main(args: Array[String]): Unit = {
     OParser.parse(parser = parser, args = args, init = Config()) match {
       case Some(config) => config.mode match {
-        case Some(EXTRACT) => extractController.extract()
         case Some(CLEAN) => cleanController.clean()
         case None => println("No mode selected")
       }
