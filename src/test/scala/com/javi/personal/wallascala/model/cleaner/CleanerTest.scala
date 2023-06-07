@@ -3,6 +3,7 @@ package com.javi.personal.wallascala.model.cleaner
 import com.javi.personal.wallascala.model.SparkSessionWrapper
 import com.javi.personal.wallascala.model.catalog.{CatalogItem, DataCatalog}
 import com.javi.personal.wallascala.model.cleaner.model.{CleanerMetadata, CleanerMetadataField}
+import com.javi.personal.wallascala.model.services.impl.blob.SparkSessionFactory
 import com.javi.personal.wallascala.model.services.impl.blob.model.ReadConfig
 import com.javi.personal.wallascala.model.services.{BlobService, SecretService}
 import org.apache.spark.sql.DataFrame
@@ -12,7 +13,9 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 import java.time.LocalDate
 
-class CleanerTest extends AnyFlatSpec with SparkSessionWrapper {
+class CleanerTest extends AnyFlatSpec {
+
+  val spark = SparkSessionFactory.build()
 
   "Cleaner.fieldCleaner()" should "clean integer field" in {
     val dummyDF = spark.createDataFrame(Seq(

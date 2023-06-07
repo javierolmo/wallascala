@@ -1,20 +1,23 @@
 package com.javi.personal.wallascala.view.cli
 
-import com.javi.personal.wallascala.controller.{CleanController}
+import com.javi.personal.wallascala.controller.MainController
 import com.javi.personal.wallascala.view.cli.model.{CLEAN, Config, EXTRACT}
-import scopt.OParser
+import scopt.{OParser, OParserBuilder}
 
 object Cli {
 
-  val cleanController: CleanController = CleanController()
+  private val PROGRAM_NAME = "wallascala"
+  private val VERSION = "0.1"
 
-  val builder = OParser.builder[Config]
+  private val cleanController: MainController = MainController()
 
-  val parser = {
+  val builder: OParserBuilder[Config] = OParser.builder[Config]
+
+  private val parser = {
     import builder._
     OParser.sequence(
-      programName("wallascala"),
-      head("wallascala", "0.1"),
+      programName(PROGRAM_NAME),
+      head(PROGRAM_NAME, VERSION),
       cmd("EXTRACT")
         .action((_, c) => c.copy(mode = Some(EXTRACT)))
         .text("Extract data from source"),

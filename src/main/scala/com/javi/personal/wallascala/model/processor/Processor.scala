@@ -1,20 +1,17 @@
 package com.javi.personal.wallascala.model.processor
 
 import com.javi.personal.wallascala.model.catalog.DataCatalog
-import com.javi.personal.wallascala.model.services.BlobService
-import com.javi.personal.wallascala.model.services.impl.blob.model.{ReadConfig, StorageAccountLocation, WriteConfig}
-import org.apache.spark.sql.SaveMode
+import com.javi.personal.wallascala.model.services.impl.blob.model.StorageAccountLocation
+import org.apache.log4j.LogManager
 import org.apache.spark.sql.expressions.Window
-import org.apache.spark.sql.functions.{bround, col, collect_list, concat, count, element_at, first, lit, lpad, row_number, size, struct}
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.{SaveMode, SparkSession}
 
-class Processor(blobService: BlobService) {
+import java.time.LocalDate
 
-  private val WRITE_CONFIG: WriteConfig = WriteConfig(
-    format = "parquet",
-    saveMode = SaveMode.Overwrite,
-    partitionColumns = Seq("year", "month", "day")
-  )
-  private val READ_CONFIG: ReadConfig = ReadConfig(format = "parquet")
+class Processor(spark: SparkSession) {
+
+  private val log = LogManager.getLogger(getClass)
 
   def process(goldName: String): Unit = {
     goldName match {
@@ -31,7 +28,7 @@ class Processor(blobService: BlobService) {
     )
 
 
-    val wallapopDF = blobService.read(DataCatalog.PISO_WALLAPOP.sanitedLocation, READ_CONFIG)
+    val wallapopDF = spark.read.parquet(DataCatalog.PISO_WALLAPOP.sanitedLocation.url)
       .withColumn("city", col("location__city"))
       .withColumn("country", col("location__country_code"))
       .withColumn("postal_code", col("location__postal_code"))
@@ -45,12 +42,22 @@ class Processor(blobService: BlobService) {
 
     val resultDF = wallapopDF
 
-    blobService.write(resultDF, processedLocation("properties"), WRITE_CONFIG)
+    resultDF.write
+      .mode(SaveMode.Overwrite)
+      .format("parquet")
+      .partitionBy("year", "month", "day")
+      .save(processedLocation("properties").url)
   }
 
   def processPriceChanges(tableName: String): Unit = {
-
-    val df = blobService.read(processedLocation("properties"), READ_CONFIG)
+    val currentDate = LocalDate.now()
+    val finalColumns = Array(
+      "id", "title", "price_changes", "price_history", "first_price", "last_price", "discount", "link", "year", "month", "day"
+    )
+    val propertiesDF = spark.read.parquet(processedLocation("properties").url)
+    val activePropertyIds = propertiesDF.filter(col("extracted_date") === current_date()).select("id").distinct().collect().map(_.getString(0))
+    log.info(s"Active properties: ${activePropertyIds.length}")
+    val df = propertiesDF
       .filter(col("city") === "Vigo")
       .withColumn("row_number", row_number().over(Window.partitionBy("id", "price").orderBy(col("extracted_date").asc)))
       .filter(col("row_number") === lit(1))
@@ -60,14 +67,18 @@ class Processor(blobService: BlobService) {
       .withColumn("first_price", col("price_history")(0)("price"))
       .withColumn("last_price", element_at(col("price_history"), -1)("price"))
       .withColumn("discount", bround((col("first_price") - col("last_price")) / col("first_price"), 2))
-      .select("id", "title", "price_changes", "price_history", "first_price", "last_price", "discount", "link")
+      .withColumn("year", lpad(lit(currentDate.getYear), 4, "0"))
+      .withColumn("month", lpad(lit(currentDate.getMonthValue), 2, "0"))
+      .withColumn("day", lpad(lit(currentDate.getDayOfMonth), 2, "0"))
+      .select(finalColumns.map(col): _*)
+      .filter(col("id").isin(activePropertyIds: _*))
       .coalesce(1)
 
-    blobService.write(df, processedLocation(tableName), WriteConfig(
-      format = "parquet",
-      saveMode = SaveMode.Overwrite
-    ))
-
+    df.write
+      .mode(SaveMode.Overwrite)
+      .format("parquet")
+      .partitionBy("year", "month", "day")
+      .save(processedLocation(tableName).url)
   }
 
 
