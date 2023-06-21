@@ -1,7 +1,7 @@
 package operations.review
 
-import com.javi.personal.wallascala.model.services.impl.blob.model.{ReadConfig, StorageAccountLocation}
-import com.javi.personal.wallascala.model.services.{BlobService, SecretService}
+import com.javi.personal.wallascala.services.impl.blob.model.{ReadConfig, StorageAccountLocation}
+import com.javi.personal.wallascala.services.{BlobService, SecretService}
 import org.apache.spark.sql.functions.col
 import org.scalatest.flatspec.AnyFlatSpec
 

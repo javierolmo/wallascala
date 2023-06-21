@@ -1,5 +1,5 @@
-import com.javi.personal.wallascala.model.services.impl.blob.SparkSessionFactory
-import com.javi.personal.wallascala.model.services.impl.blob.model.StorageAccountLocation
+import com.javi.personal.wallascala.services.impl.blob.SparkSessionFactory
+import com.javi.personal.wallascala.services.impl.blob.model.StorageAccountLocation
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.col
 import org.scalatest.flatspec.AnyFlatSpec
