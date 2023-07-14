@@ -1,7 +1,6 @@
 package com.javi.personal.wallascala.ingestion
 
-import com.javi.personal.wallascala.SparkSessionFactory
-import com.javi.personal.wallascala.model.services.impl.blob.model.StorageAccountLocation
+import com.javi.personal.wallascala.{SparkSessionFactory, StorageAccountLocation}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{SaveMode, SparkSession}
 

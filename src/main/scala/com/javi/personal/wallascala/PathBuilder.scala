@@ -1,7 +1,5 @@
 package com.javi.personal.wallascala
 
-import com.javi.personal.wallascala.model.services.impl.blob.model.StorageAccountLocation
-
 object PathBuilder {
 
   private val ACCOUNT = "melodiadl"

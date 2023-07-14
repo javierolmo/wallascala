@@ -1,4 +1,4 @@
-package com.javi.personal.wallascala.model.services.impl.blob.model
+package com.javi.personal.wallascala
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -10,12 +10,13 @@ case class StorageAccountLocation(
                                    v2: Boolean = false
                                  ) {
 
-  def cd(relativePath: String): StorageAccountLocation = StorageAccountLocation(
-    account = account,
-    container = container,
-    path = path + "/" + relativePath,
-    v2 = v2
-  )
+  def cd(relativePath: String): StorageAccountLocation =
+    StorageAccountLocation(
+      account = account,
+      container = container,
+      path = path + "/" + relativePath,
+      v2 = v2
+    )
 
   def cd(localDate: LocalDate): StorageAccountLocation = {
     val yearString = DateTimeFormatter.ofPattern("yyyy").format(localDate)
@@ -24,9 +25,9 @@ case class StorageAccountLocation(
     cd(s"year=$yearString/month=$monthString/day=$dayString")
   }
 
-  def wasbsURL: String = s"wasbs://${container}@${account}.blob.core.windows.net/${path}"
+  def wasbsURL: String = s"wasbs://$container@$account.blob.core.windows.net/$path"
 
-  def abfssURL: String = s"abfss://${container}@${account}.dfs.core.windows.net/${path}"
+  def abfssURL: String = s"abfss://$container@$account.dfs.core.windows.net/$path"
 
   def url: String = if (v2) abfssURL else wasbsURL
 

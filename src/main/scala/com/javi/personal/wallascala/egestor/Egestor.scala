@@ -1,6 +1,6 @@
 package com.javi.personal.wallascala.egestor
 
-import com.javi.personal.wallascala.model.services.impl.blob.model.StorageAccountLocation
+import com.javi.personal.wallascala.StorageAccountLocation
 import org.apache.spark.sql.functions.{col, to_json}
 import org.apache.spark.sql.{SaveMode, SparkSession}
 

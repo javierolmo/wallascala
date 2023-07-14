@@ -1,8 +1,8 @@
+import com.javi.personal.wallascala.SparkSessionFactory
 import com.javi.personal.wallascala.cleaner.Cleaner
 import com.javi.personal.wallascala.egestor.Egestor
 import com.javi.personal.wallascala.ingestion.Ingestor
-import com.javi.personal.wallascala.processor.Processor
-import com.javi.personal.wallascala.services.impl.blob.SparkSessionFactory
+import com.javi.personal.wallascala.processor.{PriceChangesProcessor, Processor}
 import org.apache.spark.sql.SparkSession
 import org.scalatest.flatspec.AnyFlatSpec
 
@@ -20,7 +20,7 @@ class EXECUTE extends AnyFlatSpec {
 
   "CLEANER" should "CLEAN DATA" in {
     val cleaner = new Cleaner(spark)
-    val from = LocalDate.of(2023, 6, 4)
+    val from = LocalDate.of(2023, 6, 19)
     val to = LocalDate.now()
 
     val days: Int = ChronoUnit.DAYS.between(from, to).toInt
@@ -29,10 +29,12 @@ class EXECUTE extends AnyFlatSpec {
     localDates.foreach(cleaner.execute("wallapop", "properties", _))
   }
 
-  "PROCESSOR" should "PROCESS DATA" in {
-    val processor = new Processor(spark)
-    processor.process("properties")
-    processor.process("price_changes")
+  "PROCESSOR" should "PROCESS PROPERTIES" in {
+    Processor.execute("properties")
+  }
+
+  "PROCESSOR" should "PROCESS PRICE CHANGES" in {
+    Processor.execute("price_changes")
   }
 
   "EGESTOR" should "EGEST DATA" in {

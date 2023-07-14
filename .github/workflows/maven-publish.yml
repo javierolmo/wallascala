@@ -32,3 +32,11 @@
           env:
             TOKEN_GITHUB_PACKAGES: ${{ secrets.TOKEN_GITHUB_PACKAGES }}
           run: mvn deploy -DskipTests=true -Dmaven.javadoc.skip=true -B
+
+        - uses: bacongobbler/azure-blob-storage-upload@main
+          with:
+            source_dir: 'target'
+            container_name: 'test'
+            connection_string: ${{ secrets.AZURE_BLOBSTORAGE_CONNECTION_STRING }}
+            overwrite: 'true'
+            extra_args: '--pattern *.jar'
