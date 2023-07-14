@@ -18,8 +18,8 @@
             java-version: '8'
             distribution: 'temurin'
 
-        - name: Build with Maven
-          run: mvn package
+        - name: Execute tests
+          run: mvn test
 
         - name: Set up Git credentials
           env:
@@ -36,7 +36,7 @@
         - uses: bacongobbler/azure-blob-storage-upload@main
           with:
             source_dir: 'target'
-            container_name: 'test'
+            container_name: 'artifacts'
             connection_string: ${{ secrets.AZURE_BLOBSTORAGE_CONNECTION_STRING }}
             overwrite: 'true'
-            extra_args: '--pattern *.jar'
+            extra_args: '--pattern *jar-with-dependencies.jar'
