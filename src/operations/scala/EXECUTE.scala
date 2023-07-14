@@ -1,5 +1,5 @@
 import com.javi.personal.wallascala.SparkSessionFactory
-import com.javi.personal.wallascala.cleaner.Cleaner
+import com.javi.personal.wallascala.cleaner.{Cleaner, CleanerCLI}
 import com.javi.personal.wallascala.egestor.Egestor
 import com.javi.personal.wallascala.ingestion.Ingestor
 import com.javi.personal.wallascala.processor.{PriceChangesProcessor, Processor}
@@ -18,7 +18,11 @@ class EXECUTE extends AnyFlatSpec {
     ingestor.ingest("wallapop", "properties")
   }
 
-  "CLEANER" should "CLEAN DATA" in {
+  "CLEANER" should "CLEAN SPECIFIC DATE" in {
+    CleanerCLI.main(Array("--source", "wallapop", "--datasetName", "properties", "--date", "2023-07-14"))
+  }
+
+  "CLEANER" should "CLEAN DATA RANGE" in {
     val cleaner = new Cleaner(spark)
     val from = LocalDate.of(2023, 6, 19)
     val to = LocalDate.now()
