@@ -2,7 +2,7 @@ import com.javi.personal.wallascala.SparkSessionFactory
 import com.javi.personal.wallascala.cleaner.{Cleaner, CleanerCLI}
 import com.javi.personal.wallascala.egestor.Egestor
 import com.javi.personal.wallascala.ingestion.Ingestor
-import com.javi.personal.wallascala.processor.{PriceChangesProcessor, Processor}
+import com.javi.personal.wallascala.processor.Processor
 import org.apache.spark.sql.SparkSession
 import org.scalatest.flatspec.AnyFlatSpec
 
@@ -34,11 +34,11 @@ class EXECUTE extends AnyFlatSpec {
   }
 
   "PROCESSOR" should "PROCESS PROPERTIES" in {
-    Processor.execute("properties")
+    Processor("properties").execute()
   }
 
   "PROCESSOR" should "PROCESS PRICE CHANGES" in {
-    Processor.execute("price_changes")
+    Processor("price_changes").execute()
   }
 
   "EGESTOR" should "EGEST DATA" in {

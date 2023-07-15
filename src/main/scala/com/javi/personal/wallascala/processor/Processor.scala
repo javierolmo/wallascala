@@ -8,14 +8,10 @@ object Processor {
 
   val spark: SparkSession = SparkSessionFactory.build()
 
-  def execute(datasetName: String): Unit = {
-    val processor: Processor = datasetName match {
+  def apply(datasetName: String): Processor =
+    datasetName match {
       case "properties" => new PropertiesProcessor(spark)
     }
-
-    val dataframe = processor.build()
-    processor.write(dataframe)
-  }
 
 }
 
@@ -24,6 +20,20 @@ abstract class Processor(spark: SparkSession) {
   private val log = LogManager.getLogger(getClass)
   protected val datasetName: String
   protected val finalColumns: Array[String]
+
+  protected def readSanited(source: String, datasetName: String): DataFrame = {
+    val location = PathBuilder.buildSanitedPath(source, datasetName)
+    spark.read
+      .format("parquet")
+      .load(location.url)
+  }
+
+  protected def readProcessed(datasetName: String): DataFrame = {
+    val location = PathBuilder.buildProcessedPath(datasetName)
+    spark.read
+      .format("parquet")
+      .load(location.url)
+  }
 
   private def write(dataFrame: DataFrame): Unit =
     dataFrame.write
@@ -34,5 +44,11 @@ abstract class Processor(spark: SparkSession) {
 
 
   protected def build(): DataFrame
+
+  final def execute(): Unit = {
+    val dataFrame = build()
+    write(dataFrame.toDF())
+  }
+
 
 }
