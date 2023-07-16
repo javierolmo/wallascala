@@ -1,16 +1,17 @@
 import com.javi.personal.wallascala.SparkSessionFactory
 import com.javi.personal.wallascala.cleaner.{Cleaner, CleanerCLI}
 import com.javi.personal.wallascala.ingestion.Ingestor
-import com.javi.personal.wallascala.processor.Processor
+import com.javi.personal.wallascala.processor.{Processor, ProcessorCLI}
 import org.apache.spark.sql.SparkSession
 import org.scalatest.flatspec.AnyFlatSpec
+import com.javi.personal.wallascala.processor.processors.PropertiesProcessor
 
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
 class EXECUTE extends AnyFlatSpec {
 
-  private val spark: SparkSession = SparkSessionFactory.build()
+  private implicit val spark: SparkSession = SparkSessionFactory.build()
 
   "INGESTOR" should "INGEST DATA" in {
     val ingestor = new Ingestor(spark)
@@ -33,15 +34,11 @@ class EXECUTE extends AnyFlatSpec {
   }
 
   "PROCESSOR" should "PROCESS PROPERTIES" in {
-    Processor("properties").execute(LocalDate.now())
+    Processor.properties(LocalDate.now()).execute()
   }
 
   "PROCESSOR" should "PROCESS PRICE CHANGES" in {
-    Processor("price_changes").execute(LocalDate.now())
-  }
-
-  "PROCESSOR" should "PROCESS PRICE CHANGES DELTA" in {
-    Processor("price_changes_delta").execute(LocalDate.of(2023, 7, 14))
+    ProcessorCLI.main(Array("--datasetName", "properties", "--date", "2023-07-16"))
   }
 
   "SPARK" should  "CREATE DATABASES" in {
