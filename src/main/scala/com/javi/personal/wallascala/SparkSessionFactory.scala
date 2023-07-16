@@ -13,7 +13,12 @@ object SparkSessionFactory {
       .appName("lib_pulse_druid")
 
     val builderWithMaster = if (runsInCluster) builder else builder.master("local[*]")
-    builderWithMaster.getOrCreate()
+    val spark = builderWithMaster.getOrCreate()
+    spark.sql(s"CREATE DATABASE IF NOT EXISTS raw")
+    spark.sql(s"CREATE DATABASE IF NOT EXISTS sanited")
+    spark.sql(s"CREATE DATABASE IF NOT EXISTS sanited_excluded")
+    spark.sql(s"CREATE DATABASE IF NOT EXISTS processed")
+    spark
   }
 
   private def runsInCluster: Boolean = sys.env.contains("MASTER")
