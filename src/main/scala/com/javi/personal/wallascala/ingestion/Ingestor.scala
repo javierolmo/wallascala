@@ -21,7 +21,11 @@ class Ingestor(spark: SparkSession) {
       .withColumn("month", lpad(month(col("date")), 2, "0"))
       .withColumn("day", lpad(dayofmonth(col("date")), 2, "0"))
 
-    transformedDF.write
+    val renamedColumnsDF = transformedDF.columns.foldLeft(transformedDF) {
+      (df, colName) => df.withColumnRenamed(colName, colName.replace(".", "__"))
+    }
+
+    renamedColumnsDF.write
       .mode(SaveMode.Overwrite)
       .format("parquet")
       .partitionBy("year", "month", "day")
