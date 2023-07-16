@@ -9,17 +9,20 @@ import java.time.LocalDate
 
 class PriceChangesProcessor(spark: SparkSession) extends Processor(spark) {
 
+  private val log = LogManager.getLogger(getClass)
+
   // Sources
   private lazy val processedProperties = readProcessed("properties")
 
-  private val log = LogManager.getLogger(getClass)
+  // Config
+  override protected val coalesce: Option[Int] = Some(1)
   override protected val datasetName: String = "price_changes"
   override protected val finalColumns: Array[String] = Array(
     "id", "title", "price_changes", "price_history", "first_price", "last_price", "discount", "link", "year", "month",
     "day"
   )
 
-  override protected def build(): DataFrame = {
+  override protected def build(date: LocalDate): DataFrame = {
     val currentDate = LocalDate.now()
     val activePropertyIds = processedProperties.filter(col("extracted_date") === current_date()).select("id").distinct().collect().map(_.getString(0))
     log.info(s"Active properties: ${activePropertyIds.length}")
@@ -38,6 +41,5 @@ class PriceChangesProcessor(spark: SparkSession) extends Processor(spark) {
       .withColumn("month", lpad(lit(currentDate.getMonthValue), 2, "0"))
       .withColumn("day", lpad(lit(currentDate.getDayOfMonth), 2, "0"))
       .select(finalColumns.map(col): _*)
-      .coalesce(1)
   }
 }

@@ -3,6 +3,8 @@ package com.javi.personal.wallascala.processor
 import org.apache.spark.sql.functions.{col, concat, lit, lpad}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
+import java.time.LocalDate
+
 class PropertiesProcessor(spark: SparkSession) extends Processor(spark) {
 
   // Sources
@@ -15,8 +17,9 @@ class PropertiesProcessor(spark: SparkSession) extends Processor(spark) {
     "description", "terrace", "type", "extracted_date", "year", "month", "day"
   )
 
-  override protected def build(): DataFrame = {
+  override protected def build(date: LocalDate): DataFrame = {
     sanitedWallapopProperties
+      .filter(ymdCondition(date))
       .withColumn("city", col("location__city"))
       .withColumn("country", col("location__country_code"))
       .withColumn("postal_code", col("location__postal_code"))
