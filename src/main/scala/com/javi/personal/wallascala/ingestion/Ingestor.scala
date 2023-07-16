@@ -1,18 +1,8 @@
 package com.javi.personal.wallascala.ingestion
 
-import com.javi.personal.wallascala.{SparkSessionFactory, StorageAccountLocation}
+import com.javi.personal.wallascala.StorageAccountLocation
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{SaveMode, SparkSession}
-
-object Ingestor {
-
-  def main(args: Array[String]): Unit = {
-    val spark = SparkSessionFactory.build()
-    val ingestor = new Ingestor(spark)
-    ingestor.ingest("fotocasa", "apartment_sales")
-  }
-
-}
 
 class Ingestor(spark: SparkSession) {
 

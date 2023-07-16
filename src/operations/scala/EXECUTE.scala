@@ -1,8 +1,7 @@
 import com.javi.personal.wallascala.SparkSessionFactory
 import com.javi.personal.wallascala.cleaner.{Cleaner, CleanerCLI}
-import com.javi.personal.wallascala.egestor.Egestor
 import com.javi.personal.wallascala.ingestion.Ingestor
-import com.javi.personal.wallascala.processor.{PriceChangesProcessor, Processor}
+import com.javi.personal.wallascala.processor.Processor
 import org.apache.spark.sql.SparkSession
 import org.scalatest.flatspec.AnyFlatSpec
 
@@ -19,12 +18,12 @@ class EXECUTE extends AnyFlatSpec {
   }
 
   "CLEANER" should "CLEAN SPECIFIC DATE" in {
-    CleanerCLI.main(Array("--source", "wallapop", "--datasetName", "properties", "--date", "2023-07-14"))
+    CleanerCLI.main(Array("--source", "wallapop", "--datasetName", "properties", "--date", "2023-07-16"))
   }
 
   "CLEANER" should "CLEAN DATA RANGE" in {
     val cleaner = new Cleaner(spark)
-    val from = LocalDate.of(2023, 6, 19)
+    val from = LocalDate.of(2023, 7, 16)
     val to = LocalDate.now()
 
     val days: Int = ChronoUnit.DAYS.between(from, to).toInt
@@ -34,17 +33,23 @@ class EXECUTE extends AnyFlatSpec {
   }
 
   "PROCESSOR" should "PROCESS PROPERTIES" in {
-    Processor.execute("properties")
+    Processor("properties").execute(LocalDate.now())
   }
 
   "PROCESSOR" should "PROCESS PRICE CHANGES" in {
-    Processor.execute("price_changes")
+    Processor("price_changes").execute(LocalDate.now())
   }
 
-  "EGESTOR" should "EGEST DATA" in {
-    val egestor: Egestor = new Egestor(spark)
-    //egestor.writeProperties()
-    egestor.writePriceChanges()
+  "PROCESSOR" should "PROCESS PRICE CHANGES DELTA" in {
+    Processor("price_changes_delta").execute(LocalDate.of(2023, 7, 14))
+  }
+
+  "SPARK" should  "CREATE DATABASES" in {
+    spark.sql("CREATE DATABASE IF NOT EXISTS processed")
+  }
+
+  "SPARK" should "VERIFY IF DATABASE EXISTS" in {
+    assert(spark.catalog.databaseExists("processed"))
   }
 
 }

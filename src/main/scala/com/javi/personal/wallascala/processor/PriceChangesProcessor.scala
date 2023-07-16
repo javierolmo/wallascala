@@ -1,9 +1,8 @@
 package com.javi.personal.wallascala.processor
 
-import com.javi.personal.wallascala.PathBuilder
 import org.apache.log4j.LogManager
 import org.apache.spark.sql.expressions.Window
-import org.apache.spark.sql.functions.{bround, col, collect_list, current_date, element_at, lit, lpad, row_number, size, struct}
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDate
@@ -11,18 +10,24 @@ import java.time.LocalDate
 class PriceChangesProcessor(spark: SparkSession) extends Processor(spark) {
 
   private val log = LogManager.getLogger(getClass)
+
+  // Sources
+  private lazy val processedProperties = readProcessed("properties")
+
+  // Config
+  override protected val coalesce: Option[Int] = Some(1)
   override protected val datasetName: String = "price_changes"
   override protected val finalColumns: Array[String] = Array(
     "id", "title", "price_changes", "price_history", "first_price", "last_price", "discount", "link", "year", "month",
     "day"
   )
 
-  override protected def build(): DataFrame = {
+  override protected def build(date: LocalDate): DataFrame = {
     val currentDate = LocalDate.now()
-    val propertiesDF = spark.read.parquet(PathBuilder.buildProcessedPath("properties").url)
-    val activePropertyIds = propertiesDF.filter(col("extracted_date") === current_date()).select("id").distinct().collect().map(_.getString(0))
+    val activePropertyIds = processedProperties.filter(col("extracted_date") === current_date()).select("id").distinct().collect().map(_.getString(0))
     log.info(s"Active properties: ${activePropertyIds.length}")
-    propertiesDF
+    processedProperties
+      .filter(col("id").isin(activePropertyIds: _*))
       .filter(col("city") === "Vigo")
       .withColumn("row_number", row_number().over(Window.partitionBy("id", "price").orderBy(col("extracted_date").asc)))
       .filter(col("row_number") === lit(1))
@@ -36,7 +41,5 @@ class PriceChangesProcessor(spark: SparkSession) extends Processor(spark) {
       .withColumn("month", lpad(lit(currentDate.getMonthValue), 2, "0"))
       .withColumn("day", lpad(lit(currentDate.getDayOfMonth), 2, "0"))
       .select(finalColumns.map(col): _*)
-      .filter(col("id").isin(activePropertyIds: _*))
-      .coalesce(1)
   }
 }
