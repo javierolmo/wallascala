@@ -27,12 +27,16 @@ class Cleaner(spark: SparkSession) {
 
     validated.validRecords.write
       .mode(SaveMode.Overwrite)
+      .format("parquet")
       .partitionBy(Seq("year", "month", "day"): _*)
-      .parquet(PathBuilder.buildSanitedPath(source, datasetName).url)
+      .option("path", PathBuilder.buildSanitedPath(source, datasetName).url)
+      .saveAsTable(s"sanited.${source}_$datasetName")
     validated.invalidRecords.write
       .mode(SaveMode.Overwrite)
+      .format("parquet")
       .partitionBy(Seq("year", "month", "day"): _*)
-      .parquet(PathBuilder.buildExcludedPath(source, datasetName).url)
+      .option("path", PathBuilder.buildExcludedPath(source, datasetName).url)
+      .saveAsTable(s"sanited_excluded.${source}_$datasetName")
   }
 
   def validate(inputDF: DataFrame, metadata: CleanerMetadata): ValidationResult = {

@@ -1,6 +1,6 @@
 package com.javi.personal.wallascala.ingestion
 
-import com.javi.personal.wallascala.StorageAccountLocation
+import com.javi.personal.wallascala.PathBuilder
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{SaveMode, SparkSession}
 
@@ -11,7 +11,7 @@ class Ingestor(spark: SparkSession) {
     val stagingJSON = spark.read
       .format("json")
       .option("multiline", "true")
-      .load(stagingLocation(source, datasetName).url)
+      .load(PathBuilder.buildStagingPath(source, datasetName).url)
 
     val transformedDF = stagingJSON
       .withColumn("element", explode(col("elements")))
@@ -25,22 +25,9 @@ class Ingestor(spark: SparkSession) {
       .mode(SaveMode.Overwrite)
       .format("parquet")
       .partitionBy("year", "month", "day")
-      .save(rawLocation(source, datasetName).url)
+      .option("path", PathBuilder.buildRawPath(source, datasetName).url)
+      .saveAsTable(s"raw.${source}_$datasetName")
 
   }
-
-  private def stagingLocation(source: String, datasetName: String): StorageAccountLocation =
-    StorageAccountLocation(
-      account = "melodiadl",
-      container = "test",
-      path = s"staging/$source/$datasetName",
-      v2 = true)
-
-  private def rawLocation(source: String, datasetName: String): StorageAccountLocation =
-    StorageAccountLocation(
-      account = "melodiadl",
-      container = "test",
-      path = s"raw/$source/$datasetName",
-      v2 = true)
 
 }
