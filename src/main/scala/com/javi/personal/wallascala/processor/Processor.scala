@@ -12,9 +12,10 @@ object Processor {
 
   private lazy implicit val spark: SparkSession = SparkSessionFactory.build()
 
+  def properties(): Processor = PropertiesProcessor(Option.empty)
   def properties(date: LocalDate): Processor = PropertiesProcessor(Some(date))
-  def priceChanges(date: LocalDate): Processor = PriceChangesProcessor(Some(date))
   def priceChanges(): Processor = PriceChangesProcessor(Option.empty)
+  def priceChanges(date: LocalDate): Processor = PriceChangesProcessor(Some(date))
 
 }
 
