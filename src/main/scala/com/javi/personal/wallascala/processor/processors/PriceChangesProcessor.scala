@@ -12,7 +12,7 @@ case class PriceChangesProcessor(dateOption: Option[LocalDate])(implicit spark: 
   private val properties =
     if (dateOption.isDefined) {
       val date = dateOption.get
-      readProcessed("properties").filter(ymdCondition(date) || ymdCondition(date))
+      readProcessed("properties").filter(ymdCondition(date) || ymdCondition(date.plusDays(-1)))
     } else
       readProcessed("properties")
 

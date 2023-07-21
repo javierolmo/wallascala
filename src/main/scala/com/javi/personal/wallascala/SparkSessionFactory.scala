@@ -10,7 +10,7 @@ object SparkSessionFactory {
       .config("spark.sql.sources.partitionOverwriteMode","dynamic")
       .config("fs.azure.account.key.melodiadl.dfs.core.windows.net", "hZ2NsPin9BJc/6tvs2VQjIBwYbnNfiIcTddC8lBVpJS/4aTpr65+60oLtpNRBONI0VGHaG+ri2/E+ASt0QFNTg==")
       .config("fs.azure.account.key.melodiadl.blob.core.windows.net", "hZ2NsPin9BJc/6tvs2VQjIBwYbnNfiIcTddC8lBVpJS/4aTpr65+60oLtpNRBONI0VGHaG+ri2/E+ASt0QFNTg==")
-      .appName("lib_pulse_druid")
+      .appName("wallascala")
 
     val builderWithMaster = if (runsInCluster) builder else builder.master("local[*]")
     val spark = builderWithMaster.getOrCreate()

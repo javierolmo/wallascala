@@ -6,12 +6,12 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 
 class Ingestor(spark: SparkSession) {
 
-  def ingest(source: String, datasetName: String): Unit = {
+  def ingest(source: String, datasetName: String, fileName: String = ""): Unit = {
 
     val stagingJSON = spark.read
       .format("json")
       .option("multiline", "true")
-      .load(PathBuilder.buildStagingPath(source, datasetName).url)
+      .load(s"${PathBuilder.buildStagingPath(source, datasetName).url}/$fileName")
 
     val transformedDF = stagingJSON
       .withColumn("element", explode(col("elements")))

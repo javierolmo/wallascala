@@ -1,10 +1,9 @@
 import com.javi.personal.wallascala.SparkSessionFactory
 import com.javi.personal.wallascala.cleaner.{Cleaner, CleanerCLI}
-import com.javi.personal.wallascala.ingestion.Ingestor
 import com.javi.personal.wallascala.processor.{Processor, ProcessorCLI}
+import com.javi.personal.wallascala.ingestion.Ingestor
 import org.apache.spark.sql.SparkSession
 import org.scalatest.flatspec.AnyFlatSpec
-import com.javi.personal.wallascala.processor.processors.PropertiesProcessor
 
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -24,7 +23,7 @@ class EXECUTE extends AnyFlatSpec {
 
   "CLEANER" should "CLEAN DATA RANGE" in {
     val cleaner = new Cleaner(spark)
-    val from = LocalDate.of(2023, 7, 16)
+    val from = LocalDate.of(2023, 6, 10)
     val to = LocalDate.now()
 
     val days: Int = ChronoUnit.DAYS.between(from, to).toInt
@@ -34,11 +33,14 @@ class EXECUTE extends AnyFlatSpec {
   }
 
   "PROCESSOR" should "PROCESS PROPERTIES" in {
-    Processor.properties(LocalDate.now()).execute()
+    Processor.properties().execute()
   }
 
   "PROCESSOR" should "PROCESS PRICE CHANGES" in {
-    ProcessorCLI.main(Array("--datasetName", "properties", "--date", "2023-07-16"))
+    Processor.priceChanges(LocalDate.of(2023, 7, 18)).execute()
+    Processor.priceChanges(LocalDate.of(2023, 7, 19)).execute()
+    Processor.priceChanges(LocalDate.of(2023, 7, 20)).execute()
+    Processor.priceChanges(LocalDate.of(2023, 7, 21)).execute()
   }
 
   "SPARK" should  "CREATE DATABASES" in {
