@@ -34,6 +34,8 @@ case class PropertiesProcessor(date: Option[LocalDate])(implicit spark: SparkSes
       .withColumn("year", lpad(col("year"), 4, "0"))
       .withColumn("month", lpad(col("month"), 2, "0"))
       .withColumn("day", lpad(col("day"), 2, "0"))
+      .orderBy("id")
+      .dropDuplicates("title", "price", "description", "surface", "operation", "year", "month", "day")
       .select(finalColumns.map(col): _*)
   }
 }

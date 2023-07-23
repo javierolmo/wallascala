@@ -4,7 +4,7 @@ import org.apache.spark.sql.SparkSession
 
 object SparkSessionFactory {
 
-  def build() = {
+  def build(): SparkSession = {
     val builder = SparkSession.builder()
       .config("spark.sql.parquet.int96RebaseModeInWrite", "CORRECTED")
       .config("spark.sql.sources.partitionOverwriteMode","dynamic")
