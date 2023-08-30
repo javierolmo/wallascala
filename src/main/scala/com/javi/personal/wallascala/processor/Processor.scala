@@ -17,7 +17,7 @@ object Processor {
   def priceChanges(): Processor = PriceChanges()
   def priceChanges(date: LocalDate): Processor = PriceChanges(Some(date))
   def postalCodeAnalysis(): Processor = PostalCodeAnalysis()
-  def postalCodeAnalysis(date: LocalDate): Processor = PostalCodeAnalysis(Some(date))
+  def postalCodeAnalysis(date: LocalDate): Processor = PostalCodeAnalysis(date)
 
 }
 

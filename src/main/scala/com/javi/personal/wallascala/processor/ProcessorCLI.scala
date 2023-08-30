@@ -40,7 +40,7 @@ object ProcessorCLI {
         val processor = params.datasetName match {
           case "properties" => Properties(Some(params.date))
           case "price_changes" => PriceChanges(Some(params.date))
-          case "postal_code_analysis" => PostalCodeAnalysis(Some(params.date))
+          case "postal_code_analysis" => PostalCodeAnalysis(params.date)
         }
         processor.execute()
       case _ =>

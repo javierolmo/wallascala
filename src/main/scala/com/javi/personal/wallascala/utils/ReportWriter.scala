@@ -8,17 +8,18 @@ import scala.io.Source
 
 case class ReportWriter(report: HtmlReport) {
 
-  def disk(fileName: String = "new-report.html"): Unit = {
+  private def execute(): String = {
     val sampleReport = Source.fromResource("sample-report.html").getLines().mkString("\n")
-    val newReport = sampleReport.replace("[DATA_PLACEHOLDER]", toJson())
-    Files.write(Paths.get(fileName), newReport.getBytes(StandardCharsets.UTF_8))
+    sampleReport.replace("[DATA_PLACEHOLDER]", toJson)
   }
 
-  def telegramMessage(): Unit = {
+  def disk(fileName: String = "new-report.html"): Unit =
+    Files.write(Paths.get(fileName), execute().getBytes(StandardCharsets.UTF_8))
 
-  }
+  def telegramMessage(): Unit =
+    TelegramConnector.sendDocument(execute(), TelegramConnector.ChatId)
 
-  private def toJson(): String = {
+  private def toJson: String = {
 
     def tableToJson(name: String, description: String, dataFrame: DataFrame) =
       s"""
