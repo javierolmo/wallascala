@@ -1,23 +1,26 @@
 package com.javi.personal.wallascala.processor
 
-import com.javi.personal.wallascala.processor.processors.{PriceChangesProcessor, PropertiesProcessor}
+import com.javi.personal.wallascala.processor.tables.{PostalCodeAnalysis, PriceChanges, Properties}
 import com.javi.personal.wallascala.{PathBuilder, SparkSessionFactory, SparkUtils}
-import org.apache.log4j.LogManager
-import org.apache.spark.sql.functions.{col, lit}
+import org.apache.spark.sql.functions.{col, days}
 import org.apache.spark.sql.{Column, DataFrame, SaveMode, SparkSession}
 
+import java.io.PrintWriter
 import java.time.LocalDate
 
 object Processor {
 
   private lazy implicit val spark: SparkSession = SparkSessionFactory.build()
 
-  def properties(): Processor = PropertiesProcessor(Option.empty)
-  def properties(date: LocalDate): Processor = PropertiesProcessor(Some(date))
-  def priceChanges(): Processor = PriceChangesProcessor(Option.empty)
-  def priceChanges(date: LocalDate): Processor = PriceChangesProcessor(Some(date))
+  def properties(): Processor = Properties()
+  def properties(date: LocalDate): Processor = Properties(Some(date))
+  def priceChanges(): Processor = PriceChanges()
+  def priceChanges(date: LocalDate): Processor = PriceChanges(Some(date))
+  def postalCodeAnalysis(): Processor = PostalCodeAnalysis()
+  def postalCodeAnalysis(date: LocalDate): Processor = PostalCodeAnalysis(date)
 
 }
+
 
 abstract class Processor(spark: SparkSession) extends SparkUtils {
 
@@ -38,7 +41,7 @@ abstract class Processor(spark: SparkSession) extends SparkUtils {
     val cols: Array[Column] = finalColumns.map(colName => col(colName))
     val dataFrame = build().select(cols:_*)
     val dataFrameWithCoalesce = if (coalesce.isDefined) dataFrame.coalesce(coalesce.get) else dataFrame
-    write(dataFrameWithCoalesce.toDF())
+    write(dataFrameWithCoalesce)
   }
 
 

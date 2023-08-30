@@ -1,7 +1,7 @@
 package com.javi.personal.wallascala.processor
 
 import com.javi.personal.wallascala.SparkSessionFactory
-import com.javi.personal.wallascala.processor.processors.{PriceChangesProcessor, PropertiesProcessor}
+import com.javi.personal.wallascala.processor.tables.{PostalCodeAnalysis, PriceChanges, Properties}
 import org.apache.spark.sql.SparkSession
 import scopt.{OParser, OParserBuilder}
 
@@ -38,8 +38,9 @@ object ProcessorCLI {
     OParser.parse(parser, args, ProcessorParams("datasetName", LocalDate.of(1900, 1, 1))) match {
       case Some(params) =>
         val processor = params.datasetName match {
-          case "properties" => PropertiesProcessor(Some(params.date))
-          case "price_changes" => PriceChangesProcessor(Some(params.date))
+          case "properties" => Properties(Some(params.date))
+          case "price_changes" => PriceChanges(Some(params.date))
+          case "postal_code_analysis" => PostalCodeAnalysis(params.date)
         }
         processor.execute()
       case _ =>

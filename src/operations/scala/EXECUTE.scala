@@ -33,14 +33,15 @@ class EXECUTE extends AnyFlatSpec {
   }
 
   "PROCESSOR" should "PROCESS PROPERTIES" in {
-    Processor.properties().execute()
+    Processor.properties(LocalDate.of(2023, 8, 10)).execute()
   }
 
   "PROCESSOR" should "PROCESS PRICE CHANGES" in {
-    Processor.priceChanges(LocalDate.of(2023, 7, 18)).execute()
-    Processor.priceChanges(LocalDate.of(2023, 7, 19)).execute()
-    Processor.priceChanges(LocalDate.of(2023, 7, 20)).execute()
-    Processor.priceChanges(LocalDate.of(2023, 7, 21)).execute()
+    Processor.priceChanges().execute()
+  }
+
+  "PROCESSOR" should "PROCESS POSTAL CODE ANALYSIS" in {
+    Processor.postalCodeAnalysis().execute()
   }
 
   "SPARK" should  "CREATE DATABASES" in {
