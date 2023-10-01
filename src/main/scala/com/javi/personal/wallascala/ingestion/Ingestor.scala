@@ -9,23 +9,17 @@ class Ingestor(spark: SparkSession) {
   def ingest(source: String, datasetName: String, fileName: String = ""): Unit = {
 
     val stagingJSON = spark.read
-      .format("json")
-      .option("multiline", "true")
-      .load(s"${PathBuilder.buildStagingPath(source, datasetName).url}/$fileName")
+      .format("parquet")
+      .option("header", "true")
+      .load(s"${PathBuilder.buildStagingPath(source, datasetName).url}/year=*/month=*/day=*/*.parquet")
 
     val transformedDF = stagingJSON
-      .withColumn("element", explode(col("elements")))
-      .select("element.*", "city", "source", "date")
-      .withColumn("date", to_date(col("date"), "yyyyMMdd"))
+      .withColumn("date", to_date(col("date"), "yyyy-MM-dd"))
       .withColumn("year", lpad(year(col("date")), 4, "0"))
       .withColumn("month", lpad(month(col("date")), 2, "0"))
       .withColumn("day", lpad(dayofmonth(col("date")), 2, "0"))
 
-    val renamedColumnsDF = transformedDF.columns.foldLeft(transformedDF) {
-      (df, colName) => df.withColumnRenamed(colName, colName.replace(".", "__"))
-    }
-
-    renamedColumnsDF.write
+    transformedDF.write
       .mode(SaveMode.Overwrite)
       .format("parquet")
       .partitionBy("year", "month", "day")

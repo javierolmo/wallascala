@@ -54,7 +54,6 @@ object CleanerMetadata {
       CleanerMetadataField("visibility_flags__highlighted", "Boolean"),
       CleanerMetadataField("visibility_flags__urgent", "Boolean"),
       CleanerMetadataField("web_slug", "String"),
-      CleanerMetadataField("city", "String"),
       CleanerMetadataField("source", "String"),
       CleanerMetadataField("date", "String"),
     )

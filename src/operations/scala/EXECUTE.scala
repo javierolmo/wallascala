@@ -14,11 +14,11 @@ class EXECUTE extends AnyFlatSpec {
 
   "INGESTOR" should "INGEST DATA" in {
     val ingestor = new Ingestor(spark)
-    ingestor.ingest("wallapop", "properties")
+    ingestor.ingest(source = "wallapop", datasetName = "properties")
   }
 
   "CLEANER" should "CLEAN SPECIFIC DATE" in {
-    CleanerCLI.main(Array("--source", "wallapop", "--datasetName", "properties", "--date", "2023-07-16"))
+    CleanerCLI.main(Array("--source", "wallapop", "--datasetName", "properties", "--date", "2023-10-01"))
   }
 
   "CLEANER" should "CLEAN DATA RANGE" in {
@@ -32,8 +32,12 @@ class EXECUTE extends AnyFlatSpec {
     localDates.foreach(cleaner.execute("wallapop", "properties", _))
   }
 
+  "PROCESSOR" should "PROCESS SOMETHING" in {
+    ProcessorCLI.main(Array("--datasetName", "properties", "--date", "2023-10-01", "hola"))
+  }
+
   "PROCESSOR" should "PROCESS PROPERTIES" in {
-    Processor.properties(LocalDate.of(2023, 8, 10)).execute()
+    Processor.properties().execute()
   }
 
   "PROCESSOR" should "PROCESS PRICE CHANGES" in {
@@ -51,5 +55,4 @@ class EXECUTE extends AnyFlatSpec {
   "SPARK" should "VERIFY IF DATABASE EXISTS" in {
     assert(spark.catalog.databaseExists("processed"))
   }
-
 }

@@ -25,7 +25,7 @@ case class PostalCodeAnalysis (date: LocalDate = LocalDate.now())(implicit spark
       .withColumn(Properties.Surface, when(col(Properties.Surface) === 0, null).otherwise(col(Properties.Surface)))
       .withColumn(Properties.Price, when(col(Properties.Price) === 0, null).otherwise(col(Properties.Price)))
       .withColumn("price_m2", col(Properties.Price) / col(Properties.Surface))
-      .groupBy(Properties.PostalCode, Properties.Type, Properties.Operation, Properties.Year, Properties.Month, Properties.Day)
+      .groupBy(Properties.PostalCode, Properties.Type, Properties.Operation)
       .agg(
         first(Properties.City).as(City),
         round(avg(Properties.Price), 2).as(AveragePrice),
