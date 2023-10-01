@@ -2,8 +2,8 @@ package com.javi.personal.wallascala
 
 object PathBuilder {
 
-  private val ACCOUNT = "melodiadl"
-  private val CONTAINER = "test"
+  private val ACCOUNT = "tfgbs"
+  private val CONTAINER = "datalake"
   private val V2 = true
 
   private val locationTemplate = StorageAccountLocation(

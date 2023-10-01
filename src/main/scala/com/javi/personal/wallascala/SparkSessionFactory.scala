@@ -8,8 +8,8 @@ object SparkSessionFactory {
     val builder = SparkSession.builder()
       .config("spark.sql.parquet.int96RebaseModeInWrite", "CORRECTED")
       .config("spark.sql.sources.partitionOverwriteMode","dynamic")
-      .config("fs.azure.account.key.melodiadl.dfs.core.windows.net", "hZ2NsPin9BJc/6tvs2VQjIBwYbnNfiIcTddC8lBVpJS/4aTpr65+60oLtpNRBONI0VGHaG+ri2/E+ASt0QFNTg==")
-      .config("fs.azure.account.key.melodiadl.blob.core.windows.net", "hZ2NsPin9BJc/6tvs2VQjIBwYbnNfiIcTddC8lBVpJS/4aTpr65+60oLtpNRBONI0VGHaG+ri2/E+ASt0QFNTg==")
+      .config("fs.azure.account.key.tfgbs.dfs.core.windows.net", "6tBTVIQIEc5LSQXRh7m0NN4xAt9AXX9KeFtpkgOIrwfkS3hvbxbF0kesR6x1i9WaTuNZD4vMqo4i+AStRBqL5Q==")
+      .config("fs.azure.account.key.tfgbs.blob.core.windows.net", "6tBTVIQIEc5LSQXRh7m0NN4xAt9AXX9KeFtpkgOIrwfkS3hvbxbF0kesR6x1i9WaTuNZD4vMqo4i+AStRBqL5Q==")
       .appName("wallascala")
 
     val builderWithMaster = if (runsInCluster) builder else builder.master("local[*]")

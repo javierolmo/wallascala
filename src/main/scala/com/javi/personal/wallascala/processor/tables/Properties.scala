@@ -2,13 +2,14 @@ package com.javi.personal.wallascala.processor.tables
 
 import com.javi.personal.wallascala.processor.Processor
 import com.javi.personal.wallascala.processor.tables.Properties._
-import org.apache.spark.sql.functions.{col, concat, lit, lpad}
+import org.apache.spark.sql.functions.{col, concat, lit, lpad, to_date}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDate
 
 case class Properties(dateOption: Option[LocalDate] = Option.empty)(implicit spark: SparkSession) extends Processor(spark) {
 
+  override protected val coalesce: Option[Int] = Some(1)
   override protected val datasetName: String = "properties"
   override protected val finalColumns: Array[String] = Array(
     Id, Title, Price, Surface, Rooms, Bathrooms, Link, Source, CreationDate, Currency, Elevator, Garage, Garden, City,
@@ -28,7 +29,9 @@ case class Properties(dateOption: Option[LocalDate] = Option.empty)(implicit spa
       .withColumn(PostalCode, col("location__postal_code"))
       .withColumn(Description, col("storytelling"))
       .withColumn(Link, concat(lit("https://es.wallapop.com/item/"), col("web_slug")))
-      .withColumn(ExtractedDate, col("date"))
+      .withColumn(CreationDate, to_date(col(CreationDate)))
+      .withColumn(ModificationDate, to_date(col(ModificationDate)))
+      .withColumn(ExtractedDate, to_date(col("date")))
       .withColumn(Year, lpad(col(Year), 4, "0"))
       .withColumn(Month, lpad(col(Month), 2, "0"))
       .withColumn(Day, lpad(col(Day), 2, "0"))

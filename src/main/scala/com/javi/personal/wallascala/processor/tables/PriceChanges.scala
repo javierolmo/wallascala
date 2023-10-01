@@ -1,9 +1,9 @@
 package com.javi.personal.wallascala.processor.tables
 
 import com.javi.personal.wallascala.processor.Processor
-import com.javi.personal.wallascala.processor.tables.PriceChanges.{City, Day, Id, Link, Month, NewPrice, PreviousPrice, Title, Year}
+import com.javi.personal.wallascala.processor.tables.PriceChanges.{Day, Discount, Id, Month, NewPrice, PreviousPrice, Year}
 import org.apache.spark.sql.expressions.Window
-import org.apache.spark.sql.functions.{col, lag, lpad}
+import org.apache.spark.sql.functions.{col, lag, lpad, round}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDate
@@ -13,7 +13,7 @@ case class PriceChanges(dateOption: Option[LocalDate] = Option.empty)(implicit s
   override protected val coalesce: Option[Int] = Some(1)
   override protected val datasetName: String = "price_changes"
   override protected val finalColumns: Array[String] = Array(
-    Id, Title, PreviousPrice, NewPrice, Link, City, Year, Month, Day
+    Id, PreviousPrice, NewPrice, Discount, Year, Month, Day
   )
 
   private val properties = dateOption match {
@@ -28,6 +28,7 @@ case class PriceChanges(dateOption: Option[LocalDate] = Option.empty)(implicit s
       .withColumn(NewPrice, col(Properties.Price))
       .filter(col(PreviousPrice).isNotNull)
       .filter(col(PreviousPrice) =!= col(NewPrice))
+      .withColumn(Discount, round((col(NewPrice) - col(PreviousPrice)) / col(PreviousPrice), 4))
       .withColumn(Year, lpad(col(Year), 4, "0"))
       .withColumn(Month, lpad(col(Month), 2, "0"))
       .withColumn(Day, lpad(col(Day), 2, "0"))
@@ -36,11 +37,9 @@ case class PriceChanges(dateOption: Option[LocalDate] = Option.empty)(implicit s
 
 object PriceChanges {
   val Id = "id"
-  val Title = "title"
   val PreviousPrice = "previous_price"
   val NewPrice = "new_price"
-  val Link = "link"
-  val City = "city"
+  val Discount = "discount"
   val Year = "year"
   val Month = "month"
   val Day = "day"
