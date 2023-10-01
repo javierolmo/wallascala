@@ -56,6 +56,7 @@ object CleanerMetadata {
       CleanerMetadataField("web_slug", "String"),
       CleanerMetadataField("source", "String"),
       CleanerMetadataField("date", "String"),
+      CleanerMetadataField("province", "String"),
     )
   )
 
