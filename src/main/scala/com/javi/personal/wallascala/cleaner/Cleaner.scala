@@ -8,14 +8,6 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
 import java.time.LocalDate
 
-object Cleaner {
-  def main(args: Array[String]): Unit = {
-    val spark = SparkSessionFactory.build()
-    val cleaner = new Cleaner(spark)
-    cleaner.execute("wallapop", "properties", LocalDate.of(2023, 6, 18))
-  }
-}
-
 class Cleaner(spark: SparkSession) {
 
   def execute(source: String, datasetName: String, localDate: LocalDate): Unit = {

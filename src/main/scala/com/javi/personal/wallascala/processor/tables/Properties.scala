@@ -2,6 +2,7 @@ package com.javi.personal.wallascala.processor.tables
 
 import com.javi.personal.wallascala.processor.Processor
 import com.javi.personal.wallascala.processor.tables.Properties._
+import com.javi.personal.wallascala.utils.writers.{ParquetWriter, Writer}
 import org.apache.spark.sql.functions.{col, concat, lit, lpad, to_date}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -38,6 +39,7 @@ case class Properties(dateOption: Option[LocalDate] = Option.empty)(implicit spa
       .orderBy(Id)
       .dropDuplicates(Title, Price, Description, Surface, Operation, Year, Month, Day)
   }
+
 }
 
 object Properties {
@@ -67,5 +69,4 @@ object Properties {
   val Year = "year"
   val Month = "month"
   val Day = "day"
-
 }
