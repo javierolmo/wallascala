@@ -1,8 +1,8 @@
 package com.javi.personal.wallascala.cleaner
 
+import com.javi.personal.wallascala.PathBuilder
 import com.javi.personal.wallascala.cleaner.model.{CleanerMetadata, CleanerMetadataField}
 import com.javi.personal.wallascala.cleaner.validator.ValidationResult
-import com.javi.personal.wallascala.{PathBuilder, SparkSessionFactory}
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
@@ -34,7 +34,7 @@ class Cleaner(spark: SparkSession) {
   def validate(inputDF: DataFrame, metadata: CleanerMetadata): ValidationResult = {
 
     def cleanField(df: DataFrame, field: CleanerMetadataField): DataFrame = {
-      df.withColumn(field.name, field.buildUDF.apply(col(field.name)))
+      df.withColumn(field.name, field.genericFieldCleaner(col(field.name)))
     }
 
     val dfCleaned = metadata.fields
@@ -42,11 +42,11 @@ class Cleaner(spark: SparkSession) {
       .select(metadata.fields.map(field => col(field.name)): _*)
 
     val dfInvalidRecords = dfCleaned
-      .filter(metadata.fields.map(field => col(s"${field.name}._2").isNotNull).reduce(_ || _))
-      .select(dfCleaned.columns.map(x => col(x+"._2").as(x)): _*)
+      .filter(metadata.fields.map(field => col(s"${field.name}.error").isNotNull).reduce(_ || _))
+      .select(dfCleaned.columns.map(x => col(x+".error").as(x)): _*)
     val dfValidRecords = dfCleaned
-      .filter(metadata.fields.map(field => col(s"${field.name}._2").isNull).reduce(_ && _))
-      .select(dfCleaned.columns.map(x => col(x+"._1").as(x)): _*)
+      .filter(metadata.fields.map(field => col(s"${field.name}.error").isNull).reduce(_ && _))
+      .select(dfCleaned.columns.map(x => col(x+".result").as(x)): _*)
 
 
     ValidationResult(dfValidRecords, dfInvalidRecords)
