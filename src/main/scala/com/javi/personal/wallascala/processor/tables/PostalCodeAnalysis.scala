@@ -15,11 +15,11 @@ case class PostalCodeAnalysis (date: LocalDate = LocalDate.now())(implicit spark
   override protected val datasetName: String = "postal_code_analysis"
   override protected val finalColumns: Array[String] = Array(City, PostalCode, Type, Operation, AveragePrice, AverageSurface, AveragePriceM2, Count, Year, Month, Day)
 
-  private val properties = readProcessed("properties")
+  private val properties = readProcessed("properties").filter(col(Properties.ExtractedDate).leq(date))
+
 
   override protected def build(): DataFrame = {
     val result = properties
-      .filter(col(Properties.ExtractedDate).geq(date))
       .withColumn("row_number", row_number().over(Window.partitionBy(Properties.Id).orderBy(col(Properties.ExtractedDate).desc)))
       .filter(col("row_number") === 1)
       .withColumn(Properties.Surface, when(col(Properties.Surface) === 0, null).otherwise(col(Properties.Surface)))

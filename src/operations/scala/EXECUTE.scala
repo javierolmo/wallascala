@@ -1,7 +1,7 @@
-import com.javi.personal.wallascala.SparkSessionFactory
 import com.javi.personal.wallascala.cleaner.{Cleaner, CleanerCLI}
-import com.javi.personal.wallascala.processor.{Processor, ProcessorCLI}
 import com.javi.personal.wallascala.ingestion.Ingestor
+import com.javi.personal.wallascala.processor.{Processor, ProcessorCLI}
+import com.javi.personal.wallascala.{PathBuilder, SparkSessionFactory}
 import org.apache.spark.sql.SparkSession
 import org.scalatest.flatspec.AnyFlatSpec
 
@@ -23,7 +23,7 @@ class EXECUTE extends AnyFlatSpec {
 
   "CLEANER" should "CLEAN DATA RANGE" in {
     val cleaner = new Cleaner(spark)
-    val from = LocalDate.of(2023, 6, 10)
+    val from = LocalDate.of(2023, 10, 2)
     val to = LocalDate.now()
 
     val days: Int = ChronoUnit.DAYS.between(from, to).toInt
@@ -37,15 +37,15 @@ class EXECUTE extends AnyFlatSpec {
   }
 
   "PROCESSOR" should "PROCESS PROPERTIES" in {
-    Processor.properties().execute()
+    Processor.properties(LocalDate.now()).execute()
   }
 
   "PROCESSOR" should "PROCESS PRICE CHANGES" in {
-    Processor.priceChanges().execute()
+    Processor.priceChanges(LocalDate.now()).execute()
   }
 
   "PROCESSOR" should "PROCESS POSTAL CODE ANALYSIS" in {
-    Processor.postalCodeAnalysis().execute()
+    Processor.postalCodeAnalysis(LocalDate.now()).execute()
   }
 
   "SPARK" should  "CREATE DATABASES" in {
@@ -54,5 +54,10 @@ class EXECUTE extends AnyFlatSpec {
 
   "SPARK" should "VERIFY IF DATABASE EXISTS" in {
     assert(spark.catalog.databaseExists("processed"))
+  }
+
+  "SPARK" should "INGEST PROVICENS" in {
+    val df = spark.read.format("json").load(PathBuilder.buildStagingPath("opendatasoft", "provincias-espanolas.json").url)
+    df
   }
 }

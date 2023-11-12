@@ -2,7 +2,8 @@ package com.javi.personal.wallascala.processor.tables
 
 import com.javi.personal.wallascala.processor.Processor
 import com.javi.personal.wallascala.processor.tables.Properties._
-import org.apache.spark.sql.functions.{col, concat, lit, lpad, to_date}
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.IntegerType
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDate
@@ -13,20 +14,27 @@ case class Properties(dateOption: Option[LocalDate] = Option.empty)(implicit spa
   override protected val datasetName: String = "properties"
   override protected val finalColumns: Array[String] = Array(
     Id, Title, Price, Surface, Rooms, Bathrooms, Link, Source, CreationDate, Currency, Elevator, Garage, Garden, City,
-    Country, PostalCode, ModificationDate, Operation, Pool, Description, Terrace, Type, ExtractedDate, Year, Month, Day
+    Country, PostalCode, Province, Region, ModificationDate, Operation, Pool, Description, Terrace, Type, ExtractedDate,
+    Year, Month, Day
   )
 
-  // Sources
-  private val sanitedWallapopProperties: DataFrame = dateOption match {
-    case Some(date) => readSanited("wallapop", "properties").filter(ymdCondition(date))
-    case None => readSanited("wallapop", "properties")
+  object sources {
+    val sanitedWallapopProperties: DataFrame = dateOption match {
+      case Some(date) => readSanited("wallapop", "properties").filter(ymdCondition(date))
+      case None => readSanited("wallapop", "properties")
+    }
+    val sanitedProvinces: DataFrame = readSanited("opendatasoft", "provincias-espanolas")
   }
 
   override protected def build(): DataFrame = {
-    sanitedWallapopProperties
+    sources.sanitedWallapopProperties
+      .withColumn("province_code", (col("location__postal_code").cast(IntegerType)/1000).cast(IntegerType))
+      .join(sources.sanitedProvinces.as("p"), col("province_code") === sources.sanitedProvinces("codigo").cast(IntegerType), "left")
       .withColumn(City, col("location__city"))
       .withColumn(Country, col("location__country_code"))
       .withColumn(PostalCode, col("location__postal_code"))
+      .withColumn(Province, col("p.provincia"))
+      .withColumn(Region, col("p.ccaa"))
       .withColumn(Description, col("storytelling"))
       .withColumn(Link, concat(lit("https://es.wallapop.com/item/"), col("web_slug")))
       .withColumn(CreationDate, to_date(col(CreationDate)))
@@ -38,6 +46,7 @@ case class Properties(dateOption: Option[LocalDate] = Option.empty)(implicit spa
       .orderBy(Id)
       .dropDuplicates(Title, Price, Description, Surface, Operation, Year, Month, Day)
   }
+
 }
 
 object Properties {
@@ -57,6 +66,8 @@ object Properties {
   val City = "city"
   val Country = "country"
   val PostalCode = "postal_code"
+  val Province = "province"
+  val Region = "region"
   val ModificationDate = "modification_date"
   val Operation = "operation"
   val Pool = "pool"
@@ -67,5 +78,4 @@ object Properties {
   val Year = "year"
   val Month = "month"
   val Day = "day"
-
 }
