@@ -2,13 +2,16 @@ package com.javi.personal.wallascala.cleaner.model
 
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.{from_unixtime, to_timestamp}
-import org.apache.spark.sql.types.{BooleanType, DoubleType, IntegerType, StringType, TimestampType}
+import org.apache.spark.sql.types.{ArrayType, BooleanType, DoubleType, IntegerType, StringType, StructField, StructType, TimestampType}
+
+import scala.collection.Seq
 
 object CleanerMetadata {
 
   private val metadata: Seq[CleanerMetadata] = Seq(
     pisoWallapop,
-    //pisoFotocasa
+    pisoFotocasa,
+    provinciasEspanolas
   )
 
   def findByCatalogItem(source: String, datasetName: String): Option[CleanerMetadata] = {
@@ -81,6 +84,29 @@ object CleanerMetadata {
       CleanerMetadataField("city", StringType),
       CleanerMetadataField("source", StringType),
       CleanerMetadataField("timeAgo", IntegerType),
+    )
+  )
+
+  private def provinciasEspanolas: CleanerMetadata = CleanerMetadata(
+    source = "opendatasoft",
+    datasetName = "provincias-espanolas",
+    fields = Seq(
+      CleanerMetadataField("ccaa", StringType),
+      CleanerMetadataField("cod_ccaa", IntegerType),
+      CleanerMetadataField("codigo", IntegerType),
+      CleanerMetadataField("geo_point_2d", StructType(Seq(
+        StructField("lat", DoubleType),
+        StructField("lon", DoubleType)
+      ))),
+      CleanerMetadataField("geo_shape", StructType(Seq(
+        StructField("geometry", StructType(Seq(
+          StructField("coordinates", ArrayType(ArrayType(ArrayType(StringType)))),
+          StructField("type", DoubleType)
+        ))),
+        StructField("type", StringType)
+      ))),
+      CleanerMetadataField("provincia", StringType),
+      CleanerMetadataField("texto", StringType),
     )
   )
 }

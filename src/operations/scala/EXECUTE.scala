@@ -1,7 +1,7 @@
-import com.javi.personal.wallascala.SparkSessionFactory
-import com.javi.personal.wallascala.cleaner.{Cleaner, CleanerCLI, CleanerTest}
-import com.javi.personal.wallascala.processor.{Processor, ProcessorCLI}
+import com.javi.personal.wallascala.cleaner.{Cleaner, CleanerCLI}
 import com.javi.personal.wallascala.ingestion.Ingestor
+import com.javi.personal.wallascala.processor.{Processor, ProcessorCLI}
+import com.javi.personal.wallascala.{PathBuilder, SparkSessionFactory}
 import org.apache.spark.sql.SparkSession
 import org.scalatest.flatspec.AnyFlatSpec
 
@@ -54,5 +54,10 @@ class EXECUTE extends AnyFlatSpec {
 
   "SPARK" should "VERIFY IF DATABASE EXISTS" in {
     assert(spark.catalog.databaseExists("processed"))
+  }
+
+  "SPARK" should "INGEST PROVICENS" in {
+    val df = spark.read.format("json").load(PathBuilder.buildStagingPath("opendatasoft", "provincias-espanolas.json").url)
+    df
   }
 }

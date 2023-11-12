@@ -22,8 +22,9 @@ object PathBuilder {
   def buildSanitedPath(source: String, datasetName: String): StorageAccountLocation =
     locationTemplate.copy(path = f"sanited/$source/$datasetName")
 
-  def buildExcludedPath(source: String, datasetName: String): StorageAccountLocation =
+  def buildExcludedPath(source: String, datasetName: String): StorageAccountLocation = {
     locationTemplate.copy(path = f"sanited/excluded/$source/$datasetName")
+  }
 
   def buildProcessedPath(datasetName: String): StorageAccountLocation =
     locationTemplate.copy(path = f"processed/$datasetName")

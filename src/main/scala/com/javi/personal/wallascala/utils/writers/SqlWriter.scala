@@ -1,7 +1,7 @@
 package com.javi.personal.wallascala.utils.writers
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
-case class SqlWriter(layer: String, datasetName: String) extends Writer {
+case class SqlWriter(database: String, table: String) extends Writer {
 
   def host(): String = "localhost"
   def port(): Int = 3306
@@ -15,8 +15,8 @@ case class SqlWriter(layer: String, datasetName: String) extends Writer {
       .format("jdbc")
       .mode(saveMode())
       .option("driver", "com.mysql.cj.jdbc.Driver")
-      .option("url", s"jdbc:mysql://$host:$port/$layer")
-      .option("dbtable", datasetName)
+      .option("url", s"jdbc:mysql://$host:$port/$database")
+      .option("dbtable", table)
       .option("user", user())
       .option("password", pass())
       .save()

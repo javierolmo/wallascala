@@ -1,12 +1,12 @@
 package com.javi.personal.wallascala.processor
 
 import com.javi.personal.wallascala.processor.tables.{PostalCodeAnalysis, PriceChanges, Properties}
-import com.javi.personal.wallascala.utils.writers.{ParquetWriter, Writer}
-import com.javi.personal.wallascala.{PathBuilder, SparkSessionFactory, SparkUtils}
-import org.apache.spark.sql.functions.{col, days}
-import org.apache.spark.sql.{Column, DataFrame, SaveMode, SparkSession}
+import com.javi.personal.wallascala.utils.Processed
+import com.javi.personal.wallascala.utils.writers.{DatalakeWriter, Writer}
+import com.javi.personal.wallascala.{SparkSessionFactory, SparkUtils}
+import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.{Column, DataFrame, SparkSession}
 
-import java.io.PrintWriter
 import java.time.LocalDate
 
 object Processor {
@@ -28,7 +28,7 @@ abstract class Processor(spark: SparkSession) extends SparkUtils {
   protected val datasetName: String
   protected val finalColumns: Array[String]
   protected val coalesce: Option[Int] = Option.empty
-  protected def writers: Seq[Writer] = Seq(ParquetWriter("processed", datasetName))
+  protected def writers: Seq[Writer] = Seq(DatalakeWriter(Processed, datasetName))
   protected def build(): DataFrame
 
   final def execute(): Unit = {

@@ -10,6 +10,28 @@ import java.time.LocalDate
 
 class Cleaner(spark: SparkSession) {
 
+  def execute(source: String, datasetName: String, partitionBy: Seq[String] = Seq("year", "month", "day")): Unit = {
+    val location = PathBuilder.buildRawPath(source, datasetName)
+    val inputDF: DataFrame = spark.read.parquet(location.url)
+
+    val cleanerMetadata = CleanerMetadata.findByCatalogItem(source, datasetName).get
+    val validated: ValidationResult = validate(inputDF, cleanerMetadata)
+
+
+    validated.validRecords.write
+      .mode(SaveMode.Overwrite)
+      .format("parquet")
+      .partitionBy(partitionBy: _*)
+      .option("path", PathBuilder.buildSanitedPath(source, datasetName).url)
+      .saveAsTable(s"sanited.${source}_$datasetName")
+    validated.invalidRecords.write
+      .mode(SaveMode.Overwrite)
+      .format("parquet")
+      .partitionBy(partitionBy: _*)
+      .option("path", PathBuilder.buildExcludedPath(source, datasetName).url)
+      .saveAsTable(s"sanited_excluded.${source}_$datasetName")
+  }
+
   def execute(source: String, datasetName: String, localDate: LocalDate): Unit = {
     val location = PathBuilder.buildRawPath(source, datasetName).cd(localDate)
     val inputDF: DataFrame = spark.read.parquet(location.url)

@@ -1,25 +1,21 @@
 package com.javi.personal.wallascala.launcher
 
 import com.javi.personal.wallascala.SparkSessionFactory
-import com.javi.personal.wallascala.utils.reader.{BlobStorageReader, Reader}
-import com.javi.personal.wallascala.utils.writers.{SqlWriter, Writer}
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.{DataFrame, SparkSession}
 
-object Launcher {
+case class Launcher(config: LauncherConfig) {
 
   private implicit lazy val spark: SparkSession = SparkSessionFactory.build()
 
-  def run(reader: Reader, writer: Writer): Unit = {
-    val dataFrame = reader.read()
-    writer.write(dataFrame)
+  def run(): Unit = {
+    val dataFrame = config.reader.read()
+    val dfWithSelect = selectFields(dataFrame, config.select)
+    config.writer.write(dfWithSelect)
   }
 
-  def main(args: Array[String]): Unit = {
-    val layer = "processed"
-    val dataset = "properties"
-    val reader = BlobStorageReader(layer, dataset)
-    val writer = SqlWriter(layer, dataset)
-    Launcher.run(reader, writer)
-  }
+  private def selectFields(dataFrame: DataFrame, fields: Option[Seq[String]]): DataFrame =
+    if (fields.isDefined) dataFrame.select(fields.get.map(field => col(field)):_*)
+    else dataFrame
 
 }
