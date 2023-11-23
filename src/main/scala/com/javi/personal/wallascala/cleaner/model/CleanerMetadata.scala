@@ -1,10 +1,8 @@
 package com.javi.personal.wallascala.cleaner.model
 
 import org.apache.spark.sql.Column
-import org.apache.spark.sql.functions.{from_unixtime, to_timestamp}
-import org.apache.spark.sql.types.{ArrayType, BooleanType, DoubleType, IntegerType, StringType, StructField, StructType, TimestampType}
-
-import scala.collection.Seq
+import org.apache.spark.sql.functions.from_unixtime
+import org.apache.spark.sql.types._
 
 object CleanerMetadata {
 
@@ -18,7 +16,6 @@ object CleanerMetadata {
     metadata.find(metadata => metadata.datasetName == datasetName && metadata.source == source)
   }
 
-  // Create metadata for each field of object WallapopRawItem
   private def pisoWallapop: CleanerMetadata = CleanerMetadata(
     source = "wallapop",
     datasetName = "properties",
