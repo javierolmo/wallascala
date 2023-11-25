@@ -3,20 +3,9 @@ package com.javi.personal.wallascala
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-case class StorageAccountLocation(
-                                   account: String,
-                                   container: String,
-                                   path: String,
-                                   v2: Boolean = false
-                                 ) {
+case class StorageAccountLocation(account: String, container: String, path: String, v2: Boolean = false) {
 
-  def cd(relativePath: String): StorageAccountLocation =
-    StorageAccountLocation(
-      account = account,
-      container = container,
-      path = path + "/" + relativePath,
-      v2 = v2
-    )
+  def cd(relativePath: String): StorageAccountLocation = this.copy(path = f"$path/$relativePath")
 
   def cd(localDate: LocalDate): StorageAccountLocation = {
     val yearString = DateTimeFormatter.ofPattern("yyyy").format(localDate)
