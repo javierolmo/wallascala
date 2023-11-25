@@ -28,10 +28,10 @@
             mkdir -p ~/.m2
             echo "<settings><servers><server><id>github</id><username>javierolmo</username><password>\${env.TOKEN_GITHUB_PACKAGES}</password></server></servers></settings>" > ~/.m2/settings.xml
 
-        - name: Deploy to GitHub Packages
-          env:
-            TOKEN_GITHUB_PACKAGES: ${{ secrets.GITHUB_TOKEN }}
-          run: mvn deploy -DskipTests=true -Dmaven.javadoc.skip=true -B
+        #- name: Deploy to GitHub Packages
+        #  env:
+        #    TOKEN_GITHUB_PACKAGES: ${{ secrets.GITHUB_TOKEN }}
+        #  run: mvn deploy -DskipTests=true -Dmaven.javadoc.skip=true -B
 
         - uses: bacongobbler/azure-blob-storage-upload@main
           with:
