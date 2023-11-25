@@ -6,7 +6,7 @@
 
     <groupId>com.javi.personal</groupId>
     <artifactId>wallascala</artifactId>
-    <version>0.1.14</version>
+    <version>0.2.0</version>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -36,7 +36,7 @@
         <!-- https://mvnrepository.com/artifact/com.microsoft.azure/spark-mssql-connector -->
         <dependency>
             <groupId>com.microsoft.azure</groupId>
-            <artifactId>spark-mssql-connector_2.12</artifactId>
+            <artifactId>spark-mssql-connector_${scala.compat.version}</artifactId>
             <version>1.2.0</version>
         </dependency>
 
@@ -48,6 +48,12 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.33</version>
+        </dependency>
 
         <!-- Spark Core -->
         <dependency>
