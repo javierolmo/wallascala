@@ -1,7 +1,7 @@
 package com.javi.personal.wallascala.processor
 
 import com.javi.personal.wallascala.processor.tables.{PostalCodeAnalysis, PriceChanges, Properties}
-import com.javi.personal.wallascala.utils.Processed
+import com.javi.personal.wallascala.utils.Layer
 import com.javi.personal.wallascala.utils.writers.{DatalakeWriter, Writer}
 import com.javi.personal.wallascala.{SparkSessionFactory, SparkUtils}
 import org.apache.spark.sql.functions.col
@@ -28,7 +28,7 @@ abstract class Processor(spark: SparkSession) extends SparkUtils {
   protected val datasetName: String
   protected val finalColumns: Array[String]
   protected val coalesce: Option[Int] = Option.empty
-  protected def writers: Seq[Writer] = Seq(DatalakeWriter(Processed, datasetName))
+  protected def writers: Seq[Writer] = Seq(DatalakeWriter(Layer.Processed, datasetName))
   protected def build(): DataFrame
 
   final def execute(): Unit = {

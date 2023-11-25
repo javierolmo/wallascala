@@ -1,59 +1,25 @@
 package com.javi.personal.wallascala.cleaner
 
-import com.javi.personal.wallascala.PathBuilder
 import com.javi.personal.wallascala.cleaner.model.{CleanerMetadata, CleanerMetadataField}
 import com.javi.personal.wallascala.cleaner.validator.ValidationResult
+import com.javi.personal.wallascala.utils.reader.SparkFileReader
+import com.javi.personal.wallascala.utils.writers.SparkFileWriter
 import org.apache.spark.sql.functions.col
-import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
+import org.apache.spark.sql.{DataFrame, SparkSession}
 
-import java.time.LocalDate
+object Cleaner {
 
-class Cleaner(spark: SparkSession) {
+  def execute(config: CleanerConfig)(implicit spark: SparkSession): Unit = {
+    val cleanerMetadata = CleanerMetadata.findByCatalogItem(config.source, config.datasetName).get
+    val rawDF: DataFrame = SparkFileReader.readRaw(config.source, config.datasetName, config.date)
 
-  def execute(source: String, datasetName: String, partitionBy: Seq[String] = Seq("year", "month", "day")): Unit = {
-    val location = PathBuilder.buildRawPath(source, datasetName)
-    val inputDF: DataFrame = spark.read.parquet(location.url)
+    val result = validate(rawDF, cleanerMetadata)
 
-    val cleanerMetadata = CleanerMetadata.findByCatalogItem(source, datasetName).get
-    val validated: ValidationResult = validate(inputDF, cleanerMetadata)
-
-
-    validated.validRecords.write
-      .mode(SaveMode.Overwrite)
-      .format("parquet")
-      .partitionBy(partitionBy: _*)
-      .option("path", PathBuilder.buildSanitedPath(source, datasetName).url)
-      .saveAsTable(s"sanited.${source}_$datasetName")
-    validated.invalidRecords.write
-      .mode(SaveMode.Overwrite)
-      .format("parquet")
-      .partitionBy(partitionBy: _*)
-      .option("path", PathBuilder.buildExcludedPath(source, datasetName).url)
-      .saveAsTable(s"sanited_excluded.${source}_$datasetName")
+    SparkFileWriter.writeSanited(result.validRecords, config.source, config.datasetName, config.date)
+    SparkFileWriter.writeExcluded(result.invalidRecords, config.source, config.datasetName, config.date)
   }
 
-  def execute(source: String, datasetName: String, localDate: LocalDate): Unit = {
-    val location = PathBuilder.buildRawPath(source, datasetName).cd(localDate)
-    val inputDF: DataFrame = spark.read.parquet(location.url)
-
-    val cleanerMetadata = CleanerMetadata.findByCatalogItem(source, datasetName).get
-    val validated: ValidationResult = validate(inputDF, cleanerMetadata).withYearMonthDay(localDate)
-
-    validated.validRecords.write
-      .mode(SaveMode.Overwrite)
-      .format("parquet")
-      .partitionBy(Seq("year", "month", "day"): _*)
-      .option("path", PathBuilder.buildSanitedPath(source, datasetName).url)
-      .saveAsTable(s"sanited.${source}_$datasetName")
-    validated.invalidRecords.write
-      .mode(SaveMode.Overwrite)
-      .format("parquet")
-      .partitionBy(Seq("year", "month", "day"): _*)
-      .option("path", PathBuilder.buildExcludedPath(source, datasetName).url)
-      .saveAsTable(s"sanited_excluded.${source}_$datasetName")
-  }
-
-  def validate(inputDF: DataFrame, metadata: CleanerMetadata): ValidationResult = {
+  private def validate(inputDF: DataFrame, metadata: CleanerMetadata): ValidationResult = {
 
     def cleanField(df: DataFrame, field: CleanerMetadataField): DataFrame = {
       df.withColumn(field.name, field.genericFieldCleaner(col(field.name)))

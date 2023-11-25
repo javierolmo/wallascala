@@ -4,9 +4,6 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 case class StorageAccountLocation(account: String, container: String, path: String, v2: Boolean = false) {
-  require(account.nonEmpty)
-  require(container.nonEmpty)
-  require(path.nonEmpty)
 
   def cd(relativePath: String): StorageAccountLocation = this.copy(path = f"$path/$relativePath")
 
