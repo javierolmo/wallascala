@@ -7,14 +7,14 @@ import org.apache.spark.sql.SparkSession
 object Launcher {
 
   private def copyData(reader: SparkReader, writer: SparkWriter)(implicit spark: SparkSession): Unit = {
-    val df = reader.read()
-    writer.write(df)
+    val dataFrame = reader.read()
+    writer.write(dataFrame)
   }
 
   private def buildReader(config: LauncherConfig)(implicit spark: SparkSession): SparkReader = {
     config.sourceFormat match {
-      case "jdbc" => ???
-      case _ => new SparkFileReader(path=config.sourcePath.get, format=config.sourceFormat)
+      case "jdbc" => throw new UnsupportedOperationException("JDBC source format is not supported yet.")
+      case _ => new SparkFileReader(path = config.sourcePath.getOrElse(throw new IllegalArgumentException("Source path is required.")), format = config.sourceFormat)
     }
   }
 
