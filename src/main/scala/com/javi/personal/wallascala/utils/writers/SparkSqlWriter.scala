@@ -28,7 +28,7 @@ extends SparkWriter(format=format, saveMode=saveMode, options=options) {
       .option("url", s"jdbc:mysql://${databaseConnection.host}:${databaseConnection.port}/$database")
       .option("dbtable", table)
       .option("user", databaseConnection.user)
-      .option("password", databaseConnection.port)
+      .option("password", databaseConnection.pass)
       .save()
   }
 

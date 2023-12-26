@@ -1,33 +1,29 @@
 package com.javi.personal.wallascala.processor.tables
 
-import com.javi.personal.wallascala.processor.Processor
 import com.javi.personal.wallascala.processor.tables.Properties._
+import com.javi.personal.wallascala.processor.{ProcessedTables, Processor}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.IntegerType
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDate
 
-case class Properties(dateOption: Option[LocalDate] = Option.empty)(implicit spark: SparkSession) extends Processor(spark) {
+case class Properties(date: LocalDate)(implicit spark: SparkSession) extends Processor(date) {
 
   override protected val coalesce: Option[Int] = Some(1)
-  override protected val datasetName: String = "properties"
+  override protected val datasetName: ProcessedTables = ProcessedTables.PROPERTIES
   override protected val finalColumns: Array[String] = Array(
     Id, Title, Price, Surface, Rooms, Bathrooms, Link, Source, CreationDate, Currency, Elevator, Garage, Garden, City,
-    Country, PostalCode, Province, Region, ModificationDate, Operation, Pool, Description, Terrace, Type, ExtractedDate,
-    Year, Month, Day
+    Country, PostalCode, Province, Region, ModificationDate, Operation, Pool, Description, Terrace, Type, ExtractedDate
   )
 
   object sources {
-    val sanitedWallapopProperties: DataFrame = dateOption match {
-      case Some(date) => readSanited("wallapop", "properties").filter(ymdCondition(date))
-      case None => readSanited("wallapop", "properties")
-    }
+    val sanitedWallapopProperties: DataFrame = readSanited("wallapop", "properties").filter(ymdCondition(date))
     val sanitedProvinces: DataFrame = readSanited("opendatasoft", "provincias-espanolas")
   }
 
   override protected def build(): DataFrame = {
-    sources.sanitedWallapopProperties
+    val result = sources.sanitedWallapopProperties
       .withColumn("province_code", (col("location__postal_code").cast(IntegerType)/1000).cast(IntegerType))
       .join(sources.sanitedProvinces.as("p"), col("province_code") === sources.sanitedProvinces("codigo").cast(IntegerType), "left")
       .withColumn(City, col("location__city"))
@@ -40,11 +36,9 @@ case class Properties(dateOption: Option[LocalDate] = Option.empty)(implicit spa
       .withColumn(CreationDate, to_date(col(CreationDate)))
       .withColumn(ModificationDate, to_date(col(ModificationDate)))
       .withColumn(ExtractedDate, to_date(col("date")))
-      .withColumn(Year, lpad(col(Year), 4, "0"))
-      .withColumn(Month, lpad(col(Month), 2, "0"))
-      .withColumn(Day, lpad(col(Day), 2, "0"))
       .orderBy(Id)
       .dropDuplicates(Title, Price, Description, Surface, Operation, Year, Month, Day)
+    result
   }
 
 }

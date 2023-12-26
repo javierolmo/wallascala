@@ -1,34 +1,21 @@
 package com.javi.personal.wallascala.processor
 
 import com.javi.personal.wallascala.processor.tables.{PostalCodeAnalysis, PriceChanges, Properties}
-import com.javi.personal.wallascala.utils.Layer
-import com.javi.personal.wallascala.utils.writers.{DatalakeWriter, Writer}
-import com.javi.personal.wallascala.{SparkSessionFactory, SparkUtils}
-import org.apache.spark.sql.functions.col
+import com.javi.personal.wallascala.utils.writers.{SparkFileWriter, SparkWriter}
+import com.javi.personal.wallascala.{PathBuilder, SparkUtils}
+import org.apache.spark.sql.functions.{col, lit, lpad}
 import org.apache.spark.sql.{Column, DataFrame, SparkSession}
 
 import java.time.LocalDate
 
-object Processor {
+abstract class Processor(date: LocalDate)(implicit spark: SparkSession) extends SparkUtils {
 
-  private lazy implicit val spark: SparkSession = SparkSessionFactory.build()
-
-  def properties(): Processor = Properties()
-  def properties(date: LocalDate): Processor = Properties(Some(date))
-  def priceChanges(): Processor = PriceChanges()
-  def priceChanges(date: LocalDate): Processor = PriceChanges(Some(date))
-  def postalCodeAnalysis(): Processor = PostalCodeAnalysis()
-  def postalCodeAnalysis(date: LocalDate): Processor = PostalCodeAnalysis(date)
-
-}
-
-
-abstract class Processor(spark: SparkSession) extends SparkUtils {
-
-  protected val datasetName: String
+  protected val datasetName: ProcessedTables
   protected val finalColumns: Array[String]
   protected val coalesce: Option[Int] = Option.empty
-  protected def writers: Seq[Writer] = Seq(DatalakeWriter(Layer.Processed, datasetName))
+  protected def writers: Seq[SparkWriter] = Seq(
+    SparkFileWriter(PathBuilder.buildProcessedPath(datasetName.getName).cd(date).url)(spark)
+  )
   protected def build(): DataFrame
 
   final def execute(): Unit = {
@@ -41,5 +28,16 @@ abstract class Processor(spark: SparkSession) extends SparkUtils {
     writers.foreach(writer => writer.write(cachedDF)(spark))
   }
 
+}
+
+object Processor {
+
+  def build(config: ProcessorConfig)(implicit spark: SparkSession): Processor = {
+    config.datasetName match {
+      case "properties" => Properties(config.date)
+      case "price_changes" => PriceChanges(config.date)
+      case "postal_code_analysis" => PostalCodeAnalysis(config.date)
+    }
+  }
 
 }

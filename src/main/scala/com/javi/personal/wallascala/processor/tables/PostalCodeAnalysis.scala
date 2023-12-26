@@ -1,6 +1,6 @@
 package com.javi.personal.wallascala.processor.tables
 
-import com.javi.personal.wallascala.processor.Processor
+import com.javi.personal.wallascala.processor.{ProcessedTables, Processor}
 import com.javi.personal.wallascala.processor.tables.PostalCodeAnalysis._
 import com.javi.personal.wallascala.processor.tables.PriceChanges.{Day, Month, Year}
 import org.apache.spark.sql.expressions.Window
@@ -9,19 +9,21 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDate
 
-case class PostalCodeAnalysis (date: LocalDate = LocalDate.now())(implicit spark: SparkSession) extends Processor(spark) {
+case class PostalCodeAnalysis (date: LocalDate = LocalDate.now())(implicit spark: SparkSession) extends Processor(date) {
 
   override protected val coalesce: Option[Int] = Some(1)
-  override protected val datasetName: String = "postal_code_analysis"
-  override protected val finalColumns: Array[String] = Array(City, PostalCode, Type, Operation, AveragePrice, AverageSurface, AveragePriceM2, Count, Year, Month, Day)
+  override protected val datasetName: ProcessedTables = ProcessedTables.POSTAL_CODE_ANALYSIS
+  override protected val finalColumns: Array[String] = Array(City, PostalCode, Type, Operation, AveragePrice, AverageSurface, AveragePriceM2, Count)
 
-  private val properties = readProcessed("properties").filter(col(Properties.ExtractedDate).leq(date))
-
-
-  override protected def build(): DataFrame = {
-    val result = properties
+  object sources {
+    val properties: DataFrame = readProcessed("properties")
+      .filter(col(Properties.ExtractedDate).leq(date))
       .withColumn("row_number", row_number().over(Window.partitionBy(Properties.Id).orderBy(col(Properties.ExtractedDate).desc)))
       .filter(col("row_number") === 1)
+  }
+
+  override protected def build(): DataFrame = {
+    val result = sources.properties
       .withColumn(Properties.Surface, when(col(Properties.Surface) === 0, null).otherwise(col(Properties.Surface)))
       .withColumn(Properties.Price, when(col(Properties.Price) === 0, null).otherwise(col(Properties.Price)))
       .withColumn("price_m2", col(Properties.Price) / col(Properties.Surface))
@@ -33,9 +35,6 @@ case class PostalCodeAnalysis (date: LocalDate = LocalDate.now())(implicit spark
         round(avg("price_m2"), 2).as(AveragePriceM2),
         count(Properties.Id).as(Count)
       )
-      .withColumn(Year, lpad(lit(date.getYear), 4, "0"))
-      .withColumn(Month, lpad(lit(date.getMonthValue), 2, "0"))
-      .withColumn(Day, lpad(lit(date.getDayOfMonth), 2, "0"))
 
     result
   }
@@ -50,7 +49,4 @@ object PostalCodeAnalysis {
   val AverageSurface = "average_surface"
   val AveragePriceM2 = "average_price_m2"
   val Count = "count"
-  val Year = "year"
-  val Month = "month"
-  val Day = "day"
 }
