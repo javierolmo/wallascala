@@ -25,4 +25,9 @@ trait SparkUtils {
       .format("parquet")
       .load(PathBuilder.buildProcessedPath(datasetName).url)
 
+  implicit class DataFrameOps(dataFrame: DataFrame) {
+    def applyIf(condition: Boolean, function: DataFrame => DataFrame): DataFrame =
+      if (condition) function(dataFrame) else dataFrame
+  }
+
 }

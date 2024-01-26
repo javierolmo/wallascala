@@ -1,13 +1,16 @@
 package com.javi.personal.wallascala.launcher
 
+import com.javi.personal.wallascala.SparkUtils
 import com.javi.personal.wallascala.utils.reader.{SparkFileReader, SparkReader}
 import com.javi.personal.wallascala.utils.writers.{SparkFileWriter, SparkSqlWriter, SparkWriter}
 import org.apache.spark.sql.SparkSession
 
-object Launcher {
+object Launcher extends SparkUtils {
 
-  private def copyData(reader: SparkReader, writer: SparkWriter)(implicit spark: SparkSession): Unit = {
+  def execute(config: LauncherConfig)(implicit spark: SparkSession): Unit = {
+    val (reader, writer) = (buildReader(config), buildWriter(config))
     val dataFrame = reader.read()
+      .applyIf(config.flattenFields, SparkReader.flattenFields)
     writer.write(dataFrame)
   }
 
@@ -27,13 +30,5 @@ object Launcher {
       case _ => SparkFileWriter(path=config.targetPath.get, hiveTable=config.targetTable, format=config.targetFormat, coalesce=config.coalesce)
     }
   }
-
-  def execute(config: LauncherConfig)(implicit spark: SparkSession): Unit = {
-    val reader = buildReader(config)
-    val writer = buildWriter(config)
-    copyData(reader, writer)
-  }
-
-
 
 }

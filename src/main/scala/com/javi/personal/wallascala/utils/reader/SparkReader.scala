@@ -1,5 +1,6 @@
 package com.javi.personal.wallascala.utils.reader
 
+import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, DataFrameReader, SparkSession}
 
@@ -18,4 +19,19 @@ abstract class SparkReader
 
   def read(): DataFrame
 
+}
+
+object SparkReader {
+
+  def flattenFields(dataFrame: DataFrame): DataFrame = {
+    val flattenedColumns = dataFrame.schema.fields.flatMap { field =>
+      field.dataType match {
+        case structType: StructType =>
+          structType.fields.map(innerField => col(s"${field.name}.${innerField.name}").alias(s"${field.name}__${innerField.name}"))
+        case _ =>
+          Array(col(field.name))
+      }
+    }
+    dataFrame.select(flattenedColumns: _*)
+  }
 }

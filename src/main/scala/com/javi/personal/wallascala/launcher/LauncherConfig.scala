@@ -11,7 +11,8 @@ case class LauncherConfig(
                            sourceFormat: String = "parquet",
                            targetFormat: String = "parquet",
                            coalesce: Option[Int] = Option.empty,
-                           select: Option[Seq[String]] = Option.empty
+                           select: Option[Seq[String]] = Option.empty,
+                           flattenFields: Boolean = false
                          )
 
 object LauncherConfig {
@@ -57,6 +58,10 @@ object LauncherConfig {
         .optional()
         .action((x, c) => c.copy(coalesce = Some(x)))
         .text("Perform spark's coalesce in write operation"),
+      opt[Unit]("flattenFields")
+        .optional()
+        .action((_, c) => c.copy(flattenFields = true))
+        .text("Flatten fields from source"),
       help("help").text("prints this usage text"),
       checkConfig { config =>
         if (config.sourceFormat == "jdbc" && config.sourceTable.isEmpty)
