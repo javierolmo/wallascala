@@ -1,20 +1,23 @@
 package com.javi.personal.wallascala.launcher
 
+import com.javi.personal.wallascala.SparkUtils
 import com.javi.personal.wallascala.utils.reader.{SparkFileReader, SparkReader}
 import com.javi.personal.wallascala.utils.writers.{SparkFileWriter, SparkSqlWriter, SparkWriter}
 import org.apache.spark.sql.SparkSession
 
-object Launcher {
+object Launcher extends SparkUtils {
 
-  private def copyData(reader: SparkReader, writer: SparkWriter)(implicit spark: SparkSession): Unit = {
-    val df = reader.read()
-    writer.write(df)
+  def execute(config: LauncherConfig)(implicit spark: SparkSession): Unit = {
+    val (reader, writer) = (buildReader(config), buildWriter(config))
+    val dataFrame = reader.read()
+      .applyIf(config.flattenFields, SparkReader.flattenFields)
+    writer.write(dataFrame)
   }
 
   private def buildReader(config: LauncherConfig)(implicit spark: SparkSession): SparkReader = {
     config.sourceFormat match {
-      case "jdbc" => ???
-      case _ => new SparkFileReader(path=config.sourcePath.get, format=config.sourceFormat)
+      case "jdbc" => throw new UnsupportedOperationException("JDBC source format is not supported yet.")
+      case _ => new SparkFileReader(path = config.sourcePath.getOrElse(throw new IllegalArgumentException("Source path is required.")), format = config.sourceFormat)
     }
   }
 
@@ -27,13 +30,5 @@ object Launcher {
       case _ => SparkFileWriter(path=config.targetPath.get, hiveTable=config.targetTable, format=config.targetFormat, coalesce=config.coalesce)
     }
   }
-
-  def execute(config: LauncherConfig)(implicit spark: SparkSession): Unit = {
-    val reader = buildReader(config)
-    val writer = buildWriter(config)
-    copyData(reader, writer)
-  }
-
-
 
 }

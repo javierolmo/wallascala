@@ -1,7 +1,6 @@
 package com.javi.personal.wallascala.cleaner
 
-import com.javi.personal.wallascala.cleaner.model.{CleanerMetadata, CleanerMetadataField}
-import com.javi.personal.wallascala.cleaner.validator.ValidationResult
+import com.javi.personal.wallascala.cleaner.model.{CleanerMetadata, CleanerMetadataField, ValidationResult}
 import com.javi.personal.wallascala.utils.reader.SparkFileReader
 import com.javi.personal.wallascala.utils.writers.SparkFileWriter
 import org.apache.spark.sql.functions.col
