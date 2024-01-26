@@ -1,10 +1,12 @@
-import com.javi.personal.wallascala.processor.{ProcessorOperations, ProcessorConfig}
+import com.javi.personal.wallascala.processor.{ProcessorConfig, ProcessorOperations}
 import com.javi.personal.wallascala.{PathBuilder, SparkSessionFactory}
 import org.apache.spark.sql.SparkSession
+import org.scalatest.Ignore
 import org.scalatest.flatspec.AnyFlatSpec
 
 import java.time.LocalDate
 
+@Ignore
 class EXECUTE extends AnyFlatSpec {
 
   private implicit val spark: SparkSession = SparkSessionFactory.build()
