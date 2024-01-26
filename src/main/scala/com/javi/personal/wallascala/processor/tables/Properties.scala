@@ -2,43 +2,54 @@ package com.javi.personal.wallascala.processor.tables
 
 import com.javi.personal.wallascala.processor.tables.Properties._
 import com.javi.personal.wallascala.processor.{ProcessedTables, Processor}
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.IntegerType
+import org.apache.spark.sql.types.{BooleanType, DateType, IntegerType, StringType, StructField, StructType}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDate
 
-case class Properties(date: LocalDate)(implicit spark: SparkSession) extends Processor(date) {
+class Properties(date: LocalDate)(implicit spark: SparkSession) extends Processor(date) {
 
   override protected val coalesce: Option[Int] = Some(1)
   override protected val datasetName: ProcessedTables = ProcessedTables.PROPERTIES
-  override protected val finalColumns: Array[String] = Array(
-    Id, Title, Price, Surface, Rooms, Bathrooms, Link, Source, CreationDate, Currency, Elevator, Garage, Garden, City,
-    Country, PostalCode, Province, Region, ModificationDate, Operation, Pool, Description, Terrace, Type, ExtractedDate
+  override protected val schema: StructType = StructType(Array(
+      StructField(Id, StringType),
+      StructField(Title, StringType),
+      StructField(Price, IntegerType),
+      StructField(Surface, IntegerType),
+      StructField(Rooms, IntegerType),
+      StructField(Bathrooms, IntegerType),
+      StructField(Link, StringType),
+      StructField(Source, StringType),
+      StructField(CreationDate, DateType),
+      StructField(Currency, StringType),
+      StructField(Elevator, BooleanType),
+      StructField(Garage, BooleanType),
+      StructField(Garden, BooleanType),
+      StructField(City, StringType),
+      StructField(Country, StringType),
+      StructField(PostalCode, IntegerType),
+      StructField(Province, StringType),
+      StructField(Region, StringType),
+      StructField(ModificationDate, DateType),
+      StructField(Operation, StringType),
+      StructField(Pool, BooleanType),
+      StructField(Description, StringType),
+      StructField(Terrace, BooleanType),
+      StructField(Type, StringType),
+      StructField(ExtractedDate, DateType),
+      StructField(Year, IntegerType),
+      StructField(Month, IntegerType),
+      StructField(Day, IntegerType)
+    )
   )
 
-  object sources {
-    val sanitedWallapopProperties: DataFrame = readSanited("wallapop", "properties").filter(ymdCondition(date))
-    val sanitedProvinces: DataFrame = readSanited("opendatasoft", "provincias-espanolas")
+  private object sources {
+    val processedWallapopProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES.getName).filter(ymdCondition(date))
+    val processedFotocasaProperties: DataFrame = readProcessed(ProcessedTables.FOTOCASA_PROPERTIES.getName).filter(ymdCondition(date))
   }
 
   override protected def build(): DataFrame = {
-    val result = sources.sanitedWallapopProperties
-      .withColumn("province_code", (col("location__postal_code").cast(IntegerType)/1000).cast(IntegerType))
-      .join(sources.sanitedProvinces.as("p"), col("province_code") === sources.sanitedProvinces("codigo").cast(IntegerType), "left")
-      .withColumn(City, col("location__city"))
-      .withColumn(Country, col("location__country_code"))
-      .withColumn(PostalCode, col("location__postal_code"))
-      .withColumn(Province, col("p.provincia"))
-      .withColumn(Region, col("p.ccaa"))
-      .withColumn(Description, col("storytelling"))
-      .withColumn(Link, concat(lit("https://es.wallapop.com/item/"), col("web_slug")))
-      .withColumn(CreationDate, to_date(col(CreationDate)))
-      .withColumn(ModificationDate, to_date(col(ModificationDate)))
-      .withColumn(ExtractedDate, to_date(col("date")))
-      .orderBy(Id)
-      .dropDuplicates(Title, Price, Description, Surface, Operation, Year, Month, Day)
-    result
+    sources.processedFotocasaProperties.union(sources.processedWallapopProperties)
   }
 
 }

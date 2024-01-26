@@ -67,20 +67,22 @@ object CleanerMetadata {
 
   private def pisoFotocasa: CleanerMetadata = CleanerMetadata(
     source ="fotocasa",
-    datasetName = "piso_fotocasa",
+    datasetName = "properties",
     fields = Seq(
+      CleanerMetadataField("address", StringType),
+      CleanerMetadataField("description", StringType),
+      CleanerMetadataField("features__bathrooms", IntegerType),
+      CleanerMetadataField("features__floor", IntegerType),
+      CleanerMetadataField("features__rooms", IntegerType),
+      CleanerMetadataField("features__size", IntegerType),
       CleanerMetadataField("id", IntegerType),
-      CleanerMetadataField("title", StringType),
       CleanerMetadataField("price", IntegerType),
-      CleanerMetadataField("rooms", IntegerType),
-      CleanerMetadataField("size", IntegerType),
-      CleanerMetadataField("floor", IntegerType),
-      CleanerMetadataField("bathrooms", IntegerType),
-      CleanerMetadataField("agent", StringType),
+      CleanerMetadataField("timeAgo", IntegerType),
+      CleanerMetadataField("title", StringType),
       CleanerMetadataField("url", StringType),
       CleanerMetadataField("city", StringType),
-      CleanerMetadataField("source", StringType),
-      CleanerMetadataField("timeAgo", IntegerType),
+      CleanerMetadataField("operation", StringType),
+      CleanerMetadataField("type", StringType)
     )
   )
 

@@ -7,7 +7,7 @@ import java.time.LocalDate
 
 case class ApartmentInvestmentAnalysis(dateOption: Option[LocalDate])(implicit spark: SparkSession) extends Processor(dateOption.get) {
   override protected val datasetName: ProcessedTables = ProcessedTables.APARTMENT_INVESTMENT_ANALYSIS
-  override protected val finalColumns: Array[String] = ???
+  override protected val finalColumns: Array[String] = Array("") // TODO: fill this
 
   private val properties = dateOption match {
     case Some(date) => readProcessed("properties").filter(ymdCondition(date))
