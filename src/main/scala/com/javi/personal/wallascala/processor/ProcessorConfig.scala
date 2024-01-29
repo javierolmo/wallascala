@@ -5,7 +5,9 @@ import scopt.{OParser, OParserBuilder}
 
 import java.time.LocalDate
 
-case class ProcessorConfig(datasetName: String, date: LocalDate)
+case class ProcessorConfig(datasetName: String, date: LocalDate) {
+  def this(processedTable: ProcessedTables, date: LocalDate) = this(processedTable.toString, date)
+}
 
 object ProcessorConfig {
 

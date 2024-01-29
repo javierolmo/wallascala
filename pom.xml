@@ -6,7 +6,7 @@
 
     <groupId>com.javi.personal</groupId>
     <artifactId>wallascala</artifactId>
-    <version>0.2.1</version>
+    <version>0.2.2</version>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -14,6 +14,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <scala.version>2.12.6</scala.version>
         <scala.compat.version>2.12</scala.compat.version>
+        <spark.version>3.1.2</spark.version>
     </properties>
 
     <distributionManagement>
@@ -59,7 +60,7 @@
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_${scala.compat.version}</artifactId>
-            <version>3.1.2</version>
+            <version>${spark.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -67,7 +68,7 @@
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql_${scala.compat.version}</artifactId>
-            <version>3.1.2</version>
+            <version>${spark.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -115,6 +116,15 @@
             <version>12.22.2</version>
             <scope>provided</scope>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-hive -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-hive_${scala.compat.version}</artifactId>
+            <version>${spark.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
 
     </dependencies>
 

@@ -1,7 +1,7 @@
 package com.javi.personal.wallascala.cleaner.model
 
 import org.apache.spark.sql.Column
-import org.apache.spark.sql.functions.from_unixtime
+import org.apache.spark.sql.functions.{from_unixtime, to_timestamp}
 import org.apache.spark.sql.types._
 
 object CleanerMetadata {
@@ -23,7 +23,7 @@ object CleanerMetadata {
       CleanerMetadataField("bathrooms", IntegerType),
       CleanerMetadataField("category_id", IntegerType, equalTo = Some(200)),
       CleanerMetadataField("condition", StringType),
-      CleanerMetadataField("creation_date", TimestampType, transform = Some(fromMillis)),
+      CleanerMetadataField("creation_date", TimestampType, transform = Some(to_timestamp)),
       CleanerMetadataField("currency", StringType),
       CleanerMetadataField("distance", DoubleType),
       CleanerMetadataField("elevator", BooleanType),
@@ -41,7 +41,7 @@ object CleanerMetadata {
       CleanerMetadataField("location__city", StringType),
       CleanerMetadataField("location__country_code", StringType),
       CleanerMetadataField("location__postal_code", IntegerType),
-      CleanerMetadataField("modification_date", TimestampType, transform = Some(fromMillis)),
+      CleanerMetadataField("modification_date", TimestampType, transform = Some(to_timestamp)),
       CleanerMetadataField("operation", StringType),
       CleanerMetadataField("pool", BooleanType),
       CleanerMetadataField("price", DoubleType),

@@ -37,7 +37,7 @@ case class FotocasaProperties(date: LocalDate)(implicit spark: SparkSession) ext
       .withColumn(Description, lit(null))
       .withColumn(Terrace, lit(null))
       .withColumn(ExtractedDate, lit(null))
-      .dropDuplicates(Title, Price, Description, Surface, Operation, Year, Month, Day)
+      .dropDuplicates(Title, Price, Description, Surface, Operation)
 
   }
 
