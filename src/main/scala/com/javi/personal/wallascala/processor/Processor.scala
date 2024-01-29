@@ -26,7 +26,7 @@ abstract class Processor(date: LocalDate)(implicit spark: SparkSession) extends 
     val dataFrameWithCoalesce = if (coalesce.isDefined) dataFrame.coalesce(coalesce.get) else dataFrame
 
     // Write dataframe
-    val cachedDF = dataFrameWithCoalesce.cache()
+    val cachedDF = if (writers.size > 1) dataFrameWithCoalesce.cache() else dataFrameWithCoalesce
     writers.foreach(writer => writer.write(cachedDF)(spark))
   }
 

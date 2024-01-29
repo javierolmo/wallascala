@@ -31,8 +31,7 @@ class WallapopProperties(date: LocalDate)(implicit spark: SparkSession) extends 
       .withColumn(CreationDate, to_date(col(CreationDate)))
       .withColumn(ModificationDate, to_date(col(ModificationDate)))
       .withColumn(ExtractedDate, to_date(col("date")))
-      .orderBy(Id)
-      .dropDuplicates(Title, Price, Description, Surface, Operation, Year, Month, Day)
+      .dropDuplicates(Title, Price, Description, Surface, Operation)
   }
 
 }
