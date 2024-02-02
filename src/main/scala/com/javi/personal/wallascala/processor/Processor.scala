@@ -16,7 +16,10 @@ abstract class Processor(date: LocalDate)(implicit spark: SparkSession) extends 
   protected val finalColumns: Array[String] = Array.empty
   protected val schema: StructType = StructType(Seq())
   protected def writers: Seq[SparkWriter] = Seq(
-    SparkFileWriter(PathBuilder.buildProcessedPath(datasetName.getName).cd(date).url)(spark)
+    SparkFileWriter(
+      path = PathBuilder.buildProcessedPath(datasetName.getName).cd(date).url,
+      hiveTable = Some(s"processed.$datasetName")
+    )
   )
   protected def build(): DataFrame
 
