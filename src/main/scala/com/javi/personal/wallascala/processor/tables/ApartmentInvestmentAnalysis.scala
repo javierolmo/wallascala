@@ -10,12 +10,12 @@ case class ApartmentInvestmentAnalysis(dateOption: Option[LocalDate])(implicit s
   override protected val finalColumns: Array[String] = Array("") // TODO: fill this
 
   private val properties = dateOption match {
-    case Some(date) => readProcessed("properties").filter(ymdCondition(date))
+    case Some(date) => readProcessed("properties", date)
     case None => readProcessed("properties")
   }
 
   private val postalCodeAnalysis = dateOption match {
-    case Some(date) => readProcessed("properties").filter(ymdCondition(date))
+    case Some(date) => readProcessed("properties", date)
     case None => readProcessed("properties")
   }
 

@@ -12,7 +12,7 @@ case class FotocasaProperties(date: LocalDate)(implicit spark: SparkSession) ext
   override protected val datasetName: ProcessedTables = ProcessedTables.FOTOCASA_PROPERTIES
 
   private object sources {
-    val sanitedFotocasaProperties: DataFrame = readSanited("fotocasa", "properties").filter(ymdCondition(date))
+    val sanitedFotocasaProperties: DataFrame = readSanited("fotocasa", "properties", date)
   }
 
   override protected def build(): DataFrame = {
