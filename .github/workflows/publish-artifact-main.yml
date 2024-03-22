@@ -1,0 +1,30 @@
+  name: Deploy to GitHub Packages
+
+  on:
+    push:
+      branches:
+        - main
+
+  jobs:
+    deploy:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v2
+
+        - name: Set up JDK
+          uses: actions/setup-java@v2
+          with:
+            java-version: '8'
+            distribution: 'temurin'
+
+        - name: Execute tests
+          run: mvn package -DskipTests
+
+        - uses: bacongobbler/azure-blob-storage-upload@main
+          with:
+            source_dir: 'target'
+            container_name: 'artifacts'
+            connection_string: ${{ secrets.AZURE_BLOBSTORAGE_CONNECTION_STRING }}
+            overwrite: 'true'
+            extra_args: '--pattern *jar-with-dependencies.jar'
