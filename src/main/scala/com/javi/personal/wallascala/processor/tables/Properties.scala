@@ -36,16 +36,13 @@ class Properties(date: LocalDate)(implicit spark: SparkSession) extends Processo
       StructField(Description, StringType),
       StructField(Terrace, BooleanType),
       StructField(Type, StringType),
-      StructField(ExtractedDate, DateType),
-      StructField(Year, IntegerType),
-      StructField(Month, IntegerType),
-      StructField(Day, IntegerType)
+      StructField(ExtractedDate, DateType)
     )
   )
 
   private object sources {
-    val processedWallapopProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES.getName).filter(ymdCondition(date))
-    val processedFotocasaProperties: DataFrame = readProcessed(ProcessedTables.FOTOCASA_PROPERTIES.getName).filter(ymdCondition(date))
+    val processedWallapopProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES.getName, date)
+    val processedFotocasaProperties: DataFrame = readProcessed(ProcessedTables.FOTOCASA_PROPERTIES.getName, date)
   }
 
   override protected def build(): DataFrame = {
@@ -80,7 +77,4 @@ object Properties {
   val Terrace = "terrace"
   val Type = "type"
   val ExtractedDate = "extracted_date"
-  val Year = "year"
-  val Month = "month"
-  val Day = "day"
 }

@@ -5,9 +5,7 @@ import scopt.{OParser, OParserBuilder}
 
 import java.time.LocalDate
 
-case class ProcessorConfig(datasetName: String, date: LocalDate) {
-  def this(processedTable: ProcessedTables, date: LocalDate) = this(processedTable.toString, date)
-}
+case class ProcessorConfig(datasetName: String, date: LocalDate)
 
 object ProcessorConfig {
 
@@ -28,15 +26,19 @@ object ProcessorConfig {
       opt[String]('d', "date")
         .required()
         .action((x, c) => c.copy(date = LocalDate.parse(x)))
-        .text("date to clean"),
+        .text("date to process in format yyyy-MM-dd"),
       help("help").text("prints this usage text")
     )
   }
 
   def parse(args: Array[String]): ProcessorConfig =
-    OParser.parse(parser, args, ProcessorConfig(null, null)) match {
+    OParser.parse(parser, args, dummy) match {
       case Some(config) => config
       case None => throw WallaScalaException(f"Could not parse arguments: [${args.mkString(", ")}]")
     }
+
+  def apply(processedTable: ProcessedTables, date: LocalDate): ProcessorConfig = new ProcessorConfig(processedTable.name(), date)
+
+  private def dummy: ProcessorConfig = ProcessorConfig("", LocalDate.now)
 
 }
