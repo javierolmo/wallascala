@@ -39,6 +39,7 @@ object Processor {
 
   def build(config: ProcessorConfig)(implicit spark: SparkSession): Processor = {
     config.datasetName match {
+      case "pisos_properties" => PisosProperties(config.date)
       case "fotocasa_properties" => FotocasaProperties(config.date)
       case "wallapop_properties" => new WallapopProperties(config.date)
       case "properties" => new Properties(config.date)

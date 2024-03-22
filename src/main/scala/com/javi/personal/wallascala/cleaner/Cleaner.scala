@@ -9,7 +9,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 object Cleaner {
 
   def execute(config: CleanerConfig)(implicit spark: SparkSession): Unit = {
-    val cleanerMetadata = CleanerMetadata.findByCatalogItem(config.source, config.datasetName).get
+    val cleanerMetadata = CleanerMetadata.findByCatalogItem(config.source, config.datasetName).getOrElse(throw new IllegalArgumentException(s"No metadata found for ${config.source} and ${config.datasetName}"))
     val rawDF: DataFrame = SparkFileReader.readRaw(config.source, config.datasetName, config.date)
 
     val result = validate(rawDF, cleanerMetadata)
