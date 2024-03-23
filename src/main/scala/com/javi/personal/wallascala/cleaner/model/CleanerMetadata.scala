@@ -7,19 +7,18 @@ import org.apache.spark.sql.types._
 object CleanerMetadata {
 
   private val metadata: Seq[CleanerMetadata] = Seq(
-    pisoWallapop,
-    pisoFotocasa,
+    wallapop_properties,
+    fotocasaProperties,
     provinciasEspanolas,
     pisosProperties
   )
 
-  def findByCatalogItem(source: String, datasetName: String): Option[CleanerMetadata] = {
-    metadata.find(metadata => metadata.datasetName == datasetName && metadata.source == source)
-  }
+  def findByCatalogItem(id: String): Option[CleanerMetadata] = metadata.find(metadata => metadata.id == id)
 
-  private def pisoWallapop: CleanerMetadata = CleanerMetadata(
-    source = "wallapop",
-    datasetName = "properties",
+  def all(): Seq[String] = metadata.map(metadata => metadata.id)
+
+  private def wallapop_properties: CleanerMetadata = CleanerMetadata(
+    id = "wallapop_properties",
     fields = Seq(
       CleanerMetadataField("bathrooms", IntegerType),
       CleanerMetadataField("category_id", IntegerType, equalTo = Some(200)),
@@ -70,9 +69,8 @@ object CleanerMetadata {
 
   private def removeLineBreaks(inputColumn: Column): Column = regexp_replace(inputColumn, "\n", "")
 
-  private def pisoFotocasa: CleanerMetadata = CleanerMetadata(
-    source ="fotocasa",
-    datasetName = "properties",
+  private def fotocasaProperties: CleanerMetadata = CleanerMetadata(
+    id = "fotocasa_properties",
     fields = Seq(
       CleanerMetadataField("address", StringType),
       CleanerMetadataField("description", StringType),
@@ -92,8 +90,7 @@ object CleanerMetadata {
   )
 
   private def pisosProperties: CleanerMetadata = CleanerMetadata(
-    source ="pisos",
-    datasetName = "properties",
+    id = "pisos_properties",
     fields = Seq(
       CleanerMetadataField("id", StringType),
       CleanerMetadataField("title", StringType, transform = Some(removeLineBreaks)),
@@ -112,8 +109,7 @@ object CleanerMetadata {
   )
 
   private def provinciasEspanolas: CleanerMetadata = CleanerMetadata(
-    source = "opendatasoft",
-    datasetName = "provincias-espanolas",
+    id = "opendatasoft_provincias-espanolas",
     fields = Seq(
       CleanerMetadataField("ccaa", StringType),
       CleanerMetadataField("cod_ccaa", IntegerType),
@@ -136,7 +132,6 @@ object CleanerMetadata {
 }
 
 case class CleanerMetadata(
-  source: String,
-  datasetName: String,
+  id: String,
   fields: Seq[CleanerMetadataField]
 )
