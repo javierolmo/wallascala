@@ -17,8 +17,8 @@
         - name: Set up JDK
           uses: actions/setup-java@v2
           with:
-            java-version: '8'
-            distribution: 'temurin'
+            java-version: '11'
+            distribution: 'correto'
 
         - name: Execute tests
           run: mvn package -DskipTests
