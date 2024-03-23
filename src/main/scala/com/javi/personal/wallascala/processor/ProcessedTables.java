@@ -2,6 +2,7 @@ package com.javi.personal.wallascala.processor;
 
 public enum ProcessedTables {
     FOTOCASA_PROPERTIES("fotocasa_properties"),
+    PISOS_PROPERTIES("pisos_properties"),
     WALLAPOP_PROPERTIES("wallapop_properties"),
     PROPERTIES("properties"),
     PRICE_CHANGES("price_changes"),

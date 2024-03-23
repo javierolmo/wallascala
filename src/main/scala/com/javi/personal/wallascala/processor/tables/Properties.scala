@@ -43,10 +43,13 @@ class Properties(date: LocalDate)(implicit spark: SparkSession) extends Processo
   private object sources {
     val processedWallapopProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES.getName, date)
     val processedFotocasaProperties: DataFrame = readProcessed(ProcessedTables.FOTOCASA_PROPERTIES.getName, date)
+    val processedPisosProperties: DataFrame = readProcessed(ProcessedTables.PISOS_PROPERTIES.getName, date)
   }
 
   override protected def build(): DataFrame = {
-    sources.processedFotocasaProperties.union(sources.processedWallapopProperties)
+    sources.processedFotocasaProperties
+      .union(sources.processedWallapopProperties)
+      .union(sources.processedPisosProperties)
   }
 
 }

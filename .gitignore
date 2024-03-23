@@ -4,3 +4,4 @@ project
 target
 wallascala.iml
 src/operations
+spark-warehouse
