@@ -1,4 +1,4 @@
-  name: Deploy to GitHub Packages
+  name: Deploy to Azure Blob Storage
 
   on:
     push:
@@ -20,10 +20,11 @@
             java-version: '11'
             distribution: 'corretto'
 
-        - name: Execute tests
+        - name: Build jar with dependencies
           run: mvn package -DskipTests
 
-        - uses: bacongobbler/azure-blob-storage-upload@main
+        - name: Deploy to Azure Blob Storage
+          uses: bacongobbler/azure-blob-storage-upload@main
           with:
             source_dir: 'target'
             container_name: 'artifacts-feature'
