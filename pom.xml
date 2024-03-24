@@ -121,6 +121,14 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Scalamock -->
+        <dependency>
+            <groupId>org.scalamock</groupId>
+            <artifactId>scalamock_${scala.compat.version}</artifactId>
+            <version>5.1.0</version>
+            <scope>test</scope>
+        </dependency>
+
 
     </dependencies>
 
