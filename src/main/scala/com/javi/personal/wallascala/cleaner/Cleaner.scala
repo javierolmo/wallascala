@@ -9,13 +9,13 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 object Cleaner {
 
   def execute(config: CleanerConfig)(implicit spark: SparkSession): Unit = {
-    val cleanerMetadata = CleanerMetadata.findByCatalogItem(config.source, config.datasetName).getOrElse(throw new IllegalArgumentException(s"No metadata found for ${config.source} and ${config.datasetName}"))
-    val rawDF: DataFrame = SparkFileReader.readRaw(config.source, config.datasetName, config.date)
+    val cleanerMetadata = CleanerMetadata.findByCatalogItem(config.id).getOrElse(throw new IllegalArgumentException(s"No metadata found for id '${config.id}'"))
+    val rawDF: DataFrame = SparkFileReader.read(config.sourcePath)
 
     val result = validate(rawDF, cleanerMetadata)
 
-    SparkFileWriter.writeSanited(result.validRecords, config.source, config.datasetName, config.date)
-    SparkFileWriter.writeExcluded(result.invalidRecords, config.source, config.datasetName, config.date)
+    SparkFileWriter.write(result.validRecords, config.targetPath)
+    SparkFileWriter.write(result.invalidRecords, config.targetPathExclusions)
   }
 
   private def validate(inputDF: DataFrame, metadata: CleanerMetadata): ValidationResult = {
