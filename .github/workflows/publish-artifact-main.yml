@@ -19,7 +19,7 @@
             distribution: 'corretto'
 
         - name: Build jar with dependencies
-          run: mvn package -DskipTests
+          run: mvn package
 
         - name: Deploy to Azure Blob Storage
           uses: bacongobbler/azure-blob-storage-upload@main
