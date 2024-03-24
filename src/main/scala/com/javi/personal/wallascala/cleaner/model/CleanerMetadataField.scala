@@ -4,7 +4,7 @@ import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.{lit, struct, typedLit, when}
 import org.apache.spark.sql.types._
 
-case class CleanerMetadataField(name: String, dataType: DataType, transform: Option[Column => Column] = Option.empty, defaultValue: Option[Any] = Option.empty, equalTo: Option[AnyVal] = Option.empty) {
+case class CleanerMetadataField(name: String, dataType: DataType, transform: Option[Column => Column] = Option.empty, defaultValue: Option[Any] = Option.empty) {
 
   def genericFieldCleaner(inputField: Column): Column = {
     val defaultedField = defaultValue.map(value => when(inputField.isNull, lit(value)).otherwise(inputField)).getOrElse(inputField)

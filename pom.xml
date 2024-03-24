@@ -6,7 +6,7 @@
 
     <groupId>com.javi.personal</groupId>
     <artifactId>wallascala</artifactId>
-    <version>0.5.0</version>
+    <version>0.5.1</version>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -15,6 +15,7 @@
         <scala.version>2.12.6</scala.version>
         <scala.compat.version>2.12</scala.compat.version>
         <spark.version>3.5.0</spark.version>
+        <jackson.version>2.17.0</jackson.version>
     </properties>
 
     <distributionManagement>
@@ -49,13 +50,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.33</version>
-        </dependency>
-
         <!-- Spark Core -->
         <dependency>
             <groupId>org.apache.spark</groupId>
@@ -88,20 +82,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Play JSON -->
-        <dependency>
-            <groupId>com.typesafe.play</groupId>
-            <artifactId>play-json_${scala.compat.version}</artifactId>
-            <version>2.9.3</version>
-        </dependency>
-
-        <!-- Scalaj-HTTP -->
-        <dependency>
-            <groupId>org.scalaj</groupId>
-            <artifactId>scalaj-http_${scala.compat.version}</artifactId>
-            <version>2.4.2</version>
-        </dependency>
-
         <!-- https://mvnrepository.com/artifact/com.github.scopt/scopt -->
         <dependency>
             <groupId>com.github.scopt</groupId>
@@ -124,6 +104,23 @@
             <version>${spark.version}</version>
             <scope>provided</scope>
         </dependency>
+
+        <!-- Jackson Core -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${jackson.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Jackson Annotations -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${jackson.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
 
     </dependencies>
 
@@ -154,24 +151,11 @@
             </plugin>
 
             <!-- Test -->
-            <!--
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.21.0</version>
-                <configuration>
-                    <skipTests>true</skipTests>
-                </configuration>
-            </plugin>
-            -->
-
-            <!-- Test -->
             <plugin>
                 <groupId>org.scalatest</groupId>
                 <artifactId>scalatest-maven-plugin</artifactId>
                 <version>2.0.0</version>
                 <configuration>
-                    <tagsToExclude>Operation</tagsToExclude>
                     <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
                     <filereports>TestSuiteReport.txt</filereports>
                 </configuration>

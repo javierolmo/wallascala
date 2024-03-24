@@ -21,7 +21,7 @@ object CleanerMetadata {
     id = "wallapop_properties",
     fields = Seq(
       CleanerMetadataField("bathrooms", IntegerType),
-      CleanerMetadataField("category_id", IntegerType, equalTo = Some(200)),
+      CleanerMetadataField("category_id", IntegerType),
       CleanerMetadataField("condition", StringType),
       CleanerMetadataField("creation_date", TimestampType, transform = Some(to_timestamp)),
       CleanerMetadataField("currency", StringType),
@@ -63,12 +63,6 @@ object CleanerMetadata {
     )
   )
 
-  private def fromMillis(inputColumn: Column): Column = from_unixtime(inputColumn / 1000)
-
-  private def removeNonNumeric(inputColumn: Column): Column = regexp_replace(inputColumn, "[^0-9]", "")
-
-  private def removeLineBreaks(inputColumn: Column): Column = regexp_replace(inputColumn, "\n", "")
-
   private def fotocasaProperties: CleanerMetadata = CleanerMetadata(
     id = "fotocasa_properties",
     fields = Seq(
@@ -93,15 +87,15 @@ object CleanerMetadata {
     id = "pisos_properties",
     fields = Seq(
       CleanerMetadataField("id", StringType),
-      CleanerMetadataField("title", StringType, transform = Some(removeLineBreaks)),
-      CleanerMetadataField("price", IntegerType, transform = Some(removeNonNumeric)),
+      CleanerMetadataField("title", StringType, transform = Some(Transformations.removeLineBreaks)),
+      CleanerMetadataField("price", IntegerType, transform = Some(Transformations.removeNonNumeric)),
       CleanerMetadataField("url", StringType),
-      CleanerMetadataField("description", StringType, transform = Some(removeLineBreaks)),
+      CleanerMetadataField("description", StringType, transform = Some(Transformations.removeLineBreaks)),
       CleanerMetadataField("address", StringType),
-      CleanerMetadataField("rooms", IntegerType, transform = Some(removeNonNumeric)),
-      CleanerMetadataField("bathrooms", IntegerType, transform = Some(removeNonNumeric)),
-      CleanerMetadataField("size", IntegerType, transform = Some(removeNonNumeric)),
-      CleanerMetadataField("floor", IntegerType, transform = Some(removeNonNumeric)),
+      CleanerMetadataField("rooms", IntegerType, transform = Some(Transformations.removeNonNumeric)),
+      CleanerMetadataField("bathrooms", IntegerType, transform = Some(Transformations.removeNonNumeric)),
+      CleanerMetadataField("size", IntegerType, transform = Some(Transformations.removeNonNumeric)),
+      CleanerMetadataField("floor", IntegerType, transform = Some(Transformations.removeNonNumeric)),
       CleanerMetadataField("city", StringType),
       CleanerMetadataField("operation", StringType),
       CleanerMetadataField("type", StringType)
