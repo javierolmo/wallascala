@@ -1,11 +1,10 @@
 package com.javi.personal.wallascala.cleaner
 
 import com.javi.personal.wallascala.WallaScalaException
+import com.javi.personal.wallascala.cleaner.model.CleanerMetadata
 import scopt.{OParser, OParserBuilder}
 
-import java.time.LocalDate
-
-case class CleanerConfig(source: String, datasetName: String, date: Option[LocalDate] = Option.empty)
+case class CleanerConfig(sourcePath: String, targetPath: String, targetPathExclusions: String, id: String)
 
 object CleanerConfig {
 
@@ -19,26 +18,32 @@ object CleanerConfig {
     OParser.sequence(
       programName(PROGRAM_NAME),
       head(PROGRAM_NAME, VERSION),
-      opt[String]('s', "source")
+      opt[String]('s', "sourcePath")
         .required()
-        .action((x, c) => c.copy(source = x))
-        .text("source to clean"),
-      opt[String]('n', "datasetName")
+        .action((x, c) => c.copy(sourcePath = x))
+        .text("source path of the dataset to clean"),
+      opt[String]('t', "targetPath")
         .required()
-        .action((x, c) => c.copy(datasetName = x))
-        .text("dataset name to clean"),
-      opt[String]('d', "date")
-        .optional()
-        .action((x, c) => c.copy(date = Some(LocalDate.parse(x))))
-        .text("date to clean"),
+        .action((x, c) => c.copy(targetPath = x))
+        .text("target path for the cleaned dataset"),
+      opt[String]('e', "targetPathExclusions")
+        .required()
+        .action((x, c) => c.copy(targetPathExclusions = x))
+        .text("target path for the cleaned dataset exclusions"),
+      opt[String]('i', "id")
+        .required()
+        .action((x, c) => c.copy(id = x))
+        .text(s"id of the cleaner metadata to use [${CleanerMetadata.all().mkString(", ")}]"),
       help("help").text("prints this usage text")
     )
   }
 
   def parse(args: Array[String]): CleanerConfig =
-    OParser.parse(parser, args, CleanerConfig(null, null)) match {
+    OParser.parse(parser, args, dummy) match {
       case Some(config) => config
       case None => throw WallaScalaException(f"Could not parse arguments: [${args.mkString(", ")}]")
     }
+
+  def dummy: CleanerConfig = CleanerConfig(null, null, null, null)
 
 }
