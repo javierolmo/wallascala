@@ -1,6 +1,6 @@
 package com.javi.personal.wallascala.cleaner
 
-import com.javi.personal.wallascala.cleaner.model.{CleanerMetadata, CleanerMetadataField, ValidationResult}
+import com.javi.personal.wallascala.cleaner.model.{CleanerMetadata, ValidationResult}
 import com.javi.personal.wallascala.utils.reader.SparkFileReader
 import com.javi.personal.wallascala.utils.writers.SparkFileWriter
 import org.apache.spark.sql.functions.col
@@ -20,8 +20,8 @@ object Cleaner {
 
   private def validate(inputDF: DataFrame, metadata: CleanerMetadata): ValidationResult = {
 
-    def cleanField(df: DataFrame, field: CleanerMetadataField): DataFrame = {
-      df.withColumn(field.name, field.genericFieldCleaner(col(field.name)))
+    def cleanField(df: DataFrame, field: FieldCleaner): DataFrame = {
+      df.withColumn(field.name, field.clean(col(field.name)))
     }
 
     val dfCleaned = metadata.fields

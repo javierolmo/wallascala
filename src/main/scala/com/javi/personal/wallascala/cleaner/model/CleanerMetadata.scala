@@ -1,5 +1,6 @@
 package com.javi.personal.wallascala.cleaner.model
 
+import com.javi.personal.wallascala.cleaner.FieldCleaner
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.{from_unixtime, regexp_replace, to_timestamp}
 import org.apache.spark.sql.types._
@@ -20,112 +21,112 @@ object CleanerMetadata {
   private def wallapop_properties: CleanerMetadata = CleanerMetadata(
     id = "wallapop_properties",
     fields = Seq(
-      CleanerMetadataField("bathrooms", IntegerType),
-      CleanerMetadataField("category_id", IntegerType),
-      CleanerMetadataField("condition", StringType),
-      CleanerMetadataField("creation_date", TimestampType, transform = Some(to_timestamp)),
-      CleanerMetadataField("currency", StringType),
-      CleanerMetadataField("distance", DoubleType),
-      CleanerMetadataField("elevator", BooleanType),
-      CleanerMetadataField("favorited", BooleanType),
-      CleanerMetadataField("flags__banned", BooleanType),
-      CleanerMetadataField("flags__expired", BooleanType),
-      CleanerMetadataField("flags__onhold", BooleanType),
-      CleanerMetadataField("flags__pending", BooleanType),
-      CleanerMetadataField("flags__reserved", BooleanType),
-      CleanerMetadataField("flags__sold", BooleanType),
-      CleanerMetadataField("garage", BooleanType),
-      CleanerMetadataField("garden", BooleanType),
-      CleanerMetadataField("id", StringType),
-      CleanerMetadataField("images", StringType),
-      CleanerMetadataField("location__city", StringType),
-      CleanerMetadataField("location__country_code", StringType),
-      CleanerMetadataField("location__postal_code", IntegerType),
-      CleanerMetadataField("modification_date", TimestampType, transform = Some(to_timestamp)),
-      CleanerMetadataField("operation", StringType),
-      CleanerMetadataField("pool", BooleanType),
-      CleanerMetadataField("price", DoubleType),
-      CleanerMetadataField("rooms", IntegerType),
-      CleanerMetadataField("storytelling", StringType),
-      CleanerMetadataField("surface", IntegerType),
-      CleanerMetadataField("terrace", BooleanType),
-      CleanerMetadataField("title", StringType),
-      CleanerMetadataField("type", StringType),
-      CleanerMetadataField("user__id", StringType),
-      CleanerMetadataField("visibility_flags__boosted", BooleanType),
-      CleanerMetadataField("visibility_flags__bumped", BooleanType),
-      CleanerMetadataField("visibility_flags__country_bumped", BooleanType),
-      CleanerMetadataField("visibility_flags__highlighted", BooleanType),
-      CleanerMetadataField("visibility_flags__urgent", BooleanType),
-      CleanerMetadataField("web_slug", StringType),
-      CleanerMetadataField("source", StringType),
-      CleanerMetadataField("date", StringType),
+      FieldCleaner("bathrooms", IntegerType),
+      FieldCleaner("category_id", IntegerType),
+      FieldCleaner("condition", StringType),
+      FieldCleaner("creation_date", TimestampType, transform = Some(to_timestamp)),
+      FieldCleaner("currency", StringType),
+      FieldCleaner("distance", DoubleType),
+      FieldCleaner("elevator", BooleanType),
+      FieldCleaner("favorited", BooleanType),
+      FieldCleaner("flags__banned", BooleanType),
+      FieldCleaner("flags__expired", BooleanType),
+      FieldCleaner("flags__onhold", BooleanType),
+      FieldCleaner("flags__pending", BooleanType),
+      FieldCleaner("flags__reserved", BooleanType),
+      FieldCleaner("flags__sold", BooleanType),
+      FieldCleaner("garage", BooleanType),
+      FieldCleaner("garden", BooleanType),
+      FieldCleaner("id", StringType),
+      FieldCleaner("images", StringType),
+      FieldCleaner("location__city", StringType),
+      FieldCleaner("location__country_code", StringType),
+      FieldCleaner("location__postal_code", IntegerType),
+      FieldCleaner("modification_date", TimestampType, transform = Some(to_timestamp)),
+      FieldCleaner("operation", StringType),
+      FieldCleaner("pool", BooleanType),
+      FieldCleaner("price", DoubleType),
+      FieldCleaner("rooms", IntegerType),
+      FieldCleaner("storytelling", StringType),
+      FieldCleaner("surface", IntegerType),
+      FieldCleaner("terrace", BooleanType),
+      FieldCleaner("title", StringType),
+      FieldCleaner("type", StringType),
+      FieldCleaner("user__id", StringType),
+      FieldCleaner("visibility_flags__boosted", BooleanType),
+      FieldCleaner("visibility_flags__bumped", BooleanType),
+      FieldCleaner("visibility_flags__country_bumped", BooleanType),
+      FieldCleaner("visibility_flags__highlighted", BooleanType),
+      FieldCleaner("visibility_flags__urgent", BooleanType),
+      FieldCleaner("web_slug", StringType),
+      FieldCleaner("source", StringType),
+      FieldCleaner("date", StringType),
     )
   )
 
   private def fotocasaProperties: CleanerMetadata = CleanerMetadata(
     id = "fotocasa_properties",
     fields = Seq(
-      CleanerMetadataField("address", StringType),
-      CleanerMetadataField("description", StringType),
-      CleanerMetadataField("features__bathrooms", IntegerType),
-      CleanerMetadataField("features__floor", IntegerType),
-      CleanerMetadataField("features__rooms", IntegerType),
-      CleanerMetadataField("features__size", IntegerType),
-      CleanerMetadataField("id", IntegerType),
-      CleanerMetadataField("price", IntegerType),
-      CleanerMetadataField("timeAgo", IntegerType),
-      CleanerMetadataField("title", StringType),
-      CleanerMetadataField("url", StringType),
-      CleanerMetadataField("city", StringType),
-      CleanerMetadataField("operation", StringType),
-      CleanerMetadataField("type", StringType)
+      FieldCleaner("address", StringType),
+      FieldCleaner("description", StringType),
+      FieldCleaner("features__bathrooms", IntegerType),
+      FieldCleaner("features__floor", IntegerType),
+      FieldCleaner("features__rooms", IntegerType),
+      FieldCleaner("features__size", IntegerType),
+      FieldCleaner("id", IntegerType),
+      FieldCleaner("price", IntegerType),
+      FieldCleaner("timeAgo", IntegerType),
+      FieldCleaner("title", StringType),
+      FieldCleaner("url", StringType),
+      FieldCleaner("city", StringType),
+      FieldCleaner("operation", StringType),
+      FieldCleaner("type", StringType)
     )
   )
 
   private def pisosProperties: CleanerMetadata = CleanerMetadata(
     id = "pisos_properties",
     fields = Seq(
-      CleanerMetadataField("id", StringType),
-      CleanerMetadataField("title", StringType, transform = Some(Transformations.removeLineBreaks)),
-      CleanerMetadataField("price", IntegerType, transform = Some(Transformations.removeNonNumeric)),
-      CleanerMetadataField("url", StringType),
-      CleanerMetadataField("description", StringType, transform = Some(Transformations.removeLineBreaks)),
-      CleanerMetadataField("address", StringType),
-      CleanerMetadataField("rooms", IntegerType, transform = Some(Transformations.removeNonNumeric)),
-      CleanerMetadataField("bathrooms", IntegerType, transform = Some(Transformations.removeNonNumeric)),
-      CleanerMetadataField("size", IntegerType, transform = Some(Transformations.removeNonNumeric)),
-      CleanerMetadataField("floor", IntegerType, transform = Some(Transformations.removeNonNumeric)),
-      CleanerMetadataField("city", StringType),
-      CleanerMetadataField("operation", StringType),
-      CleanerMetadataField("type", StringType)
+      FieldCleaner("id", StringType),
+      FieldCleaner("title", StringType, transform = Some(Transformations.removeLineBreaks)),
+      FieldCleaner("price", IntegerType, transform = Some(Transformations.removeNonNumeric)),
+      FieldCleaner("url", StringType),
+      FieldCleaner("description", StringType, transform = Some(Transformations.removeLineBreaks)),
+      FieldCleaner("address", StringType),
+      FieldCleaner("rooms", IntegerType, transform = Some(Transformations.removeNonNumeric)),
+      FieldCleaner("bathrooms", IntegerType, transform = Some(Transformations.removeNonNumeric)),
+      FieldCleaner("size", IntegerType, transform = Some(Transformations.removeNonNumeric)),
+      FieldCleaner("floor", IntegerType, transform = Some(Transformations.removeNonNumeric)),
+      FieldCleaner("city", StringType),
+      FieldCleaner("operation", StringType),
+      FieldCleaner("type", StringType)
     )
   )
 
   private def provinciasEspanolas: CleanerMetadata = CleanerMetadata(
     id = "opendatasoft_provincias-espanolas",
     fields = Seq(
-      CleanerMetadataField("ccaa", StringType),
-      CleanerMetadataField("cod_ccaa", IntegerType),
-      CleanerMetadataField("codigo", IntegerType),
-      CleanerMetadataField("geo_point_2d", StructType(Seq(
+      FieldCleaner("ccaa", StringType),
+      FieldCleaner("cod_ccaa", IntegerType),
+      FieldCleaner("codigo", IntegerType),
+      FieldCleaner("geo_point_2d", StructType(Seq(
         StructField("lat", DoubleType),
         StructField("lon", DoubleType)
       ))),
-      CleanerMetadataField("geo_shape", StructType(Seq(
+      FieldCleaner("geo_shape", StructType(Seq(
         StructField("geometry", StructType(Seq(
           StructField("coordinates", ArrayType(ArrayType(ArrayType(StringType)))),
           StructField("type", DoubleType)
         ))),
         StructField("type", StringType)
       ))),
-      CleanerMetadataField("provincia", StringType),
-      CleanerMetadataField("texto", StringType),
+      FieldCleaner("provincia", StringType),
+      FieldCleaner("texto", StringType),
     )
   )
 }
 
 case class CleanerMetadata(
   id: String,
-  fields: Seq[CleanerMetadataField]
+  fields: Seq[FieldCleaner]
 )
