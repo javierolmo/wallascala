@@ -24,8 +24,9 @@ extends SparkWriter(format=format, saveMode=saveMode, options=options) {
    */
   override def write(dataFrame: DataFrame)(implicit spark: SparkSession): Unit = {
     baseWriter(dataFrame)
-      .option("driver", "com.mysql.cj.jdbc.Driver")
-      .option("url", s"jdbc:mysql://${databaseConnection.host}:${databaseConnection.port}/$database")
+      // .option("driver", "com.mysql.cj.jdbc.Driver")
+      .option("driver", "com.microsoft.sqlserver.jdbc.SQLServerDriver")
+      .option("url", s"jdbc:sqlserver://${databaseConnection.host}:${databaseConnection.port};database=$database")
       .option("dbtable", table)
       .option("user", databaseConnection.user)
       .option("password", databaseConnection.pass)

@@ -6,6 +6,7 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 case class PisosProperties(date: LocalDate)(implicit spark: SparkSession) extends Properties(date) {
 
@@ -34,7 +35,7 @@ case class PisosProperties(date: LocalDate)(implicit spark: SparkSession) extend
       .withColumn(ModificationDate, lit(null))
       .withColumn(Pool, lit(null))
       .withColumn(Terrace, lit(null))
-      .withColumn(ExtractedDate, lit(null))
+      .withColumn(Date, lit(date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))))
       .dropDuplicates(Title, Price, Description, Surface, Operation)
 
   }

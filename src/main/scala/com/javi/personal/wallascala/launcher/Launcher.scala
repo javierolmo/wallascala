@@ -3,7 +3,8 @@ package com.javi.personal.wallascala.launcher
 import com.javi.personal.wallascala.SparkUtils
 import com.javi.personal.wallascala.utils.reader.{SparkFileReader, SparkReader}
 import com.javi.personal.wallascala.utils.writers.{SparkFileWriter, SparkSqlWriter, SparkWriter}
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions.lit
+import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object Launcher extends SparkUtils {
 
@@ -11,7 +12,11 @@ object Launcher extends SparkUtils {
     val (reader, writer) = (buildReader(config), buildWriter(config))
     val dataFrame = reader.read()
       .applyIf(config.flattenFields, SparkReader.flattenFields)
-    writer.write(dataFrame)
+    val dataFrameWithColumns = config.newColumns
+      .map(_.split("="))
+      .filter(_.length == 2)
+      .foldLeft(dataFrame)((df, column) => addColumn(df, column(0), column(1)))
+    writer.write(dataFrameWithColumns)
   }
 
   private def buildReader(config: LauncherConfig)(implicit spark: SparkSession): SparkReader = {
@@ -30,5 +35,8 @@ object Launcher extends SparkUtils {
       case _ => SparkFileWriter(path=config.targetPath.get, hiveTable=config.targetTable, format=config.targetFormat, coalesce=config.coalesce)
     }
   }
+
+  private def addColumn(dataFrame: DataFrame, columnName: String, columnValue: String): DataFrame =
+    dataFrame.withColumn(columnName, lit(columnValue))
 
 }

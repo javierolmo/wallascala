@@ -17,8 +17,8 @@ case class PostalCodeAnalysis (date: LocalDate = LocalDate.now())(implicit spark
 
   object sources {
     val properties: DataFrame = readProcessed("properties")
-      .filter(col(Properties.ExtractedDate).leq(date))
-      .withColumn("row_number", row_number().over(Window.partitionBy(Properties.Id).orderBy(col(Properties.ExtractedDate).desc)))
+      .filter(col(Properties.Date).leq(date))
+      .withColumn("row_number", row_number().over(Window.partitionBy(Properties.Id).orderBy(col(Properties.Date).desc)))
       .filter(col("row_number") === 1)
   }
 

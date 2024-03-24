@@ -36,7 +36,7 @@ class Properties(date: LocalDate)(implicit spark: SparkSession) extends Processo
       StructField(Description, StringType),
       StructField(Terrace, BooleanType),
       StructField(Type, StringType),
-      StructField(ExtractedDate, DateType)
+      StructField(Date, DateType)
     )
   )
 
@@ -79,5 +79,5 @@ object Properties {
   val Description = "description"
   val Terrace = "terrace"
   val Type = "type"
-  val ExtractedDate = "extracted_date"
+  val Date = "date"
 }

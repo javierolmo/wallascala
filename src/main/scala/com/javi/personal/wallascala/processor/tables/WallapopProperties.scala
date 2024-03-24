@@ -7,6 +7,7 @@ import org.apache.spark.sql.types.IntegerType
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class WallapopProperties(date: LocalDate)(implicit spark: SparkSession) extends Properties(date) {
 
@@ -31,7 +32,7 @@ class WallapopProperties(date: LocalDate)(implicit spark: SparkSession) extends 
       .withColumn(Link, concat(lit("https://es.wallapop.com/item/"), col("web_slug")))
       .withColumn(CreationDate, to_date(col(CreationDate)))
       .withColumn(ModificationDate, to_date(col(ModificationDate)))
-      .withColumn(ExtractedDate, to_date(col("date")))
+      .withColumn(Date, lit(date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))))
       .dropDuplicates(Title, Price, Description, Surface, Operation)
   }
 
