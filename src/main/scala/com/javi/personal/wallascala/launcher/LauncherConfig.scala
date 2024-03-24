@@ -12,7 +12,8 @@ case class LauncherConfig(
                            targetFormat: String = "parquet",
                            coalesce: Option[Int] = Option.empty,
                            select: Option[Seq[String]] = Option.empty,
-                           flattenFields: Boolean = false
+                           flattenFields: Boolean = false,
+                           newColumns: Seq[String] = Seq.empty
                          )
 
 object LauncherConfig {
@@ -62,6 +63,10 @@ object LauncherConfig {
         .optional()
         .action((_, c) => c.copy(flattenFields = true))
         .text("Flatten fields from source"),
+      opt[Seq[String]]("addColumns")
+        .optional()
+        .action((x, c) => c.copy(newColumns = x))
+        .text("Add columns to the final dataframe"),
       help("help").text("prints this usage text"),
       checkConfig { config =>
         if (config.sourceFormat == "jdbc" && config.sourceTable.isEmpty)
