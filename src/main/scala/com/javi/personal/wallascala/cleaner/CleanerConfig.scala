@@ -1,7 +1,7 @@
 package com.javi.personal.wallascala.cleaner
 
 import com.javi.personal.wallascala.WallaScalaException
-import com.javi.personal.wallascala.cleaner.model.CleanerMetadata
+import com.javi.personal.wallascala.cleaner.model.MetadataCatalog
 import scopt.{OParser, OParserBuilder}
 
 case class CleanerConfig(sourcePath: String, targetPath: String, targetPathExclusions: String, id: String)
@@ -33,7 +33,7 @@ object CleanerConfig {
       opt[String]('i', "id")
         .required()
         .action((x, c) => c.copy(id = x))
-        .text(s"id of the cleaner metadata to use [${CleanerMetadata.all().mkString(", ")}]"),
+        .text(s"id of the cleaner metadata to use [${MetadataCatalog.default().availableIds().mkString(", ")}]"),
       help("help").text("prints this usage text")
     )
   }

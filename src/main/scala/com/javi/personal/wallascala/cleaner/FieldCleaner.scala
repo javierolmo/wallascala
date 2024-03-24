@@ -1,12 +1,13 @@
-package com.javi.personal.wallascala.cleaner.model
+package com.javi.personal.wallascala.cleaner
 
+import com.javi.personal.wallascala.cleaner.FieldCleaner.{castField, createErrorStruct}
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.{lit, struct, typedLit, when}
 import org.apache.spark.sql.types._
 
-case class CleanerMetadataField(name: String, dataType: DataType, transform: Option[Column => Column] = Option.empty, defaultValue: Option[Any] = Option.empty, equalTo: Option[AnyVal] = Option.empty) {
+case class FieldCleaner(name: String, dataType: DataType, transform: Option[Column => Column] = Option.empty, defaultValue: Option[Any] = Option.empty) {
 
-  def genericFieldCleaner(inputField: Column): Column = {
+  def clean(inputField: Column): Column = {
     val defaultedField = defaultValue.map(value => when(inputField.isNull, lit(value)).otherwise(inputField)).getOrElse(inputField)
     val nulledField = when(defaultedField === "null", null).otherwise(defaultedField)
     val castedField = castField(nulledField, dataType, transform)
@@ -16,10 +17,9 @@ case class CleanerMetadataField(name: String, dataType: DataType, transform: Opt
     struct(leftSide.as("result"), rightSide.as("error"))
   }
 
-  private def castField(inputField: Column, dataType: DataType, function: Option[Column => Column]): Column = {
-    val transformed = function.map(_.apply(inputField)).getOrElse(inputField)
-    transformed.cast(dataType)
-  }
+}
+
+object FieldCleaner {
 
   private def createErrorStruct(inputField: Column, fieldName: String, fieldType: DataType): Column = {
     struct(
@@ -28,6 +28,11 @@ case class CleanerMetadataField(name: String, dataType: DataType, transform: Opt
       lit(fieldType.getClass.getSimpleName).as("fieldType"),
       lit("Error al castear").as("message")
     )
+  }
+
+  private def castField(inputField: Column, dataType: DataType, function: Option[Column => Column]): Column = {
+    val transformed = function.map(_.apply(inputField)).getOrElse(inputField)
+    transformed.cast(dataType)
   }
 
 }
