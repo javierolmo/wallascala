@@ -1,8 +1,10 @@
 package com.javi.personal.wallascala.processor.tables
 
 import com.javi.personal.wallascala.processor.tables.PriceChanges._
+import com.javi.personal.wallascala.processor.tables.Properties.{Bathrooms, City, Country, CreationDate, Currency, Date, Description, Elevator, Garage, Garden, Id, Link, ModificationDate, Operation, Pool, PostalCode, Price, Province, Region, Rooms, Source, Surface, Terrace, Title, Type}
 import com.javi.personal.wallascala.processor.{ProcessedTables, Processor}
 import org.apache.spark.sql.functions.{col, round}
+import org.apache.spark.sql.types.{BooleanType, DateType, DoubleType, IntegerType, StringType, StructField, StructType}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDate
@@ -11,9 +13,12 @@ case class PriceChanges(date: LocalDate)(implicit spark: SparkSession) extends P
 
   override protected val coalesce: Option[Int] = Some(1)
   override protected val datasetName: ProcessedTables = ProcessedTables.PRICE_CHANGES
-  override protected val finalColumns: Array[String] = Array(
-    Id, PreviousPrice, NewPrice, Discount
-  )
+  override protected val schema: StructType = StructType(Array(
+    StructField(Id, StringType),
+    StructField(PreviousPrice, IntegerType),
+    StructField(NewPrice, IntegerType),
+    StructField(Discount, DoubleType)
+  ))
 
   object sources {
     val todayProperties: DataFrame = readProcessed("properties", date)

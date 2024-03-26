@@ -13,7 +13,7 @@ case class PostalCodeAnalysis (date: LocalDate = LocalDate.now())(implicit spark
 
   override protected val coalesce: Option[Int] = Some(1)
   override protected val datasetName: ProcessedTables = ProcessedTables.POSTAL_CODE_ANALYSIS
-  override protected val finalColumns: Array[String] = Array(City, PostalCode, Type, Operation, AveragePrice, AverageSurface, AveragePriceM2, Count)
+  // override protected val finalColumns: Array[String] = Array(City, PostalCode, Type, Operation, AveragePrice, AverageSurface, AveragePriceM2, Count) // TODO
 
   object sources {
     val properties: DataFrame = readProcessed("properties")

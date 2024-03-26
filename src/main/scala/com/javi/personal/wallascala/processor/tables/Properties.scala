@@ -2,10 +2,12 @@ package com.javi.personal.wallascala.processor.tables
 
 import com.javi.personal.wallascala.processor.tables.Properties._
 import com.javi.personal.wallascala.processor.{ProcessedTables, Processor}
+import org.apache.spark.sql.functions.{col, concat, lit, to_date}
 import org.apache.spark.sql.types.{BooleanType, DateType, IntegerType, StringType, StructField, StructType}
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class Properties(date: LocalDate)(implicit spark: SparkSession) extends Processor(date) {
 
@@ -41,15 +43,84 @@ class Properties(date: LocalDate)(implicit spark: SparkSession) extends Processo
   )
 
   private object sources {
-    val processedWallapopProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES.getName, date)
-    val processedFotocasaProperties: DataFrame = readProcessed(ProcessedTables.FOTOCASA_PROPERTIES.getName, date)
-    val processedPisosProperties: DataFrame = readProcessed(ProcessedTables.PISOS_PROPERTIES.getName, date)
+    val sanitedWallapopProperties: DataFrame = readSanitedOptional("wallapop", "properties", date) match {
+      case Some(wallapopProperties) => {
+        val sanitedProvinces: DataFrame = readSanited("opendatasoft", "provincias-espanolas")
+        wallapopProperties
+          .withColumn("province_code", (col("location__postal_code").cast(IntegerType)/1000).cast(IntegerType))
+          .join(sanitedProvinces.as("p"), col("province_code") === sanitedProvinces("codigo").cast(IntegerType), "left")
+          .withColumnRenamed("location__city", City)
+          .withColumnRenamed("location__country_code", Country)
+          .withColumnRenamed("location__postal_code", PostalCode)
+          .withColumnRenamed("provincia", Province)
+          .withColumnRenamed("ccaa", Region)
+          .withColumnRenamed("storytelling", Description)
+          .withColumn(Source, lit("wallapop"))
+          .withColumn(Link, concat(lit("https://es.wallapop.com/item/"), col("web_slug")))
+          .withColumn(CreationDate, to_date(col(CreationDate)))
+          .withColumn(ModificationDate, to_date(col(ModificationDate)))
+          .withColumn(Date, lit(date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))))
+          .dropDuplicates(Title, Price, Description, Surface, Operation)
+          .select(schema.fields.map(field => col(field.name).cast(field.dataType)):_*)
+      }
+      case None => spark.createDataFrame(spark.sparkContext.emptyRDD[Row], schema)
+    }
+
+    val sanitedPisosProperties: DataFrame = readSanitedOptional("pisos", "properties", date) match {
+      case Some(pisosProperties) => pisosProperties
+        .withColumn(Surface, col("size"))
+        .withColumn(Bathrooms, col("bathrooms"))
+        .withColumn(Link, concat(lit("https://www.pisos.com"), col("url")))
+        .withColumn(Source, lit("pisos"))
+        .withColumn(CreationDate, lit(null)) // TODO: get creation date from fotocasa
+        .withColumn(Currency, lit("EUR"))
+        .withColumn(Elevator, lit(null))
+        .withColumn(Garage, lit(null))
+        .withColumn(Garden, lit(null))
+        .withColumn(Country, lit("ES"))
+        .withColumn(PostalCode, lit(null))
+        .withColumn(Province, lit(null))
+        .withColumn(Region, lit(null))
+        .withColumn(ModificationDate, lit(null))
+        .withColumn(Pool, lit(null))
+        .withColumn(Terrace, lit(null))
+        .withColumn(Date, lit(date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))))
+        .dropDuplicates(Title, Price, Description, Surface, Operation)
+        .select(schema.fields.map(field => col(field.name).cast(field.dataType)):_*)
+      case None => spark.createDataFrame(spark.sparkContext.emptyRDD[Row], schema)
+    }
+
+    val sanitedFotocasaProperties: DataFrame = readSanitedOptional("fotocasa", "properties", date) match {
+      case Some(fotocasaProperties) => fotocasaProperties
+        .withColumn(Surface, col("features__size"))
+        .withColumn(Rooms, col("features__rooms"))
+        .withColumn(Bathrooms, col("features__bathrooms"))
+        .withColumn(Link, concat(lit("https://www.fotocasa.es"), col("url")))
+        .withColumn(Source, lit("fotocasa"))
+        .withColumn(CreationDate, lit(null)) // TODO: get creation date from fotocasa
+        .withColumn(Currency, lit("EUR"))
+        .withColumn(Elevator, lit(null))
+        .withColumn(Garage, lit(null))
+        .withColumn(Garden, lit(null))
+        .withColumn(Country, lit("ES"))
+        .withColumn(PostalCode, lit(null))
+        .withColumn(Province, lit(null))
+        .withColumn(Region, lit(null))
+        .withColumn(ModificationDate, lit(null))
+        .withColumn(Pool, lit(null))
+        .withColumn(Description, lit(null))
+        .withColumn(Terrace, lit(null))
+        .withColumn(Date, lit(date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))))
+        .dropDuplicates(Title, Price, Description, Surface, Operation)
+        .select(schema.fields.map(field => col(field.name).cast(field.dataType)):_*)
+      case None => spark.createDataFrame(spark.sparkContext.emptyRDD[Row], schema)
+    }
   }
 
   override protected def build(): DataFrame = {
-    sources.processedFotocasaProperties
-      .union(sources.processedWallapopProperties)
-      .union(sources.processedPisosProperties)
+    sources.sanitedWallapopProperties
+      .union(sources.sanitedPisosProperties)
+      .union(sources.sanitedFotocasaProperties)
   }
 
 }

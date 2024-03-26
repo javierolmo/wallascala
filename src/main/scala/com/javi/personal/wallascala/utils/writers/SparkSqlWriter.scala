@@ -15,7 +15,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 case class SparkSqlWriter
   (database: String, table: String, databaseConnection: DatabaseConnection = DatabaseConnection.fromEnv(), format: String = "jdbc", saveMode: String = "overwrite", options: Map[String, String] = Map())
   (implicit spark: SparkSession)
-extends SparkWriter(format=format, saveMode=saveMode, options=options) {
+extends SparkWriter(format=format, saveMode=saveMode, options=options, partitionBy = Seq()) {
 
   /**
    * This method writes a DataFrame.

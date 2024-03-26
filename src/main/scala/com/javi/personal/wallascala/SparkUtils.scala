@@ -23,6 +23,11 @@ trait SparkUtils {
     readParquet(location)
   }
 
+  protected def readSanitedOptional(source: String, datasetName: String, date: LocalDate)(implicit spark: SparkSession): Option[DataFrame] = {
+    val location = PathBuilder.buildSanitedPath(source, datasetName).cd(date)
+    readParquetOptional(location)
+  }
+
   protected def readProcessed(datasetName: String, date: LocalDate)(implicit spark: SparkSession): DataFrame = {
     val location = PathBuilder.buildProcessedPath(datasetName).cd(date)
     readParquet(location)
@@ -35,6 +40,13 @@ trait SparkUtils {
 
   private def readParquet(location: StorageAccountLocation)(implicit spark: SparkSession): DataFrame =
     spark.read.format("parquet").load(location.url)
+
+  private def readParquetOptional(location: StorageAccountLocation)(implicit spark: SparkSession): Option[DataFrame] = try {
+    Some(readParquet(location))
+  } catch {
+    case _: Exception => None
+  }
+
 
   implicit class DataFrameOps(dataFrame: DataFrame) {
     def applyIf(condition: Boolean, function: DataFrame => DataFrame): DataFrame =
