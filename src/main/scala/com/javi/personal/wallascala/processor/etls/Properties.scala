@@ -1,7 +1,7 @@
-package com.javi.personal.wallascala.processor.tables
+package com.javi.personal.wallascala.processor.etls
 
-import com.javi.personal.wallascala.processor.tables.Properties._
-import com.javi.personal.wallascala.processor.{ProcessedTables, Processor}
+import com.javi.personal.wallascala.processor.etls.Properties._
+import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor}
 import org.apache.spark.sql.functions.{col, concat, lit, to_date}
 import org.apache.spark.sql.types.{BooleanType, DateType, IntegerType, StringType, StructField, StructType}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
@@ -9,10 +9,10 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+@ETL(table = ProcessedTables.PROPERTIES)
 class Properties(date: LocalDate)(implicit spark: SparkSession) extends Processor(date) {
 
-  override protected val coalesce: Option[Int] = Some(1)
-  override protected val datasetName: ProcessedTables = ProcessedTables.PROPERTIES
+  override protected val writerCoalesce: Option[Int] = Some(1)
   override protected val schema: StructType = StructType(Array(
       StructField(Id, StringType),
       StructField(Title, StringType),

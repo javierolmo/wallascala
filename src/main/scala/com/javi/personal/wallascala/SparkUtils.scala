@@ -1,5 +1,6 @@
 package com.javi.personal.wallascala
 
+import com.javi.personal.wallascala.processor.ProcessedTables
 import org.apache.spark.sql.{Column, DataFrame, SparkSession}
 import org.apache.spark.sql.functions.{col, lit}
 
@@ -15,34 +16,40 @@ trait SparkUtils {
 
   protected def readSanited(source: String, datasetName: String)(implicit spark: SparkSession): DataFrame = {
     val location = PathBuilder.buildSanitedPath(source, datasetName)
-    readParquet(location)
+    read(location)
   }
 
   protected def readSanited(source: String, datasetName: String, date: LocalDate)(implicit spark: SparkSession): DataFrame = {
     val location = PathBuilder.buildSanitedPath(source, datasetName).cd(date)
-    readParquet(location)
+    read(location)
   }
 
   protected def readSanitedOptional(source: String, datasetName: String, date: LocalDate)(implicit spark: SparkSession): Option[DataFrame] = {
     val location = PathBuilder.buildSanitedPath(source, datasetName).cd(date)
-    readParquetOptional(location)
+    readOptional(location)
   }
 
-  protected def readProcessed(datasetName: String, date: LocalDate)(implicit spark: SparkSession): DataFrame = {
-    val location = PathBuilder.buildProcessedPath(datasetName).cd(date)
-    readParquet(location)
+  protected def readProcessed(dataset: ProcessedTables, dateOption: Option[LocalDate] = Option.empty)(implicit spark: SparkSession): DataFrame = {
+    val location = dateOption match {
+      case Some(date) => PathBuilder.buildProcessedPath(dataset.getName).cd(date)
+      case None => PathBuilder.buildProcessedPath(dataset.getName)
+    }
+    read(location)
   }
 
-  protected def readProcessed(datasetName: String)(implicit spark: SparkSession): DataFrame = {
-    val location = PathBuilder.buildProcessedPath(datasetName)
-    readParquet(location)
+  protected def readProcessedOptional(dataset: ProcessedTables, dateOption: Option[LocalDate] = Option.empty)(implicit spark: SparkSession): Option[DataFrame] = {
+    val location = dateOption match {
+      case Some(date) => PathBuilder.buildProcessedPath(dataset.getName).cd(date)
+      case None => PathBuilder.buildProcessedPath(dataset.getName)
+    }
+    readOptional(location)
   }
 
-  private def readParquet(location: StorageAccountLocation)(implicit spark: SparkSession): DataFrame =
-    spark.read.format("parquet").load(location.url)
+  private def read(location: StorageAccountLocation, format: String = "parquet")(implicit spark: SparkSession): DataFrame =
+    spark.read.format(format).load(location.url)
 
-  private def readParquetOptional(location: StorageAccountLocation)(implicit spark: SparkSession): Option[DataFrame] = try {
-    Some(readParquet(location))
+  private def readOptional(location: StorageAccountLocation, format: String = "parquet")(implicit spark: SparkSession): Option[DataFrame] = try {
+    Some(read(location, format))
   } catch {
     case _: Exception => None
   }
