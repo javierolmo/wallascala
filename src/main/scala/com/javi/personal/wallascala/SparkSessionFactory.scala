@@ -5,9 +5,9 @@ import org.apache.spark.sql.SparkSession
 
 object SparkSessionFactory {
 
-  def build(): SparkSession = {
+  def build(extraConf: Seq[(String, String)] = Seq()): SparkSession = {
     val builder = SparkSession.builder()
-      .config(sparkConf())
+      .config(sparkConf(extraConf))
       .appName("wallascala")
 
     val builderWithMaster = if (runsInCluster) builder else builder.master("local[*]")
@@ -16,12 +16,13 @@ object SparkSessionFactory {
     spark
   }
 
-  private def sparkConf(): SparkConf = {
+  private def sparkConf(extraConf: Seq[(String, String)] = Seq()): SparkConf = {
     val conf = new SparkConf()
     conf.set("spark.sql.parquet.int96RebaseModeInWrite", "CORRECTED")
     conf.set("spark.sql.sources.partitionOverwriteMode","dynamic")
-    conf.set("fs.azure.account.key.tfgbs.blob.core.windows.net", keyFromEnv("TFGBS_KEY"))
-    conf.set("fs.azure.account.key.tfgbs.dfs.core.windows.net", keyFromEnv("TFGBS_KEY"))
+    conf.set("fs.azure.account.key.tfgbs.blob.core.windows.net", readEnvironmentVariable("TFGBS_KEY"))
+    conf.set("fs.azure.account.key.tfgbs.dfs.core.windows.net", readEnvironmentVariable("TFGBS_KEY"))
+    extraConf.foreach { case (key, value) => conf.set(key, value) }
     conf
   }
 
@@ -34,7 +35,7 @@ object SparkSessionFactory {
     spark.sql(s"CREATE DATABASE IF NOT EXISTS processed")
   }
 
-  private def keyFromEnv(env: String): String =
-    sys.env.getOrElse(env, throw new RuntimeException(s"Environment variable $env not found"))
+  private def readEnvironmentVariable(variableName: String): String =
+    sys.env.getOrElse(variableName, throw new RuntimeException(s"Environment variable $variableName not found"))
 
 }
