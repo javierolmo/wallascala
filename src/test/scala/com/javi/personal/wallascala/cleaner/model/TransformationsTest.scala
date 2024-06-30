@@ -3,14 +3,14 @@ package com.javi.personal.wallascala.cleaner.model
 import com.javi.personal.wallascala.SparkSessionFactory
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions.col
-import org.apache.spark.sql.{Column, DataFrame, Row}
+import org.apache.spark.sql.{Column, DataFrame, Row, SparkSession}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.matchers.should.Matchers.not.be
 
 class TransformationsTest extends AnyFlatSpec {
 
-  private val spark = SparkSessionFactory.build()
+  private val spark = SparkSession.builder().master("local[*]").getOrCreate()
 
   import spark.implicits._
 
