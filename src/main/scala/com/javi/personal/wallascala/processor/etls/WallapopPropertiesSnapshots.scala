@@ -3,7 +3,7 @@ package com.javi.personal.wallascala.processor.etls
 import com.javi.personal.wallascala.processor.etls.WallapopPropertiesSnapshots._
 import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor}
 import org.apache.spark.sql.expressions.Window
-import org.apache.spark.sql.functions.{col, max, min, row_number}
+import org.apache.spark.sql.functions.{col, lit, max, min, row_number, when}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -49,10 +49,12 @@ class WallapopPropertiesSnapshots(date: LocalDate)(implicit spark: SparkSession)
 
   override protected def build(): DataFrame = {
     val result = sources.wallapopProperties
-      .withColumn("row_number", row_number().over(Window.partitionBy(Id).orderBy(col(WallapopProperties.Date).desc)))
       .withColumn(StartDate, min(col(WallapopProperties.Date)).over(Window.partitionBy(Id)))
       .withColumn(EndDate, max(col(WallapopProperties.Date)).over(Window.partitionBy(Id)))
-      .filter(col("row_number") === 1)
+      .withColumn(AbsoluteMaxDate, max(col(WallapopProperties.Date)).over())
+      .withColumn(EndDate, when(col(EndDate) === col(AbsoluteMaxDate), lit(null)).otherwise(col(EndDate)))
+      .withColumn(RowNumber, row_number().over(Window.partitionBy(Id).orderBy(col(WallapopProperties.Date).desc)))
+      .filter(col(RowNumber) === 1)
 
     result
   }
@@ -60,6 +62,9 @@ class WallapopPropertiesSnapshots(date: LocalDate)(implicit spark: SparkSession)
 }
 
 object WallapopPropertiesSnapshots {
+  private val AbsoluteMaxDate = "absolute_max_date"
+  private val RowNumber = "row_number"
+
   val Id = "id"
   val Title = "title"
   val Price = "price"
