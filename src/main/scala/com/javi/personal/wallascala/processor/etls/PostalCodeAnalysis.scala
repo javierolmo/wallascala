@@ -1,22 +1,22 @@
-package com.javi.personal.wallascala.processor.tables
+package com.javi.personal.wallascala.processor.etls
 
-import com.javi.personal.wallascala.processor.{ProcessedTables, Processor}
-import com.javi.personal.wallascala.processor.tables.PostalCodeAnalysis._
-import com.javi.personal.wallascala.processor.tables.PriceChanges.{Day, Month, Year}
+import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor}
+import com.javi.personal.wallascala.processor.etls.PostalCodeAnalysis._
+import com.javi.personal.wallascala.processor.etls.PriceChanges.{Day, Month, Year}
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDate
 
+@ETL(table = ProcessedTables.POSTAL_CODE_ANALYSIS)
 case class PostalCodeAnalysis (date: LocalDate = LocalDate.now())(implicit spark: SparkSession) extends Processor(date) {
 
-  override protected val coalesce: Option[Int] = Some(1)
-  override protected val datasetName: ProcessedTables = ProcessedTables.POSTAL_CODE_ANALYSIS
-  override protected val finalColumns: Array[String] = Array(City, PostalCode, Type, Operation, AveragePrice, AverageSurface, AveragePriceM2, Count)
+  override protected val writerCoalesce: Option[Int] = Some(1)
+  // override protected val finalColumns: Array[String] = Array(City, PostalCode, Type, Operation, AveragePrice, AverageSurface, AveragePriceM2, Count) // TODO
 
   object sources {
-    val properties: DataFrame = readProcessed("properties")
+    val properties: DataFrame = readProcessed(ProcessedTables.PROPERTIES)
       .filter(col(Properties.Date).leq(date))
       .withColumn("row_number", row_number().over(Window.partitionBy(Properties.Id).orderBy(col(Properties.Date).desc)))
       .filter(col("row_number") === 1)

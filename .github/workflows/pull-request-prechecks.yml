@@ -1,0 +1,22 @@
+  name: Check pull request before merging
+
+  on:
+    pull_request:
+      branches:
+        - main
+
+  jobs:
+    deploy:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v2
+
+        - name: Set up JDK
+          uses: actions/setup-java@v4.2.1
+          with:
+            java-version: '8'
+            distribution: 'corretto'
+
+        - name: Build jar with dependencies
+          run: mvn package

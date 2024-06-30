@@ -1,16 +1,18 @@
-package com.javi.personal.wallascala.processor.tables
+package com.javi.personal.wallascala.processor.etls
 
-import com.javi.personal.wallascala.processor.tables.Properties._
-import com.javi.personal.wallascala.processor.{ProcessedTables, Processor}
-import org.apache.spark.sql.types.{BooleanType, DateType, IntegerType, StringType, StructField, StructType}
+import com.javi.personal.wallascala.processor.etls.WallapopProperties._
+import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor}
+import org.apache.spark.sql.functions.{col, concat, lit, to_date}
+import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
-class Properties(date: LocalDate)(implicit spark: SparkSession) extends Processor(date) {
+@ETL(table = ProcessedTables.WALLAPOP_PROPERTIES)
+class WallapopProperties(date: LocalDate)(implicit spark: SparkSession) extends Processor(date) {
 
-  override protected val coalesce: Option[Int] = Some(1)
-  override protected val datasetName: ProcessedTables = ProcessedTables.PROPERTIES
+  override protected val writerCoalesce: Option[Int] = Some(1)
   override protected val schema: StructType = StructType(Array(
       StructField(Id, StringType),
       StructField(Title, StringType),
@@ -41,20 +43,32 @@ class Properties(date: LocalDate)(implicit spark: SparkSession) extends Processo
   )
 
   private object sources {
-    val processedWallapopProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES.getName, date)
-    val processedFotocasaProperties: DataFrame = readProcessed(ProcessedTables.FOTOCASA_PROPERTIES.getName, date)
-    val processedPisosProperties: DataFrame = readProcessed(ProcessedTables.PISOS_PROPERTIES.getName, date)
+    val sanitedWallapopProperties: DataFrame = readSanited("wallapop", "properties", date)
+    val sanitedProvinces: DataFrame = readSanited("opendatasoft", "provincias-espanolas")
   }
 
   override protected def build(): DataFrame = {
-    sources.processedFotocasaProperties
-      .union(sources.processedWallapopProperties)
-      .union(sources.processedPisosProperties)
+    sources.sanitedWallapopProperties
+      .withColumn("province_code", (col("location__postal_code").cast(IntegerType)/1000).cast(IntegerType))
+      .join(sources.sanitedProvinces.as("p"), col("province_code") === sources.sanitedProvinces("codigo").cast(IntegerType), "left")
+      .withColumnRenamed("location__city", City)
+      .withColumnRenamed("location__country_code", Country)
+      .withColumnRenamed("location__postal_code", PostalCode)
+      .withColumnRenamed("provincia", Province)
+      .withColumnRenamed("ccaa", Region)
+      .withColumnRenamed("storytelling", Description)
+      .withColumn(Source, lit("wallapop"))
+      .withColumn(Link, concat(lit("https://es.wallapop.com/item/"), col("web_slug")))
+      .withColumn(CreationDate, to_date(col(CreationDate)))
+      .withColumn(ModificationDate, to_date(col(ModificationDate)))
+      .withColumn(Date, lit(date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))))
+      .dropDuplicates(Title, Price, Description, Surface, Operation)
+      .select(schema.fields.map(field => col(field.name).cast(field.dataType)):_*)
   }
 
 }
 
-object Properties {
+object WallapopProperties {
   val Id = "id"
   val Title = "title"
   val Price = "price"

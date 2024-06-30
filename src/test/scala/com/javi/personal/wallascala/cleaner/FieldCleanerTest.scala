@@ -5,14 +5,14 @@ import com.javi.personal.wallascala.cleaner.model.Transformations
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.{DataType, IntegerType, StringType, StructType}
-import org.apache.spark.sql.{DataFrame, Row}
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.not.be
 import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, equal}
 
 class FieldCleanerTest extends AnyFlatSpec {
 
-  private val spark = SparkSessionFactory.build()
+  private val spark = SparkSession.builder().master("local[*]").getOrCreate()
 
   import spark.implicits._
 
