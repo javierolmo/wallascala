@@ -1,4 +1,4 @@
-  name: Deploy to Azure Blob Storage
+  name: Check pull request before merging
 
   on:
     pull_request:
