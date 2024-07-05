@@ -10,7 +10,7 @@ case class StorageAccountLocation(account: String, container: String, path: Stri
   def cd(localDate: LocalDate): StorageAccountLocation =
     cd(s"year=${localDate.getYear}")
       .cd(s"month=${localDate.getMonthValue}")
-      .cd(s"day=${localDate.getDayOfYear}")
+      .cd(s"day=${localDate.getDayOfMonth}")
 
   def wasbsURL: String = s"wasbs://$container@$account.blob.core.windows.net/$path"
 
