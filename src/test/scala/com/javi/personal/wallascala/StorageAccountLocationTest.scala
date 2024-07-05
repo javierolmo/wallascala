@@ -13,8 +13,8 @@ class StorageAccountLocationTest extends AnyFlatSpec with Matchers {
 
   "cd(localDate)" should "return a new StorageAccountLocation with the path updated" in {
     val storageAccountLocation = StorageAccountLocation("account", "container", "path")
-    val newStorageAccountLocation = storageAccountLocation.cd(java.time.LocalDate.of(2021, 1, 2))
-    newStorageAccountLocation.path shouldEqual "path/year=2021/month=1/day=2"
+    val newStorageAccountLocation = storageAccountLocation.cd(java.time.LocalDate.of(2021, 3, 5))
+    newStorageAccountLocation.path shouldEqual "path/year=2021/month=3/day=5"
   }
 
 }
