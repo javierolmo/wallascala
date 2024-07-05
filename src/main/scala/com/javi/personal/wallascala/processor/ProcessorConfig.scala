@@ -25,7 +25,12 @@ object ProcessorConfig {
         .text("dataset to ingest"),
       opt[String]('d', "date")
         .required()
-        .action((x, c) => c.copy(date = LocalDate.parse(x)))
+        .action((x, c) => {
+          val paddedDate = x.split("-")
+            .map(part => if (part.length == 1) f"0$part" else part)
+            .mkString("-")
+          c.copy(date = LocalDate.parse(paddedDate))
+        })
         .text("date to process in format yyyy-MM-dd"),
       help("help").text("prints this usage text")
     )

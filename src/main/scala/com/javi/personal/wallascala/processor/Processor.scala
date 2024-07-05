@@ -31,9 +31,9 @@ abstract class Processor(date: LocalDate)(implicit spark: SparkSession) extends 
     val dataFrame = build().select(cols:_*)
     val dataFrameWithYearMonthDay = partitionByDate match {
       case Some(date) => dataFrame
-        .withColumn("year", lit("%04d".format(date.getYear)))
-        .withColumn("month", lit("%02d".format(date.getMonthValue)))
-        .withColumn("day", lit("%02d".format(date.getDayOfMonth)))
+        .withColumn("year", lit(date.getYear))
+        .withColumn("month", lit(date.getMonthValue))
+        .withColumn("day", lit(date.getDayOfMonth))
       case None => dataFrame
     }
     val dataFrameWithCoalesce = if (writerCoalesce.isDefined) dataFrameWithYearMonthDay.coalesce(writerCoalesce.get) else dataFrameWithYearMonthDay

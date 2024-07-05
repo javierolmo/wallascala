@@ -7,12 +7,10 @@ case class StorageAccountLocation(account: String, container: String, path: Stri
 
   def cd(relativePath: String): StorageAccountLocation = this.copy(path = f"$path/$relativePath")
 
-  def cd(localDate: LocalDate): StorageAccountLocation = {
-    val yearString = DateTimeFormatter.ofPattern("yyyy").format(localDate)
-    val monthString = DateTimeFormatter.ofPattern("MM").format(localDate)
-    val dayString = DateTimeFormatter.ofPattern("dd").format(localDate)
-    cd(s"year=$yearString/month=$monthString/day=$dayString")
-  }
+  def cd(localDate: LocalDate): StorageAccountLocation =
+    cd(s"year=${localDate.getYear}")
+      .cd(s"month=${localDate.getMonthValue}")
+      .cd(s"day=${localDate.getDayOfYear}")
 
   def wasbsURL: String = s"wasbs://$container@$account.blob.core.windows.net/$path"
 
