@@ -31,8 +31,19 @@ object Launcher extends SparkUtils {
       case "jdbc" =>
         val database = config.targetTable.get.split("\\.")(0)
         val table = config.targetTable.get.split("\\.")(1)
-        SparkSqlWriter(database=database, table=table, format=config.targetFormat)
-      case _ => SparkFileWriter(path=config.targetPath.get, hiveTable=config.targetTable, format=config.targetFormat, coalesce=config.coalesce)
+        SparkSqlWriter(
+          database = database,
+          table = table,
+          format = config.targetFormat,
+          saveMode = config.mode.getOrElse("overwrite")
+        )
+      case _ => SparkFileWriter(
+        path = config.targetPath.get,
+        hiveTable = config.targetTable,
+        format = config.targetFormat,
+        coalesce = config.coalesce,
+        saveMode = config.mode.getOrElse("overwrite")
+      )
     }
   }
 

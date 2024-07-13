@@ -13,7 +13,8 @@ case class LauncherConfig(
                            coalesce: Option[Int] = Option.empty,
                            select: Option[Seq[String]] = Option.empty,
                            flattenFields: Boolean = false,
-                           newColumns: Seq[String] = Seq.empty
+                           newColumns: Seq[String] = Seq.empty,
+                           mode: Option[String] = Option.empty
                          )
 
 object LauncherConfig {
@@ -67,6 +68,10 @@ object LauncherConfig {
         .optional()
         .action((x, c) => c.copy(newColumns = x))
         .text("Add columns to the final dataframe"),
+      opt[String]("mode")
+        .optional()
+        .action((x, c) => c.copy(mode = Some(x)))
+        .text("Mode of the write operation"),
       help("help").text("prints this usage text"),
       checkConfig { config =>
         if (config.sourceFormat == "jdbc" && config.sourceTable.isEmpty)

@@ -14,7 +14,9 @@ class LauncherCLITest extends AnyFlatSpec with Matchers {
       "--targetFormat", "parquet",
       "--select", "field1,field2",
       "--coalesce", "1",
-      "--flattenFields"
+      "--flattenFields",
+      "--addColumns", "field1=a,field2=b",
+      "--mode", "overwrite"
     )
 
     val result = LauncherConfig.parse(args)
@@ -26,6 +28,8 @@ class LauncherCLITest extends AnyFlatSpec with Matchers {
     result.select.get shouldEqual Seq("field1", "field2")
     result.coalesce.get shouldEqual 1
     result.flattenFields shouldEqual true
+    result.newColumns shouldEqual Seq("field1=a", "field2=b")
+    result.mode.get shouldEqual "overwrite"
   }
 
   it should "handle missing required arguments" in {
