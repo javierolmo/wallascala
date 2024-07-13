@@ -1,6 +1,6 @@
 package com.javi.personal.wallascala.processor.etls
 
-import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor}
+import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor, ProcessorConfig}
 import com.javi.personal.wallascala.processor.etls.PostalCodeAnalysis._
 import com.javi.personal.wallascala.processor.etls.PriceChanges.{Day, Month, Year}
 import org.apache.spark.sql.expressions.Window
@@ -10,14 +10,14 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import java.time.LocalDate
 
 @ETL(table = ProcessedTables.POSTAL_CODE_ANALYSIS)
-case class PostalCodeAnalysis (date: LocalDate = LocalDate.now())(implicit spark: SparkSession) extends Processor(date) {
+case class PostalCodeAnalysis (config: ProcessorConfig)(implicit spark: SparkSession) extends Processor(config) {
 
   override protected val writerCoalesce: Option[Int] = Some(1)
   // override protected val finalColumns: Array[String] = Array(City, PostalCode, Type, Operation, AveragePrice, AverageSurface, AveragePriceM2, Count) // TODO
 
   object sources {
-    val properties: DataFrame = readProcessed(ProcessedTables.PROPERTIES)
-      .filter(col(Properties.Date).leq(date))
+    lazy val properties: DataFrame = readProcessed(ProcessedTables.PROPERTIES)
+      .filter(col(Properties.Date).leq(config.date))
       .withColumn("row_number", row_number().over(Window.partitionBy(Properties.Id).orderBy(col(Properties.Date).desc)))
       .filter(col("row_number") === 1)
   }

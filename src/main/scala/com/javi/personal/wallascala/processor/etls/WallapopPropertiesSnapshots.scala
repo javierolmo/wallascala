@@ -1,7 +1,7 @@
 package com.javi.personal.wallascala.processor.etls
 
 import com.javi.personal.wallascala.processor.etls.WallapopPropertiesSnapshots._
-import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor}
+import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor, ProcessorConfig}
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions.{col, lit, max, min, row_number, when}
 import org.apache.spark.sql.types._
@@ -10,9 +10,8 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import java.time.LocalDate
 
 @ETL(table = ProcessedTables.WALLAPOP_PROPERTIES_SNAPSHOTS)
-class WallapopPropertiesSnapshots(date: LocalDate)(implicit spark: SparkSession) extends Processor(date) {
+class WallapopPropertiesSnapshots(config: ProcessorConfig)(implicit spark: SparkSession) extends Processor(config) {
 
-  override protected val partitionByDate: Option[LocalDate] = Option.empty
   override protected val schema: StructType = StructType(Array(
       StructField(Id, StringType),
       StructField(Title, StringType),
@@ -44,7 +43,7 @@ class WallapopPropertiesSnapshots(date: LocalDate)(implicit spark: SparkSession)
   )
 
   private object sources {
-    val wallapopProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES, Option.empty)
+    lazy val wallapopProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES, Option.empty)
   }
 
   override protected def build(): DataFrame = {

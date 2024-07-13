@@ -5,7 +5,7 @@ import scopt.{OParser, OParserBuilder}
 
 import java.time.LocalDate
 
-case class ProcessorConfig(datasetName: String, date: LocalDate)
+case class ProcessorConfig(datasetName: String, date: LocalDate, targetPath: String)
 
 object ProcessorConfig {
 
@@ -32,6 +32,10 @@ object ProcessorConfig {
           c.copy(date = LocalDate.parse(paddedDate))
         })
         .text("date to process in format yyyy-MM-dd"),
+      opt[String]('t', "targetPath")
+        .required()
+        .action((x, c) => c.copy(targetPath = x))
+        .text("target path to write the processed data"),
       help("help").text("prints this usage text")
     )
   }
@@ -42,8 +46,6 @@ object ProcessorConfig {
       case None => throw WallaScalaException(f"Could not parse arguments: [${args.mkString(", ")}]")
     }
 
-  def apply(processedTable: ProcessedTables, date: LocalDate): ProcessorConfig = new ProcessorConfig(processedTable.name(), date)
-
-  private def dummy: ProcessorConfig = ProcessorConfig("", LocalDate.now)
+  private def dummy: ProcessorConfig = ProcessorConfig("", LocalDate.now, "")
 
 }

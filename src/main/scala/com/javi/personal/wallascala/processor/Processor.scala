@@ -1,9 +1,8 @@
 package com.javi.personal.wallascala.processor
 
-import com.javi.personal.wallascala.processor.etls._
+import com.javi.personal.wallascala.SparkUtils
 import com.javi.personal.wallascala.utils.writers.{SparkFileWriter, SparkWriter}
-import com.javi.personal.wallascala.{PathBuilder, SparkUtils}
-import org.apache.spark.sql.functions.{col, lit}
+import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{Column, DataFrame, SparkSession}
 import org.reflections.Reflections
@@ -11,49 +10,36 @@ import org.reflections.Reflections
 import java.time.LocalDate
 import scala.collection.JavaConverters._
 
-abstract class Processor(date: LocalDate)(implicit spark: SparkSession) extends SparkUtils {
+abstract class Processor(config: ProcessorConfig)(implicit spark: SparkSession) extends SparkUtils {
 
   protected val datasetName: ProcessedTables = getClass.getAnnotation(classOf[ETL]).table()
   protected val writerCoalesce: Option[Int] = Option.empty
   protected val schema: StructType = StructType(Seq())
-  protected val partitionByDate: Option[LocalDate] = Some(date)
-  protected def writers: Seq[SparkWriter] = Seq(
-    SparkFileWriter(
-      path = PathBuilder.buildProcessedPath(datasetName.getName).url,
-      hiveTable = Some(s"processed.$datasetName"),
-      partitionBy = if (partitionByDate.isDefined) Seq("year", "month", "day") else Seq()
-    )
+  protected def writer: SparkWriter = SparkFileWriter(
+    path = config.targetPath,
   )
   protected def build(): DataFrame
 
   final def execute(): Unit = {
     val cols: Array[Column] = schema.fields.map(field => col(field.name).cast(field.dataType))
     val dataFrame = build().select(cols:_*)
-    val dataFrameWithYearMonthDay = partitionByDate match {
-      case Some(date) => dataFrame
-        .withColumn("year", lit(date.getYear))
-        .withColumn("month", lit(date.getMonthValue))
-        .withColumn("day", lit(date.getDayOfMonth))
-      case None => dataFrame
-    }
-    val dataFrameWithCoalesce = if (writerCoalesce.isDefined) dataFrameWithYearMonthDay.coalesce(writerCoalesce.get) else dataFrameWithYearMonthDay
+    val dataFrameWithCoalesce = if (writerCoalesce.isDefined) dataFrame.coalesce(writerCoalesce.get) else dataFrame
 
     // Write dataframe
-    val cachedDF = if (writers.size > 1) dataFrameWithCoalesce.cache() else dataFrameWithCoalesce
-    writers.foreach(writer => writer.write(cachedDF)(spark))
+    writer.write(dataFrameWithCoalesce)(spark)
   }
 
 }
 
 object Processor {
 
-  def build(tableName: String, date: LocalDate)(implicit spark: SparkSession): Processor = {
-    val config = ProcessorConfig(tableName, date)
+  def build(tableName: String, date: LocalDate, targetPath: String)(implicit spark: SparkSession): Processor = {
+    val config = ProcessorConfig(tableName, date, targetPath)
     build(config)
   }
 
-  def build(table: ProcessedTables, date: LocalDate)(implicit spark: SparkSession): Processor = {
-    val config = ProcessorConfig(table.getName, date)
+  def build(table: ProcessedTables, date: LocalDate, targetPath: String)(implicit spark: SparkSession): Processor = {
+    val config = ProcessorConfig(table.getName, date, targetPath)
     build(config)
   }
 
@@ -63,7 +49,7 @@ object Processor {
     val selectedEtl = elts
       .find(_.getAnnotation(classOf[ETL]).table().getName == config.datasetName)
       .getOrElse(throw new Exception(s"ETL not found for table ${config.datasetName}"))
-    selectedEtl.getConstructors.head.newInstance(config.date, spark).asInstanceOf[Processor]
+    selectedEtl.getConstructors.head.newInstance(config, spark).asInstanceOf[Processor]
   }
 
 }
