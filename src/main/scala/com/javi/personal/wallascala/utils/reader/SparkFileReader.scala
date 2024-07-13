@@ -1,10 +1,7 @@
 package com.javi.personal.wallascala.utils.reader
 
-import com.javi.personal.wallascala.PathBuilder
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, SparkSession}
-
-import java.time.LocalDate
 
 class SparkFileReader
   (path: String, format: String = "parquet", options: Map[String, String] = Map(), schema: Option[StructType] = Option.empty)
