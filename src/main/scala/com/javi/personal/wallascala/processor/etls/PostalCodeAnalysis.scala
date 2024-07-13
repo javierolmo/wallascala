@@ -1,13 +1,10 @@
 package com.javi.personal.wallascala.processor.etls
 
-import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor, ProcessorConfig}
 import com.javi.personal.wallascala.processor.etls.PostalCodeAnalysis._
-import com.javi.personal.wallascala.processor.etls.PriceChanges.{Day, Month, Year}
+import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor, ProcessorConfig}
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SparkSession}
-
-import java.time.LocalDate
 
 @ETL(table = ProcessedTables.POSTAL_CODE_ANALYSIS)
 case class PostalCodeAnalysis (config: ProcessorConfig)(implicit spark: SparkSession) extends Processor(config) {

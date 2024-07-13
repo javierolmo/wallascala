@@ -3,11 +3,9 @@ package com.javi.personal.wallascala.processor.etls
 import com.javi.personal.wallascala.processor.etls.WallapopPropertiesSnapshots._
 import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor, ProcessorConfig}
 import org.apache.spark.sql.expressions.Window
-import org.apache.spark.sql.functions.{col, lit, max, min, row_number, when}
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SparkSession}
-
-import java.time.LocalDate
 
 @ETL(table = ProcessedTables.WALLAPOP_PROPERTIES_SNAPSHOTS)
 class WallapopPropertiesSnapshots(config: ProcessorConfig)(implicit spark: SparkSession) extends Processor(config) {

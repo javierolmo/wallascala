@@ -4,8 +4,6 @@ import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor, 
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-import java.time.LocalDate
-
 @ETL(table = ProcessedTables.APARTMENT_INVESTMENT_ANALYSIS)
 case class ApartmentInvestmentAnalysis(config: ProcessorConfig)(implicit spark: SparkSession) extends Processor(config) {
   override protected val schema: StructType = StructType(Seq()) // TODO: fill this

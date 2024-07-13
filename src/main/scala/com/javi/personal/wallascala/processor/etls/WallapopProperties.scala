@@ -6,7 +6,6 @@ import org.apache.spark.sql.functions.{col, concat, lit, to_date}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @ETL(table = ProcessedTables.WALLAPOP_PROPERTIES)

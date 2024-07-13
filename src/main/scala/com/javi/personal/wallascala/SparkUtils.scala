@@ -1,8 +1,8 @@
 package com.javi.personal.wallascala
 
 import com.javi.personal.wallascala.processor.ProcessedTables
-import org.apache.spark.sql.{Column, DataFrame, SparkSession}
 import org.apache.spark.sql.functions.{col, lit}
+import org.apache.spark.sql.{Column, DataFrame, SparkSession}
 
 import java.time.LocalDate
 
