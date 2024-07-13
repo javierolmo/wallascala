@@ -2,7 +2,7 @@ package com.javi.personal.wallascala.cleaner.model
 
 import com.javi.personal.wallascala.cleaner.FieldCleaner
 import org.apache.spark.sql.functions.to_timestamp
-import org.apache.spark.sql.types.{ArrayType, BooleanType, DoubleType, IntegerType, StringType, StructField, StructType, TimestampType}
+import org.apache.spark.sql.types._
 
 case class MetadataCatalog(items: Seq[CleanerMetadata]) {
 

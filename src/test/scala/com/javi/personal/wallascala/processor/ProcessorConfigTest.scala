@@ -11,7 +11,8 @@ class ProcessorConfigTest extends AnyFlatSpec with Matchers {
   "parse" should "Parse date with format yyyy-M-d correctly" in {
     val args = Array(
       "--datasetName", "ANY_VALUE",
-      "--date", "2021-1-2"
+      "--date", "2021-1-2",
+      "--targetPath", "ANY_VALUE"
     )
 
     val result = ProcessorConfig.parse(args)
@@ -22,7 +23,9 @@ class ProcessorConfigTest extends AnyFlatSpec with Matchers {
   it should "Parse date with format yyyy-MM-dd correctly" in {
     val args = Array(
       "--datasetName", "ANY_VALUE",
-      "--date", "2021-01-02"
+      "--date", "2021-01-02",
+      "--targetPath", "ANY_VALUE"
+
     )
 
     val result = ProcessorConfig.parse(args)
@@ -33,7 +36,9 @@ class ProcessorConfigTest extends AnyFlatSpec with Matchers {
   it should "Parse datasetName correctly" in {
     val args = Array(
       "--datasetName", "SOME_VALUE",
-      "--date", "2000-01-01"
+      "--date", "2000-01-01",
+      "--targetPath", "ANY_VALUE"
+
     )
 
     val result = ProcessorConfig.parse(args)
@@ -41,9 +46,22 @@ class ProcessorConfigTest extends AnyFlatSpec with Matchers {
     result.datasetName shouldEqual "SOME_VALUE"
   }
 
+  it should "Parse targetPath correctly" in {
+    val args = Array(
+      "--datasetName", "ANY_VALUE",
+      "--date", "2000-01-01",
+      "--targetPath", "SOME_VALUE"
+    )
+
+    val result = ProcessorConfig.parse(args)
+
+    result.targetPath shouldEqual "SOME_VALUE"
+  }
+
   it should "Fail if datasetName is not provided" in {
     val args = Array(
-      "--date", "2000-01-01"
+      "--date", "2000-01-01",
+      "--targetPath", "ANY_VALUE"
     )
 
     assertThrows[WallaScalaException] {
@@ -53,7 +71,19 @@ class ProcessorConfigTest extends AnyFlatSpec with Matchers {
 
   it should "Fail if date is not provided" in {
     val args = Array(
-      "--datasetName", "SOME_VALUE"
+      "--datasetName", "SOME_VALUE",
+      "--targetPath", "ANY_VALUE"
+    )
+
+    assertThrows[WallaScalaException] {
+      ProcessorConfig.parse(args)
+    }
+  }
+
+  it should "Fail if targetPath is not provided" in {
+    val args = Array(
+      "--datasetName", "SOME_VALUE",
+      "--date", "2000-01-01"
     )
 
     assertThrows[WallaScalaException] {

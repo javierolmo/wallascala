@@ -1,7 +1,5 @@
 package com.javi.personal.wallascala.cleaner.model
 
-import com.javi.personal.wallascala.SparkSessionFactory
-import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.{Column, DataFrame, Row, SparkSession}
 import org.scalatest.flatspec.AnyFlatSpec

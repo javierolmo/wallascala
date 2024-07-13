@@ -1,10 +1,5 @@
 package com.javi.personal.wallascala.cleaner
 
-import com.javi.personal.wallascala.SparkSessionFactory
-import com.javi.personal.wallascala.cleaner.model.{CleanerMetadata, MetadataCatalog}
-import com.javi.personal.wallascala.utils.reader.SparkFileReader
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.types.{IntegerType, StringType}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers

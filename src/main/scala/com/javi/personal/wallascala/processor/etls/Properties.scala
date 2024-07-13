@@ -1,16 +1,15 @@
 package com.javi.personal.wallascala.processor.etls
 
 import com.javi.personal.wallascala.processor.etls.Properties._
-import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor}
+import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor, ProcessorConfig}
 import org.apache.spark.sql.functions.{col, concat, lit, to_date}
-import org.apache.spark.sql.types.{BooleanType, DateType, IntegerType, StringType, StructField, StructType}
+import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @ETL(table = ProcessedTables.PROPERTIES)
-class Properties(date: LocalDate)(implicit spark: SparkSession) extends Processor(date) {
+class Properties(config: ProcessorConfig)(implicit spark: SparkSession) extends Processor(config) {
 
   override protected val writerCoalesce: Option[Int] = Some(1)
   override protected val schema: StructType = StructType(Array(
@@ -43,8 +42,9 @@ class Properties(date: LocalDate)(implicit spark: SparkSession) extends Processo
   )
 
   private object sources {
-    val sanitedWallapopProperties: DataFrame = readSanitedOptional("wallapop", "properties", date) match {
-      case Some(wallapopProperties) => {
+    private val date = config.date
+    lazy val sanitedWallapopProperties: DataFrame = readSanitedOptional("wallapop", "properties", date) match {
+      case Some(wallapopProperties) =>
         val sanitedProvinces: DataFrame = readSanited("opendatasoft", "provincias-espanolas")
         wallapopProperties
           .withColumn("province_code", (col("location__postal_code").cast(IntegerType)/1000).cast(IntegerType))
@@ -62,11 +62,10 @@ class Properties(date: LocalDate)(implicit spark: SparkSession) extends Processo
           .withColumn(Date, lit(date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))))
           .dropDuplicates(Title, Price, Description, Surface, Operation)
           .select(schema.fields.map(field => col(field.name).cast(field.dataType)):_*)
-      }
       case None => spark.createDataFrame(spark.sparkContext.emptyRDD[Row], schema)
     }
 
-    val sanitedPisosProperties: DataFrame = readSanitedOptional("pisos", "properties", date) match {
+    lazy val sanitedPisosProperties: DataFrame = readSanitedOptional("pisos", "properties", date) match {
       case Some(pisosProperties) => pisosProperties
         .withColumn(Surface, col("size"))
         .withColumn(Bathrooms, col("bathrooms"))
@@ -90,7 +89,7 @@ class Properties(date: LocalDate)(implicit spark: SparkSession) extends Processo
       case None => spark.createDataFrame(spark.sparkContext.emptyRDD[Row], schema)
     }
 
-    val sanitedFotocasaProperties: DataFrame = readSanitedOptional("fotocasa", "properties", date) match {
+    lazy val sanitedFotocasaProperties: DataFrame = readSanitedOptional("fotocasa", "properties", date) match {
       case Some(fotocasaProperties) => fotocasaProperties
         .withColumn(Surface, col("features__size"))
         .withColumn(Rooms, col("features__rooms"))

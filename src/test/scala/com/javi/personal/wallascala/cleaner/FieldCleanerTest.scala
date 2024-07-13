@@ -1,6 +1,5 @@
 package com.javi.personal.wallascala.cleaner
 
-import com.javi.personal.wallascala.SparkSessionFactory
 import com.javi.personal.wallascala.cleaner.model.Transformations
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions.col

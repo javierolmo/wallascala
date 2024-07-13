@@ -1,7 +1,7 @@
 package com.javi.personal.wallascala.cleaner.model
 
 import org.apache.spark.sql.Column
-import org.apache.spark.sql.functions.{from_unixtime, regexp_replace}
+import org.apache.spark.sql.functions.regexp_replace
 
 object Transformations {
 

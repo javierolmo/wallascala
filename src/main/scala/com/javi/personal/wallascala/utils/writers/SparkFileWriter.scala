@@ -1,9 +1,6 @@
 package com.javi.personal.wallascala.utils.writers
 
-import com.javi.personal.wallascala.PathBuilder
 import org.apache.spark.sql.{DataFrame, SparkSession}
-
-import java.time.LocalDate
 
 /**
  * SparkFileWriter is a class that defines the basic methods to write a DataFrame to a file.

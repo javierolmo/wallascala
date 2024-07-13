@@ -1,17 +1,15 @@
 package com.javi.personal.wallascala.processor.etls
 
-import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor}
+import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor, ProcessorConfig}
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-import java.time.LocalDate
-
 @ETL(table = ProcessedTables.APARTMENT_INVESTMENT_ANALYSIS)
-case class ApartmentInvestmentAnalysis(dateOption: Option[LocalDate])(implicit spark: SparkSession) extends Processor(dateOption.get) {
+case class ApartmentInvestmentAnalysis(config: ProcessorConfig)(implicit spark: SparkSession) extends Processor(config) {
   override protected val schema: StructType = StructType(Seq()) // TODO: fill this
 
-  private val properties = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES, dateOption)
-  private val postalCodeAnalysis = readProcessed(ProcessedTables.PROPERTIES, dateOption)
+  private lazy val properties = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES, Some(config.date))
+  private lazy val postalCodeAnalysis = readProcessed(ProcessedTables.PROPERTIES, Some(config.date))
 
   override protected def build(): DataFrame = {
     properties

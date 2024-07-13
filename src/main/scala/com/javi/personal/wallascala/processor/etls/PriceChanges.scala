@@ -1,16 +1,14 @@
 package com.javi.personal.wallascala.processor.etls
 
 import com.javi.personal.wallascala.processor.etls.PriceChanges._
-import com.javi.personal.wallascala.processor.etls.Properties.{Bathrooms, City, Country, CreationDate, Currency, Date, Description, Elevator, Garage, Garden, Id, Link, ModificationDate, Operation, Pool, PostalCode, Price, Province, Region, Rooms, Source, Surface, Terrace, Title, Type}
-import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor}
+import com.javi.personal.wallascala.processor.etls.Properties.Id
+import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor, ProcessorConfig}
 import org.apache.spark.sql.functions.{col, round}
-import org.apache.spark.sql.types.{BooleanType, DateType, DoubleType, IntegerType, StringType, StructField, StructType}
+import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-import java.time.LocalDate
-
 @ETL(table = ProcessedTables.PRICE_CHANGES)
-case class PriceChanges(date: LocalDate)(implicit spark: SparkSession) extends Processor(date) {
+case class PriceChanges(config: ProcessorConfig)(implicit spark: SparkSession) extends Processor(config) {
 
   override protected val writerCoalesce: Option[Int] = Some(1)
   override protected val schema: StructType = StructType(Array(
@@ -21,9 +19,9 @@ case class PriceChanges(date: LocalDate)(implicit spark: SparkSession) extends P
   ))
 
   object sources {
-    val todayProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES, Some(date))
+    lazy val todayProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES, Some(config.date))
       .select(Properties.Id, Properties.Price).as("tp")
-    val yesterdayProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES, Some(date.minusDays(1)))
+    lazy val yesterdayProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES, Some(config.date.minusDays(1)))
       .select(Properties.Id, Properties.Price).as("yp")
   }
 

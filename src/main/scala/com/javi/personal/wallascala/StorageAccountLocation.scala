@@ -1,7 +1,6 @@
 package com.javi.personal.wallascala
 
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 case class StorageAccountLocation(account: String, container: String, path: String, v2: Boolean = false) {
 

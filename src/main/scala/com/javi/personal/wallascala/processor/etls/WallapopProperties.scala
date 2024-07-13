@@ -1,16 +1,15 @@
 package com.javi.personal.wallascala.processor.etls
 
 import com.javi.personal.wallascala.processor.etls.WallapopProperties._
-import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor}
+import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor, ProcessorConfig}
 import org.apache.spark.sql.functions.{col, concat, lit, to_date}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @ETL(table = ProcessedTables.WALLAPOP_PROPERTIES)
-class WallapopProperties(date: LocalDate)(implicit spark: SparkSession) extends Processor(date) {
+class WallapopProperties(config: ProcessorConfig)(implicit spark: SparkSession) extends Processor(config) {
 
   override protected val writerCoalesce: Option[Int] = Some(1)
   override protected val schema: StructType = StructType(Array(
@@ -43,8 +42,8 @@ class WallapopProperties(date: LocalDate)(implicit spark: SparkSession) extends 
   )
 
   private object sources {
-    val sanitedWallapopProperties: DataFrame = readSanited("wallapop", "properties", date)
-    val sanitedProvinces: DataFrame = readSanited("opendatasoft", "provincias-espanolas")
+    lazy val sanitedWallapopProperties: DataFrame = readSanited("wallapop", "properties", config.date)
+    lazy val sanitedProvinces: DataFrame = readSanited("opendatasoft", "provincias-espanolas")
   }
 
   override protected def build(): DataFrame = {
@@ -61,7 +60,7 @@ class WallapopProperties(date: LocalDate)(implicit spark: SparkSession) extends 
       .withColumn(Link, concat(lit("https://es.wallapop.com/item/"), col("web_slug")))
       .withColumn(CreationDate, to_date(col(CreationDate)))
       .withColumn(ModificationDate, to_date(col(ModificationDate)))
-      .withColumn(Date, lit(date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))))
+      .withColumn(Date, lit(config.date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))))
       .dropDuplicates(Title, Price, Description, Surface, Operation)
       .select(schema.fields.map(field => col(field.name).cast(field.dataType)):_*)
   }
