@@ -3,7 +3,7 @@ package com.javi.personal.wallascala.cleaner
 import com.javi.personal.wallascala.cleaner.model.{CleanerMetadata, MetadataCatalog, ValidationResult}
 import com.javi.personal.wallascala.utils.reader.SparkFileReader
 import com.javi.personal.wallascala.utils.writers.SparkFileWriter
-import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.functions.{array, array_except, col, flatten, lit, size}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object Cleaner {
@@ -21,19 +21,27 @@ object Cleaner {
   private def validate(inputDF: DataFrame, metadata: CleanerMetadata): ValidationResult = {
 
     def cleanField(df: DataFrame, field: FieldCleaner): DataFrame = {
-      df.withColumn(field.name, field.clean(col(field.name)))
+      val (result, error) = field.clean(col(field.name))
+      df
+        .withColumn(f"${field.name}_result", result)
+        .withColumn(f"${field.name}_error", error)
     }
 
     val dfCleaned = metadata.fields
       .foldLeft(inputDF)(cleanField)
-      .select(metadata.fields.map(field => col(field.name)): _*)
+      .withColumn("errors", {
+        val errorsArray = flatten(array(metadata.fields.map(field => col(s"${field.name}_error")):_*))
+        val exclusions = array(lit(null))
+        array_except(errorsArray, exclusions)
+      })
+      .withColumn("hasErrors", size(col("errors")) > 0)
 
     val dfInvalidRecords = dfCleaned
-      .filter(metadata.fields.map(field => col(s"${field.name}.error").isNotNull).reduce(_ || _))
-      .select(dfCleaned.columns.map(x => col(x+".error").as(x)): _*)
+      .filter(col("hasErrors"))
+      .select(Seq(col("errors")) ++ metadata.fields.map(x => col(x.name)): _*)
     val dfValidRecords = dfCleaned
-      .filter(metadata.fields.map(field => col(s"${field.name}.error").isNull).reduce(_ && _))
-      .select(dfCleaned.columns.map(x => col(x+".result").as(x)): _*)
+      .filter(!col("hasErrors"))
+      .select(metadata.fields.map(x => col(x.name+"_result").as(x.name)): _*)
 
 
     ValidationResult(dfValidRecords, dfInvalidRecords)
