@@ -17,6 +17,7 @@ object MetadataCatalog {
 
   def default(): MetadataCatalog = MetadataCatalog(
     items = Seq(
+      wallapopPropertiesOld,
       wallapopProperties,
       fotocasaProperties,
       provinciasEspanolas,
@@ -24,11 +25,57 @@ object MetadataCatalog {
     )
   )
 
+  private val wallapopPropertiesOld: CleanerMetadata = CleanerMetadata(
+    id = "wallapop_properties_old",
+    fields = Seq(
+      FieldCleaner("bathrooms", IntegerType),
+      FieldCleaner("category_id", IntegerType, filter = Some(_.equalTo("200"))),
+      FieldCleaner("condition", StringType),
+      FieldCleaner("creation_date", TimestampType, transform = Some(Transformations.millisecondsToTimestamp)),
+      FieldCleaner("currency", StringType),
+      FieldCleaner("distance", DoubleType),
+      FieldCleaner("elevator", BooleanType),
+      FieldCleaner("favorited", BooleanType),
+      FieldCleaner("flags__banned", BooleanType),
+      FieldCleaner("flags__expired", BooleanType),
+      FieldCleaner("flags__onhold", BooleanType),
+      FieldCleaner("flags__pending", BooleanType),
+      FieldCleaner("flags__reserved", BooleanType),
+      FieldCleaner("flags__sold", BooleanType),
+      FieldCleaner("garage", BooleanType),
+      FieldCleaner("garden", BooleanType),
+      FieldCleaner("id", StringType),
+      FieldCleaner("images", StringType),
+      FieldCleaner("location__city", StringType),
+      FieldCleaner("location__country_code", StringType),
+      FieldCleaner("location__postal_code", IntegerType),
+      FieldCleaner("modification_date", TimestampType, transform = Some(Transformations.millisecondsToTimestamp)),
+      FieldCleaner("operation", StringType, filter = Some(_.isNotNull)),
+      FieldCleaner("pool", BooleanType),
+      FieldCleaner("price", DoubleType),
+      FieldCleaner("rooms", IntegerType),
+      FieldCleaner("storytelling", StringType),
+      FieldCleaner("surface", IntegerType),
+      FieldCleaner("terrace", BooleanType),
+      FieldCleaner("title", StringType),
+      FieldCleaner("type", StringType, filter = Some(_.isNotNull)),
+      FieldCleaner("user__id", StringType),
+      FieldCleaner("visibility_flags__boosted", BooleanType),
+      FieldCleaner("visibility_flags__bumped", BooleanType),
+      FieldCleaner("visibility_flags__country_bumped", BooleanType),
+      FieldCleaner("visibility_flags__highlighted", BooleanType),
+      FieldCleaner("visibility_flags__urgent", BooleanType),
+      FieldCleaner("web_slug", StringType),
+      FieldCleaner("source", StringType),
+      FieldCleaner("date", StringType),
+    )
+  )
+
   private val wallapopProperties: CleanerMetadata = CleanerMetadata(
     id = "wallapop_properties",
     fields = Seq(
       FieldCleaner("bathrooms", IntegerType),
-      FieldCleaner("category_id", IntegerType),
+      FieldCleaner("category_id", IntegerType, filter = Some(_.equalTo("200"))),
       FieldCleaner("condition", StringType),
       FieldCleaner("creation_date", TimestampType, transform = Some(to_timestamp)),
       FieldCleaner("currency", StringType),
@@ -49,7 +96,7 @@ object MetadataCatalog {
       FieldCleaner("location__country_code", StringType),
       FieldCleaner("location__postal_code", IntegerType),
       FieldCleaner("modification_date", TimestampType, transform = Some(to_timestamp)),
-      FieldCleaner("operation", StringType),
+      FieldCleaner("operation", StringType, filter = Some(_.isNotNull)),
       FieldCleaner("pool", BooleanType),
       FieldCleaner("price", DoubleType),
       FieldCleaner("rooms", IntegerType),
@@ -57,7 +104,7 @@ object MetadataCatalog {
       FieldCleaner("surface", IntegerType),
       FieldCleaner("terrace", BooleanType),
       FieldCleaner("title", StringType),
-      FieldCleaner("type", StringType),
+      FieldCleaner("type", StringType, filter = Some(_.isNotNull)),
       FieldCleaner("user__id", StringType),
       FieldCleaner("visibility_flags__boosted", BooleanType),
       FieldCleaner("visibility_flags__bumped", BooleanType),

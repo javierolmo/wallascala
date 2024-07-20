@@ -18,7 +18,7 @@ case class PriceChanges(config: ProcessorConfig)(implicit spark: SparkSession) e
     StructField(Discount, DoubleType)
   ))
 
-  object sources {
+  private object sources {
     lazy val todayProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES, Some(config.date))
       .select(Properties.Id, Properties.Price).as("tp")
     lazy val yesterdayProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES, Some(config.date.minusDays(1)))
@@ -44,7 +44,4 @@ object PriceChanges {
   val NewPrice = "new_price"
   val Discount = "discount"
   val DiscountRate = "discount_rate"
-  val Year = "year"
-  val Month = "month"
-  val Day = "day"
 }

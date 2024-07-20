@@ -1,10 +1,13 @@
 package com.javi.personal.wallascala.cleaner
 
 import com.javi.personal.wallascala.cleaner.model.Transformations
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
+import org.apache.spark.sql.execution.vectorized.ColumnVectorUtils
 import org.apache.spark.sql.functions.col
-import org.apache.spark.sql.types.{DataType, IntegerType, StringType, StructType}
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.apache.spark.sql.types.{DataType, IntegerType, StringType, StructField, StructType}
+import org.apache.spark.sql.vectorized.ColumnarRow
+import org.apache.spark.sql.{Column, DataFrame, Row, SparkSession}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.not.be
 import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, equal}
@@ -21,8 +24,8 @@ class FieldCleanerTest extends AnyFlatSpec {
 
     val (dataType, value) = executeCleaner(input, cleaner)
 
-    value should be ("some_value")
-    dataType should equal (StringType)
+    value shouldEqual Some("some_value")
+    dataType shouldEqual StringType
   }
 
   it should "clean integer correctly" in {
@@ -31,8 +34,8 @@ class FieldCleanerTest extends AnyFlatSpec {
 
     val (dataType, value) = executeCleaner(input, cleaner)
 
-    value should be (123123)
-    dataType should equal (IntegerType)
+    value shouldEqual Some(123123)
+    dataType shouldEqual IntegerType
   }
 
   it should "clean integer error when input is not an integer" in {
@@ -41,8 +44,8 @@ class FieldCleanerTest extends AnyFlatSpec {
 
     val (dataType, value) = executeCleaner(input, cleaner)
 
-    value should equal (None)
-    dataType should equal (IntegerType)
+    value shouldEqual None
+    dataType shouldEqual IntegerType
   }
 
   it should "Default value should be taken when input field is null" in {
@@ -51,8 +54,8 @@ class FieldCleanerTest extends AnyFlatSpec {
 
     val (dataType, value) = executeCleaner(input, cleaner)
 
-    value should be (0)
-    dataType should equal (IntegerType)
+    value shouldEqual Some(0)
+    dataType shouldEqual IntegerType
   }
 
   it should "Default value should not be taken when cast fails" in {
@@ -61,8 +64,8 @@ class FieldCleanerTest extends AnyFlatSpec {
 
     val (dataType, value) = executeCleaner(input, cleaner)
 
-    value should equal (None)
-    dataType should equal (IntegerType)
+    value shouldEqual None
+    dataType shouldEqual IntegerType
   }
 
   it should "Transformation should be applied before cast" in {
@@ -71,17 +74,47 @@ class FieldCleanerTest extends AnyFlatSpec {
 
     val (dataType, value) = executeCleaner(input, cleaner)
 
-    value should be (123)
-    dataType should equal (IntegerType)
+    value shouldEqual Some(123)
+    dataType shouldEqual IntegerType
   }
 
-  private def executeCleaner(input: String, cleaner: FieldCleaner): (DataType, Any) = {
+  it should "Filter should be applied before cast" in {
+    val input: String = "some_value"
+    val cleaner = FieldCleaner("some_field", StringType, filter = Some(_.isin("some_value")))
+
+    val (dataType, value) = executeCleaner(input, cleaner)
+
+    value shouldEqual Some("some_value")
+    dataType shouldEqual StringType
+  }
+
+  it should "Error should be returned when filter does not match (string comparation)" in {
+    val input: String = "some_value"
+    val cleaner = FieldCleaner("some_field", StringType, filter = Some(_.isin("some_other_value")))
+
+    val (dataType, value) = executeCleaner(input, cleaner)
+
+    value shouldEqual None
+    dataType shouldEqual StringType
+  }
+
+  it should "Error should be returned filter does not match (null case)" in {
+    val input: String = null
+    val cleaner = FieldCleaner("some_field", StringType, filter = Some(_.isNotNull))
+
+    val (dataType, value) = executeCleaner(input, cleaner)
+
+    value shouldEqual None
+    dataType shouldEqual StringType
+  }
+
+  private def executeCleaner(input: String, cleaner: FieldCleaner): (DataType, Option[Any]) = {
     val df: DataFrame = Seq(input).toDF("some_field")
-    val cleanedDF = df.select(cleaner.clean(col("some_field")))
-    val result: Row = cleanedDF.collect()(0)
+    val (errors, result) = cleaner.clean(col("some_field"))
+    val cleanedDF = df.withColumn("errors", errors).withColumn("result", result)
     (
-      result.schema.fields(0).dataType.asInstanceOf[StructType].fields(0).dataType,
-      Option(result(0).asInstanceOf[GenericRowWithSchema].get(0))
+      cleanedDF("result").expr.dataType,
+      cleanedDF.select("result").collect().headOption.map(_.getAs[Any](0)).flatMap(Option(_))
     )
   }
 
