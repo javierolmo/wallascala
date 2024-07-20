@@ -18,8 +18,8 @@ case class FieldCleaner(
     val excludedByFilter = filter.map(!_.apply(defaultedField)).getOrElse(lit(false))
     val castedField = castField(defaultedField, dataType, transform, filter)
     val errorCasting = when(inputField.isNotNull and castedField.isNull, lit(true)).otherwise(lit(false))
-    val leftSide = when(!errorCasting and !excludedByFilter, castedField)
-    val rightSide = array(
+    val rightSide = when(!errorCasting and !excludedByFilter, castedField)
+    val leftSide = array(
       when(errorCasting, createErrorStruct(inputField, name, dataType, "Error casting")).otherwise(typedLit[StructType](null)),
       when(excludedByFilter, createErrorStruct(inputField, name, dataType, "Does not match filter " + excludedByFilter.expr.sql)).otherwise(typedLit[StructType](null))
     )

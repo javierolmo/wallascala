@@ -21,7 +21,7 @@ object Cleaner {
   private def validate(inputDF: DataFrame, metadata: CleanerMetadata): ValidationResult = {
 
     def cleanField(df: DataFrame, field: FieldCleaner): DataFrame = {
-      val (result, error) = field.clean(col(field.name))
+      val (error, result) = field.clean(col(field.name))
       df
         .withColumn(f"${field.name}_result", result)
         .withColumn(f"${field.name}_error", error)
