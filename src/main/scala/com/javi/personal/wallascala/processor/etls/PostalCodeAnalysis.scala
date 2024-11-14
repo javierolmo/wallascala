@@ -9,7 +9,6 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 @ETL(table = ProcessedTables.POSTAL_CODE_ANALYSIS)
 case class PostalCodeAnalysis (config: ProcessorConfig)(implicit spark: SparkSession) extends Processor(config) {
 
-  override protected val writerCoalesce: Option[Int] = Some(1)
   // override protected val finalColumns: Array[String] = Array(City, PostalCode, Type, Operation, AveragePrice, AverageSurface, AveragePriceM2, Count) // TODO
 
   object sources {

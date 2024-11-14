@@ -10,7 +10,6 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 @ETL(table = ProcessedTables.PRICE_CHANGES)
 case class PriceChanges(config: ProcessorConfig)(implicit spark: SparkSession) extends Processor(config) {
 
-  override protected val writerCoalesce: Option[Int] = Some(1)
   override protected val schema: StructType = StructType(Array(
     StructField(Id, StringType),
     StructField(PreviousPrice, IntegerType),

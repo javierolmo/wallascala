@@ -13,20 +13,19 @@ import scala.collection.JavaConverters._
 abstract class Processor(config: ProcessorConfig)(implicit spark: SparkSession) extends SparkUtils {
 
   protected val datasetName: ProcessedTables = getClass.getAnnotation(classOf[ETL]).table()
-  protected val writerCoalesce: Option[Int] = Option.empty
   protected val schema: StructType = StructType(Seq())
   protected def writer: SparkWriter = SparkFileWriter(
     path = config.targetPath,
+    repartition = config.repartition
   )
   protected def build(): DataFrame
 
   final def execute(): Unit = {
     val cols: Array[Column] = schema.fields.map(field => col(field.name).cast(field.dataType))
     val dataFrame = build().select(cols:_*)
-    val dataFrameWithCoalesce = if (writerCoalesce.isDefined) dataFrame.coalesce(writerCoalesce.get) else dataFrame
 
     // Write dataframe
-    writer.write(dataFrameWithCoalesce)(spark)
+    writer.write(dataFrame)(spark)
   }
 
 }

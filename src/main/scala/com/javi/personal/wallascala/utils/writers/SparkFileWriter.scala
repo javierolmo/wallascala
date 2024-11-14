@@ -13,7 +13,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
  * @param spark The SparkSession to use.
  */
 case class SparkFileWriter
-  (path: String, hiveTable: Option[String] = Option.empty, format: String = "parquet", saveMode: String = "overwrite", options: Map[String, String] = Map(), coalesce: Option[Int] = Option.empty, partitionBy: Seq[String] = Seq())
+  (path: String, hiveTable: Option[String] = Option.empty, format: String = "parquet", saveMode: String = "overwrite", options: Map[String, String] = Map(), coalesce: Option[Int] = Option.empty, partitionBy: Seq[String] = Seq(), repartition: Option[Int] = Option.empty)
   (implicit spark: SparkSession)
 extends SparkWriter(format=format, saveMode=saveMode, options=options, partitionBy=partitionBy) {
 
@@ -22,8 +22,13 @@ extends SparkWriter(format=format, saveMode=saveMode, options=options, partition
     case None => dataFrame
   }
 
+  private def withRepartition(dataFrame: DataFrame): DataFrame = repartition match {
+    case Some(value) => dataFrame.repartition(value)
+    case None => dataFrame
+  }
+
   def write(dataFrame: DataFrame)(implicit spark: SparkSession): Unit = {
-    val writer = baseWriter(withCoalesce(dataFrame))
+    val writer = baseWriter(withRepartition(withCoalesce(dataFrame)))
     hiveTable match {
       case Some(value) => writer.option("path", path).saveAsTable(value)
       case None => writer.save(path)
