@@ -10,8 +10,6 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 @ETL(table = ProcessedTables.WALLAPOP_PROPERTIES_SNAPSHOTS)
 class WallapopPropertiesSnapshots(config: ProcessorConfig)(implicit spark: SparkSession) extends Processor(config) {
 
-  override protected val writerCoalesce: Option[Int] = Option(4)
-
   override protected val schema: StructType = StructType(Array(
       StructField(Id, StringType),
       StructField(Title, StringType),
@@ -39,11 +37,10 @@ class WallapopPropertiesSnapshots(config: ProcessorConfig)(implicit spark: Spark
       StructField(Type, StringType),
       StructField(StartDate, DateType),
       StructField(EndDate, DateType)
-    )
-  )
+  ))
 
   private object sources {
-    lazy val wallapopProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES, Option.empty)
+    def wallapopProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES, Option.empty)
   }
 
   override protected def build(): DataFrame = {

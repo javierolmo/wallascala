@@ -5,7 +5,7 @@ import scopt.{OParser, OParserBuilder}
 
 import java.time.LocalDate
 
-case class ProcessorConfig(datasetName: String, date: LocalDate, targetPath: String)
+case class ProcessorConfig(datasetName: String, date: LocalDate, targetPath: String, coalesce: Option[Int] = Option.empty, repartition: Option[Int] = Option.empty)
 
 object ProcessorConfig {
 
@@ -36,6 +36,10 @@ object ProcessorConfig {
         .required()
         .action((x, c) => c.copy(targetPath = x))
         .text("target path to write the processed data"),
+      opt[String]('r', "repartition")
+        .optional()
+        .action((x, c) => c.copy(repartition = Some(x.toInt)))
+        .text("number of partitions to coalesce the data"),
       help("help").text("prints this usage text")
     )
   }

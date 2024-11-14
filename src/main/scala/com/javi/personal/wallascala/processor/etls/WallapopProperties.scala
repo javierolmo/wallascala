@@ -11,7 +11,6 @@ import java.time.format.DateTimeFormatter
 @ETL(table = ProcessedTables.WALLAPOP_PROPERTIES)
 class WallapopProperties(config: ProcessorConfig)(implicit spark: SparkSession) extends Processor(config) {
 
-  override protected val writerCoalesce: Option[Int] = Some(1)
   override protected val schema: StructType = StructType(Array(
       StructField(Id, StringType),
       StructField(Title, StringType),
