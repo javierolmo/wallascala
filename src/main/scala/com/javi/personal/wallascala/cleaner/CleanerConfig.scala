@@ -8,7 +8,7 @@ case class CleanerConfig(sourcePath: String, targetPath: String, targetPathExclu
 
 object CleanerConfig {
 
-  private val PROGRAM_NAME = "wallascala"
+  private val PROGRAM_NAME = "cleaner"
   private val VERSION = "0.1"
 
   val builder: OParserBuilder[CleanerConfig] = OParser.builder[CleanerConfig]

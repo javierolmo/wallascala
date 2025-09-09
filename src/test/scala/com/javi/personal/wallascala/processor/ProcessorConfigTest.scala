@@ -91,4 +91,70 @@ class ProcessorConfigTest extends AnyFlatSpec with Matchers {
     }
   }
 
+  it should "Parse coalesce correctly when provided with a positive integer" in {
+    val args = Array(
+      "--datasetName", "ANY_VALUE",
+      "--date", "2000-01-01",
+      "--targetPath", "ANY_VALUE",
+      "--coalesce", "5"
+    )
+
+    val result = ProcessorConfig.parse(args)
+
+    result.coalesce shouldEqual Some(5)
+  }
+
+  it should "Fail if coalesce is provided with a non-positive integer" in {
+    val args = Array(
+      "--datasetName", "ANY_VALUE",
+      "--date", "2000-01-01",
+      "--targetPath", "ANY_VALUE",
+      "--coalesce", "0"
+    )
+
+    assertThrows[WallaScalaException] {
+      ProcessorConfig.parse(args)
+    }
+  }
+
+  it should "Parse repartition correctly when provided with a positive integer" in {
+    val args = Array(
+      "--datasetName", "ANY_VALUE",
+      "--date", "2000-01-01",
+      "--targetPath", "ANY_VALUE",
+      "--repartition", "10"
+    )
+
+    val result = ProcessorConfig.parse(args)
+
+    result.repartition shouldEqual Some(10)
+  }
+
+  it should "Fail if repartition is provided with a non-positive integer" in {
+    val args = Array(
+      "--datasetName", "ANY_VALUE",
+      "--date", "2000-01-01",
+      "--targetPath", "ANY_VALUE",
+      "--repartition", "-3"
+    )
+
+    assertThrows[WallaScalaException] {
+      ProcessorConfig.parse(args)
+    }
+  }
+
+  it should "Print help message when help argument is provided" in {
+    val args = Array("--help")
+
+    assertThrows[WallaScalaException] {
+      ProcessorConfig.parse(args)
+    }
+  }
+
+  it should "Y si empieza por el nombre del comando?" in {
+    val args = Array("processor", "--help")
+
+    ProcessorConfig.parse(args)
+  }
+
 }

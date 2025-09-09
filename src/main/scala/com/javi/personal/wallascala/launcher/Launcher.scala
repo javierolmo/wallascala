@@ -3,7 +3,7 @@ package com.javi.personal.wallascala.launcher
 import com.javi.personal.wallascala.SparkUtils
 import com.javi.personal.wallascala.utils.reader.{SparkFileReader, SparkReader}
 import com.javi.personal.wallascala.utils.writers.{SparkFileWriter, SparkSqlWriter, SparkWriter}
-import org.apache.spark.sql.functions.lit
+import org.apache.spark.sql.functions.{col, lit}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object Launcher extends SparkUtils {
@@ -16,17 +16,21 @@ object Launcher extends SparkUtils {
       .map(_.split("="))
       .filter(_.length == 2)
       .foldLeft(dataFrame)((df, column) => addColumn(df, column(0), column(1)))
-    writer.write(dataFrameWithColumns)
+    val dataFrameWithSelectedColumns = config.select match {
+      case Some(columns) => dataFrameWithColumns.select(columns.map(colName => col(colName.trim)): _*)
+      case None => dataFrameWithColumns
+    }
+    writer.write(dataFrameWithSelectedColumns)
   }
 
-  private def buildReader(config: LauncherConfig)(implicit spark: SparkSession): SparkReader = {
+  def buildReader(config: LauncherConfig)(implicit spark: SparkSession): SparkReader = {
     config.sourceFormat match {
       case "jdbc" => throw new UnsupportedOperationException("JDBC source format is not supported yet.")
       case _ => new SparkFileReader(path = config.sourcePath.getOrElse(throw new IllegalArgumentException("Source path is required.")), format = config.sourceFormat)
     }
   }
 
-  private def buildWriter(config: LauncherConfig)(implicit spark: SparkSession): SparkWriter = {
+  def buildWriter(config: LauncherConfig)(implicit spark: SparkSession): SparkWriter = {
     config.targetFormat match {
       case "jdbc" =>
         val database = config.targetTable.get.split("\\.")(0)

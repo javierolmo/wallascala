@@ -18,9 +18,11 @@ case class PriceChanges(config: ProcessorConfig)(implicit spark: SparkSession) e
   ))
 
   private object sources {
-    lazy val todayProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES, Some(config.date))
+    lazy val todayProperties: DataFrame =
+      readProcessed(ProcessedTables.WALLAPOP_PROPERTIES, Some(config.date))
       .select(Properties.Id, Properties.Price).as("tp")
-    lazy val yesterdayProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES, Some(config.date.minusDays(1)))
+    lazy val yesterdayProperties: DataFrame =
+      readProcessed(ProcessedTables.WALLAPOP_PROPERTIES, Some(config.date.minusDays(1)))
       .select(Properties.Id, Properties.Price).as("yp")
   }
 

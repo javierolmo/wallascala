@@ -36,10 +36,22 @@ object ProcessorConfig {
         .required()
         .action((x, c) => c.copy(targetPath = x))
         .text("target path to write the processed data"),
+      opt[String]('c', "coalesce")
+        .optional()
+        .validate(x =>
+          if (x.toInt > 0) success
+          else failure("Value for --coalesce must be a positive integer")
+        )
+        .action((x, c) => c.copy(coalesce = Some(x.toInt)))
+        .text("number of partitions to coalesce the data"),
       opt[String]('r', "repartition")
         .optional()
+        .validate(x =>
+          if (x.toInt > 0) success
+          else failure("Value for --repartition must be a positive integer")
+        )
         .action((x, c) => c.copy(repartition = Some(x.toInt)))
-        .text("number of partitions to coalesce the data"),
+        .text("number of partitions to repartition the data"),
       help("help").text("prints this usage text")
     )
   }

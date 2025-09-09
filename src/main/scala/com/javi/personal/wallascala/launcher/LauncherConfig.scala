@@ -18,7 +18,7 @@ case class LauncherConfig(
                          )
 
 object LauncherConfig {
-  private val PROGRAM_NAME = "wallascala-ingestor"
+  private val PROGRAM_NAME = "launcher"
   private val VERSION = "0.1"
 
   private val builder: OParserBuilder[LauncherConfig] = OParser.builder[LauncherConfig]
@@ -31,48 +31,48 @@ object LauncherConfig {
       opt[String]("sourcePath")
         .optional()
         .action((x, c) => c.copy(sourcePath = Some(x)))
-        .text("source path"),
+        .text("Ruta de origen del fichero o directorio a leer (por ejemplo, abfss://container@account/some_path). Solo se usa si sourceFormat no es 'jdbc'."),
       opt[String]("sourceTable")
         .optional()
         .action((x, c) => c.copy(sourceTable = Some(x)))
-        .text("source sql table"),
+        .text("Nombre de la tabla SQL de origen (por ejemplo, db.tabla). Solo se usa si sourceFormat es 'jdbc'."),
       opt[String]("targetPath")
         .optional()
         .action((x, c) => c.copy(targetPath = Some(x)))
-        .text("target path"),
+        .text("Ruta de destino donde se guardarán los datos (por ejemplo, abfss://container@account/some_path). Solo se usa si targetFormat no es 'jdbc'."),
       opt[String]("targetTable")
         .optional()
         .action((x, c) => c.copy(targetTable = Some(x)))
-        .text("target sql table"),
+        .text("Nombre de la tabla SQL de destino (por ejemplo, db.tabla). Solo se usa si targetFormat es 'jdbc'."),
       opt[String]("sourceFormat")
         .optional()
         .action((x, c) => c.copy(sourceFormat = x))
-        .text("source format"),
+        .text("Formato de los datos de entrada: parquet, csv, json, jdbc, etc. Por defecto: parquet."),
       opt[String]("targetFormat")
         .optional()
         .action((x, c) => c.copy(targetFormat = x))
-        .text("source format"),
+        .text("Formato de los datos de salida: parquet, csv, json, jdbc, etc. Por defecto: parquet."),
       opt[Seq[String]]("select")
         .optional()
         .action((x, c) => c.copy(select = Some(x)))
-        .text("list of fields to partition by final source"),
+        .text("Lista de campos a seleccionar del origen, separados por coma (por ejemplo, campo1,campo2)."),
       opt[Int]("coalesce")
         .optional()
         .action((x, c) => c.copy(coalesce = Some(x)))
-        .text("Perform spark's coalesce in write operation"),
+        .text("Número de particiones a usar en la escritura (Spark coalesce)."),
       opt[Unit]("flattenFields")
         .optional()
         .action((_, c) => c.copy(flattenFields = true))
-        .text("Flatten fields from source"),
+        .text("Si se indica, aplanará los campos anidados del origen (flatten)."),
       opt[Seq[String]]("addColumns")
         .optional()
         .action((x, c) => c.copy(newColumns = x))
-        .text("Add columns to the final dataframe"),
+        .text("Añade columnas al DataFrame final. Formato: nombre=valor. Ejemplo: col1=valor1,col2=valor2."),
       opt[String]("mode")
         .optional()
         .action((x, c) => c.copy(mode = Some(x)))
-        .text("Mode of the write operation"),
-      help("help").text("prints this usage text"),
+        .text("Modo de escritura: overwrite, append, etc. Por defecto: overwrite."),
+      help("help").text("Muestra este texto de ayuda y termina."),
       checkConfig { config =>
         if (config.sourceFormat == "jdbc" && config.sourceTable.isEmpty)
           failure("sourceFormat = jdbc needs sourceTable parameter value")
