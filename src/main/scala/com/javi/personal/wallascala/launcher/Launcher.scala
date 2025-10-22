@@ -9,13 +9,17 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 object Launcher extends SparkUtils {
 
   def execute(config: LauncherConfig)(implicit spark: SparkSession): Unit = {
-    val (reader, writer) = (buildReader(config), buildWriter(config))
+    val reader = buildReader(config)
+    val writer = buildWriter(config)
+    
     val dataFrame = reader.read()
       .applyIf(config.flattenFields, SparkReader.flattenFields)
+      
     val dataFrameWithColumns = config.newColumns
       .map(_.split("="))
       .filter(_.length == 2)
-      .foldLeft(dataFrame)((df, column) => addColumn(df, column(0), column(1)))
+      .foldLeft(dataFrame) { case (df, Array(name, value)) => df.withColumn(name, lit(value)) }
+      
     writer.write(dataFrameWithColumns)
   }
 
@@ -45,7 +49,6 @@ object Launcher extends SparkUtils {
     )
   }
 
-  private def addColumn(dataFrame: DataFrame, columnName: String, columnValue: String): DataFrame =
-    dataFrame.withColumn(columnName, lit(columnValue))
+
 
 }

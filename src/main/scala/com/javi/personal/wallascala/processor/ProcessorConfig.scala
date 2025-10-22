@@ -45,10 +45,8 @@ object ProcessorConfig {
   }
 
   def parse(args: Array[String]): ProcessorConfig =
-    OParser.parse(parser, args, dummy) match {
-      case Some(config) => config
-      case None => throw WallaScalaException(f"Could not parse arguments: [${args.mkString(", ")}]")
-    }
+    OParser.parse(parser, args, dummy)
+      .getOrElse(throw WallaScalaException(f"Could not parse arguments: [${args.mkString(", ")}]"))
 
   private def dummy: ProcessorConfig = ProcessorConfig("", LocalDate.now, "")
 

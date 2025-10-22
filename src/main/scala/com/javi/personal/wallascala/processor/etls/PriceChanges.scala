@@ -24,16 +24,14 @@ case class PriceChanges(config: ProcessorConfig)(implicit spark: SparkSession) e
       .select(Properties.Id, Properties.Price).as("yp")
   }
 
-  override protected def build(): DataFrame = {
-    val result = sources.todayProperties
+  override protected def build(): DataFrame =
+    sources.todayProperties
       .join(sources.yesterdayProperties, Id)
       .filter(sources.yesterdayProperties(Properties.Price) =!= sources.todayProperties(Properties.Price))
       .withColumn(PreviousPrice, sources.yesterdayProperties(Properties.Price))
       .withColumn(NewPrice, sources.todayProperties(Properties.Price))
       .withColumn(DiscountRate, round((col(NewPrice) - col(PreviousPrice)) / col(PreviousPrice), 4))
       .withColumn(Discount, col(NewPrice) - col(PreviousPrice))
-    result
-  }
 
 }
 

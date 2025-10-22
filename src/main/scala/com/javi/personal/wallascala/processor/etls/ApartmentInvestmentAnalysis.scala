@@ -11,7 +11,5 @@ case class ApartmentInvestmentAnalysis(config: ProcessorConfig)(implicit spark: 
   private lazy val properties = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES, Some(config.date))
   private lazy val postalCodeAnalysis = readProcessed(ProcessedTables.PROPERTIES, Some(config.date))
 
-  override protected def build(): DataFrame = {
-    properties
-  }
+  override protected def build(): DataFrame = properties
 }

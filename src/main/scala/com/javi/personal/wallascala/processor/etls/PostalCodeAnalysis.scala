@@ -18,8 +18,8 @@ case class PostalCodeAnalysis (config: ProcessorConfig)(implicit spark: SparkSes
       .filter(col("row_number") === 1)
   }
 
-  override protected def build(): DataFrame = {
-    val result = sources.properties
+  override protected def build(): DataFrame =
+    sources.properties
       .withColumn(Properties.Surface, when(col(Properties.Surface) === 0, null).otherwise(col(Properties.Surface)))
       .withColumn(Properties.Price, when(col(Properties.Price) === 0, null).otherwise(col(Properties.Price)))
       .withColumn("price_m2", col(Properties.Price) / col(Properties.Surface))
@@ -31,9 +31,6 @@ case class PostalCodeAnalysis (config: ProcessorConfig)(implicit spark: SparkSes
         round(avg("price_m2"), 2).as(AveragePriceM2),
         count(Properties.Id).as(Count)
       )
-
-    result
-  }
 }
 
 object PostalCodeAnalysis {

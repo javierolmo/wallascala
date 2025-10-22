@@ -39,10 +39,8 @@ object CleanerConfig {
   }
 
   def parse(args: Array[String]): CleanerConfig =
-    OParser.parse(parser, args, dummy) match {
-      case Some(config) => config
-      case None => throw WallaScalaException(f"Could not parse arguments: [${args.mkString(", ")}]")
-    }
+    OParser.parse(parser, args, dummy)
+      .getOrElse(throw WallaScalaException(f"Could not parse arguments: [${args.mkString(", ")}]"))
 
   def dummy: CleanerConfig = CleanerConfig(null, null, null, null)
 

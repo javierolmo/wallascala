@@ -84,10 +84,7 @@ object LauncherConfig {
     )
   }
 
-  def parse(args: Array[String]): LauncherConfig = {
-    OParser.parse(parser, args, LauncherConfig()) match {
-      case Some(config) => config
-      case None => throw WallaScalaException(f"Could not parse arguments: [${args.mkString(", ")}]")
-    }
-  }
+  def parse(args: Array[String]): LauncherConfig =
+    OParser.parse(parser, args, LauncherConfig())
+      .getOrElse(throw WallaScalaException(f"Could not parse arguments: [${args.mkString(", ")}]"))
 }
