@@ -4,13 +4,12 @@ case class DatabaseConnection(host: String, port: Int, user: String, pass: Strin
 
 object DatabaseConnection {
 
-  def fromEnv(): DatabaseConnection = {
-    val host = readEnvironmentVariable("DB_HOST")
-    val port = readEnvironmentVariable("DB_PORT").toInt
-    val user = readEnvironmentVariable("DB_USER")
-    val pass = readEnvironmentVariable("DB_PASS")
-    new DatabaseConnection(host, port, user, pass)
-  }
+  def fromEnv(): DatabaseConnection = DatabaseConnection(
+    host = readEnvironmentVariable("DB_HOST"),
+    port = readEnvironmentVariable("DB_PORT").toInt,
+    user = readEnvironmentVariable("DB_USER"),
+    pass = readEnvironmentVariable("DB_PASS")
+  )
 
   private def readEnvironmentVariable(variableName: String): String =
     sys.env.getOrElse(variableName, throw new RuntimeException(s"Environment variable $variableName not found"))
