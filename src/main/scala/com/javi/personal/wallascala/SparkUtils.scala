@@ -14,20 +14,14 @@ trait SparkUtils {
       col("month") === lit(date.getMonthValue) &&
       col("day") === lit(date.getDayOfMonth)
 
-  protected def readSanited(source: String, datasetName: String)(implicit spark: SparkSession): DataFrame = {
-    val location = PathBuilder.buildSanitedPath(source, datasetName)
-    read(location)
-  }
+  protected def readSanited(source: String, datasetName: String)(implicit spark: SparkSession): DataFrame =
+    read(PathBuilder.buildSanitedPath(source, datasetName))
 
-  protected def readSanited(source: String, datasetName: String, date: LocalDate)(implicit spark: SparkSession): DataFrame = {
-    val location = PathBuilder.buildSanitedPath(source, datasetName).cd(date)
-    read(location)
-  }
+  protected def readSanited(source: String, datasetName: String, date: LocalDate)(implicit spark: SparkSession): DataFrame =
+    read(PathBuilder.buildSanitedPath(source, datasetName).cd(date))
 
-  protected def readSanitedOptional(source: String, datasetName: String, date: LocalDate)(implicit spark: SparkSession): Option[DataFrame] = {
-    val location = PathBuilder.buildSanitedPath(source, datasetName).cd(date)
-    readOptional(location)
-  }
+  protected def readSanitedOptional(source: String, datasetName: String, date: LocalDate)(implicit spark: SparkSession): Option[DataFrame] =
+    readOptional(PathBuilder.buildSanitedPath(source, datasetName).cd(date))
 
   protected def readProcessed(dataset: ProcessedTables, dateOption: Option[LocalDate] = None)(implicit spark: SparkSession): DataFrame = {
     val location = dateOption.map(date => PathBuilder.buildProcessedPath(dataset.getName).cd(date))

@@ -41,18 +41,15 @@ object FieldCleaner {
     StructField(Message, StringType)
   ))
 
-  private def createErrorStruct(inputField: Column, fieldName: String, fieldType: DataType, message: String): Column = {
+  private def createErrorStruct(inputField: Column, fieldName: String, fieldType: DataType, message: String): Column =
     struct(
       lit(fieldName).as(FieldName),
       inputField.as(FieldValue),
       lit(fieldType.getClass.getSimpleName).as(FieldType),
       lit(message).as(Message)
     ).cast(ErrorStruct)
-  }
 
-  private def castField(inputField: Column, dataType: DataType, function: Option[Column => Column], filter: Option[Column => Column]): Column = {
-    val transformed = function.map(_.apply(inputField)).getOrElse(inputField)
-    transformed.cast(dataType)
-  }
+  private def castField(inputField: Column, dataType: DataType, function: Option[Column => Column], filter: Option[Column => Column]): Column =
+    function.map(_(inputField)).getOrElse(inputField).cast(dataType)
 
 }

@@ -17,22 +17,15 @@ case class SparkFileWriter
   (implicit spark: SparkSession)
 extends SparkWriter(format=format, saveMode=saveMode, options=options, partitionBy=partitionBy) {
 
-  private def withCoalesce(dataFrame: DataFrame): DataFrame = coalesce match {
-    case Some(value) => dataFrame.coalesce(value)
-    case None => dataFrame
-  }
+  private def withCoalesce(dataFrame: DataFrame): DataFrame = 
+    coalesce.map(dataFrame.coalesce).getOrElse(dataFrame)
 
-  private def withRepartition(dataFrame: DataFrame): DataFrame = repartition match {
-    case Some(value) => dataFrame.repartition(value)
-    case None => dataFrame
-  }
+  private def withRepartition(dataFrame: DataFrame): DataFrame = 
+    repartition.map(dataFrame.repartition).getOrElse(dataFrame)
 
   def write(dataFrame: DataFrame)(implicit spark: SparkSession): Unit = {
     val writer = baseWriter(withRepartition(withCoalesce(dataFrame)))
-    hiveTable match {
-      case Some(value) => writer.option("path", path).saveAsTable(value)
-      case None => writer.save(path)
-    }
+    hiveTable.fold(writer.save(path))(table => writer.option("path", path).saveAsTable(table))
   }
 }
 
