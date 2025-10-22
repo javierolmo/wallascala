@@ -115,9 +115,11 @@ class Properties(config: ProcessorConfig)(implicit spark: SparkSession) extends 
     }.getOrElse(emptyDataFrame)
   }
 
-  override protected def build(): DataFrame = 
-    Seq(sources.sanitedWallapopProperties, sources.sanitedPisosProperties, sources.sanitedFotocasaProperties)
-      .reduce(_ union _)
+  override protected def build(): DataFrame = {
+    sources.sanitedWallapopProperties
+      .union(sources.sanitedPisosProperties)
+      .union(sources.sanitedFotocasaProperties)
+  }
 
 }
 
