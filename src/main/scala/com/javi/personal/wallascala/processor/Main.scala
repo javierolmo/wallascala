@@ -5,11 +5,11 @@ import org.apache.spark.sql.SparkSession
 
 object Main {
 
-  private implicit lazy val spark: SparkSession = SparkSessionFactory.build()
-
   def main(args: Array[String]): Unit = {
+    implicit val spark: SparkSession = SparkSessionFactory.build()
     val config = ProcessorConfig.parse(args)
     Processor.build(config).execute()
+    spark.stop()
   }
 
 }
