@@ -38,10 +38,10 @@ object Cleaner {
 
     val dfInvalidRecords = dfCleaned
       .filter(col("hasErrors"))
-      .select(Seq(col("errors")) ++ metadata.fields.map(x => col(x.name)): _*)
+      .select((Seq(col("errors")) ++ metadata.fields.map(x => col(x.name))): _*)
     val dfValidRecords = dfCleaned
       .filter(!col("hasErrors"))
-      .select(metadata.fields.map(x => col(x.name+"_result").as(x.name)): _*)
+      .select(metadata.fields.map(x => col(s"${x.name}_result").as(x.name)): _*)
 
 
     ValidationResult(dfValidRecords, dfInvalidRecords)

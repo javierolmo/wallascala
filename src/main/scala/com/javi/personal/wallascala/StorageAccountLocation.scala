@@ -11,11 +11,10 @@ case class StorageAccountLocation(account: String, container: String, path: Stri
       .cd(s"month=${localDate.getMonthValue}")
       .cd(s"day=${localDate.getDayOfMonth}")
 
-  def wasbsURL: String = s"wasbs://$container@$account.blob.core.windows.net/$path"
-
-  def abfssURL: String = s"abfss://$container@$account.dfs.core.windows.net/$path"
-
-  def url: String = if (v2) abfssURL else wasbsURL
+  def url: String = if (v2) 
+    s"abfss://$container@$account.dfs.core.windows.net/$path"
+  else 
+    s"wasbs://$container@$account.blob.core.windows.net/$path"
 
   override def toString: String = url
 }

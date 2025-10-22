@@ -40,7 +40,7 @@ class WallapopPropertiesSnapshots(config: ProcessorConfig)(implicit spark: Spark
   ))
 
   private object sources {
-    def wallapopProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES, Option.empty)
+    def wallapopProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES)
   }
 
   override protected def build(): DataFrame = {

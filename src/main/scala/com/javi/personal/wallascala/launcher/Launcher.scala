@@ -19,32 +19,30 @@ object Launcher extends SparkUtils {
     writer.write(dataFrameWithColumns)
   }
 
-  private def buildReader(config: LauncherConfig)(implicit spark: SparkSession): SparkReader = {
-    config.sourceFormat match {
-      case "jdbc" => throw new UnsupportedOperationException("JDBC source format is not supported yet.")
-      case _ => new SparkFileReader(path = config.sourcePath.getOrElse(throw new IllegalArgumentException("Source path is required.")), format = config.sourceFormat)
-    }
+  private def buildReader(config: LauncherConfig)(implicit spark: SparkSession): SparkReader = config.sourceFormat match {
+    case "jdbc" => throw new UnsupportedOperationException("JDBC source format is not supported yet.")
+    case _ => new SparkFileReader(
+      path = config.sourcePath.getOrElse(throw new IllegalArgumentException("Source path is required.")), 
+      format = config.sourceFormat
+    )
   }
 
-  private def buildWriter(config: LauncherConfig)(implicit spark: SparkSession): SparkWriter = {
-    config.targetFormat match {
-      case "jdbc" =>
-        val database = config.targetTable.get.split("\\.")(0)
-        val table = config.targetTable.get.split("\\.")(1)
-        SparkSqlWriter(
-          database = database,
-          table = table,
-          format = config.targetFormat,
-          saveMode = config.mode.getOrElse("overwrite")
-        )
-      case _ => SparkFileWriter(
-        path = config.targetPath.get,
-        hiveTable = config.targetTable,
+  private def buildWriter(config: LauncherConfig)(implicit spark: SparkSession): SparkWriter = config.targetFormat match {
+    case "jdbc" =>
+      val Array(database, table) = config.targetTable.get.split("\\.")
+      SparkSqlWriter(
+        database = database,
+        table = table,
         format = config.targetFormat,
-        coalesce = config.coalesce,
         saveMode = config.mode.getOrElse("overwrite")
       )
-    }
+    case _ => SparkFileWriter(
+      path = config.targetPath.get,
+      hiveTable = config.targetTable,
+      format = config.targetFormat,
+      coalesce = config.coalesce,
+      saveMode = config.mode.getOrElse("overwrite")
+    )
   }
 
   private def addColumn(dataFrame: DataFrame, columnName: String, columnValue: String): DataFrame =

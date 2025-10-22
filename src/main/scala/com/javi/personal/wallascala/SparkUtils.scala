@@ -29,30 +29,23 @@ trait SparkUtils {
     readOptional(location)
   }
 
-  protected def readProcessed(dataset: ProcessedTables, dateOption: Option[LocalDate] = Option.empty)(implicit spark: SparkSession): DataFrame = {
-    val location = dateOption match {
-      case Some(date) => PathBuilder.buildProcessedPath(dataset.getName).cd(date)
-      case None => PathBuilder.buildProcessedPath(dataset.getName)
-    }
+  protected def readProcessed(dataset: ProcessedTables, dateOption: Option[LocalDate] = None)(implicit spark: SparkSession): DataFrame = {
+    val location = dateOption.map(date => PathBuilder.buildProcessedPath(dataset.getName).cd(date))
+      .getOrElse(PathBuilder.buildProcessedPath(dataset.getName))
     read(location)
   }
 
-  protected def readProcessedOptional(dataset: ProcessedTables, dateOption: Option[LocalDate] = Option.empty)(implicit spark: SparkSession): Option[DataFrame] = {
-    val location = dateOption match {
-      case Some(date) => PathBuilder.buildProcessedPath(dataset.getName).cd(date)
-      case None => PathBuilder.buildProcessedPath(dataset.getName)
-    }
+  protected def readProcessedOptional(dataset: ProcessedTables, dateOption: Option[LocalDate] = None)(implicit spark: SparkSession): Option[DataFrame] = {
+    val location = dateOption.map(date => PathBuilder.buildProcessedPath(dataset.getName).cd(date))
+      .getOrElse(PathBuilder.buildProcessedPath(dataset.getName))
     readOptional(location)
   }
 
   private def read(location: StorageAccountLocation, format: String = "parquet")(implicit spark: SparkSession): DataFrame =
     spark.read.format(format).load(location.url)
 
-  private def readOptional(location: StorageAccountLocation, format: String = "parquet")(implicit spark: SparkSession): Option[DataFrame] = try {
-    Some(read(location, format))
-  } catch {
-    case _: Exception => None
-  }
+  private def readOptional(location: StorageAccountLocation, format: String = "parquet")(implicit spark: SparkSession): Option[DataFrame] =
+    try Some(read(location, format)) catch { case _: Exception => None }
 
 
   implicit class DataFrameOps(dataFrame: DataFrame) {

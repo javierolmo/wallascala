@@ -4,17 +4,17 @@ import com.javi.personal.wallascala.WallaScalaException
 import scopt.{OParser, OParserBuilder}
 
 case class LauncherConfig(
-                           sourcePath: Option[String] = Option.empty,
-                           sourceTable: Option[String] = Option.empty,
-                           targetTable: Option[String] = Option.empty,
-                           targetPath: Option[String] = Option.empty,
+                           sourcePath: Option[String] = None,
+                           sourceTable: Option[String] = None,
+                           targetTable: Option[String] = None,
+                           targetPath: Option[String] = None,
                            sourceFormat: String = "parquet",
                            targetFormat: String = "parquet",
-                           coalesce: Option[Int] = Option.empty,
-                           select: Option[Seq[String]] = Option.empty,
+                           coalesce: Option[Int] = None,
+                           select: Option[Seq[String]] = None,
                            flattenFields: Boolean = false,
                            newColumns: Seq[String] = Seq.empty,
-                           mode: Option[String] = Option.empty
+                           mode: Option[String] = None
                          )
 
 object LauncherConfig {

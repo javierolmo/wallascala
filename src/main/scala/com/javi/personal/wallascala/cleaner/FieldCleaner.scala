@@ -8,16 +8,16 @@ import org.apache.spark.sql.types._
 case class FieldCleaner(
                          name: String,
                          dataType: DataType,
-                         filter: Option[Column => Column] = Option.empty,
-                         transform: Option[Column => Column] = Option.empty,
-                         defaultValue: Option[Any] = Option.empty) {
+                         filter: Option[Column => Column] = None,
+                         transform: Option[Column => Column] = None,
+                         defaultValue: Option[Any] = None) {
 
   def clean(inputField: Column): (Column, Column) = {
     val nulledField = when(inputField === "null", null).otherwise(inputField)
     val defaultedField = defaultValue.map(value => when(nulledField.isNull, lit(value)).otherwise(nulledField)).getOrElse(nulledField)
     val excludedByFilter = filter.map(!_.apply(defaultedField)).getOrElse(lit(false))
     val castedField = castField(defaultedField, dataType, transform, filter)
-    val errorCasting = when(inputField.isNotNull and castedField.isNull, lit(true)).otherwise(lit(false))
+    val errorCasting = inputField.isNotNull and castedField.isNull
     val rightSide = when(!errorCasting and !excludedByFilter, castedField)
     val leftSide = array(
       when(errorCasting, createErrorStruct(inputField, name, dataType, "Error casting")).otherwise(typedLit[StructType](null)),

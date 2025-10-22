@@ -40,32 +40,34 @@ class Properties(config: ProcessorConfig)(implicit spark: SparkSession) extends 
     )
   )
 
+  private def emptyDataFrame: DataFrame = spark.createDataFrame(spark.sparkContext.emptyRDD[Row], schema)
+
   private object sources {
     private val date = config.date
-    lazy val sanitedWallapopProperties: DataFrame = readSanitedOptional("wallapop", "properties", date) match {
-      case Some(wallapopProperties) =>
-        val sanitedProvinces: DataFrame = readSanited("opendatasoft", "provincias-espanolas")
-        wallapopProperties
-          .withColumn("province_code", (col("location__postal_code").cast(IntegerType)/1000).cast(IntegerType))
-          .join(sanitedProvinces.as("p"), col("province_code") === sanitedProvinces("codigo").cast(IntegerType), "left")
-          .withColumnRenamed("location__city", City)
-          .withColumnRenamed("location__country_code", Country)
-          .withColumnRenamed("location__postal_code", PostalCode)
-          .withColumnRenamed("provincia", Province)
-          .withColumnRenamed("ccaa", Region)
-          .withColumnRenamed("storytelling", Description)
-          .withColumn(Source, lit("wallapop"))
-          .withColumn(Link, concat(lit("https://es.wallapop.com/item/"), col("web_slug")))
-          .withColumn(CreationDate, to_date(col(CreationDate)))
-          .withColumn(ModificationDate, to_date(col(ModificationDate)))
-          .withColumn(Date, lit(date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))))
-          .dropDuplicates(Title, Price, Description, Surface, Operation)
-          .select(schema.fields.map(field => col(field.name).cast(field.dataType)):_*)
-      case None => spark.createDataFrame(spark.sparkContext.emptyRDD[Row], schema)
-    }
+    private val dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+    
+    lazy val sanitedWallapopProperties: DataFrame = readSanitedOptional("wallapop", "properties", date).map { wallapopProperties =>
+      val sanitedProvinces: DataFrame = readSanited("opendatasoft", "provincias-espanolas")
+      wallapopProperties
+        .withColumn("province_code", (col("location__postal_code").cast(IntegerType)/1000).cast(IntegerType))
+        .join(sanitedProvinces.as("p"), col("province_code") === sanitedProvinces("codigo").cast(IntegerType), "left")
+        .withColumnRenamed("location__city", City)
+        .withColumnRenamed("location__country_code", Country)
+        .withColumnRenamed("location__postal_code", PostalCode)
+        .withColumnRenamed("provincia", Province)
+        .withColumnRenamed("ccaa", Region)
+        .withColumnRenamed("storytelling", Description)
+        .withColumn(Source, lit("wallapop"))
+        .withColumn(Link, concat(lit("https://es.wallapop.com/item/"), col("web_slug")))
+        .withColumn(CreationDate, to_date(col(CreationDate)))
+        .withColumn(ModificationDate, to_date(col(ModificationDate)))
+        .withColumn(Date, lit(dateStr))
+        .dropDuplicates(Title, Price, Description, Surface, Operation)
+        .select(schema.fields.map(field => col(field.name).cast(field.dataType)):_*)
+    }.getOrElse(emptyDataFrame)
 
-    lazy val sanitedPisosProperties: DataFrame = readSanitedOptional("pisos", "properties", date) match {
-      case Some(pisosProperties) => pisosProperties
+    lazy val sanitedPisosProperties: DataFrame = readSanitedOptional("pisos", "properties", date).map { pisosProperties =>
+      pisosProperties
         .withColumn(Surface, col("size"))
         .withColumn(Bathrooms, col("bathrooms"))
         .withColumn(Link, concat(lit("https://www.pisos.com"), col("url")))
@@ -82,14 +84,13 @@ class Properties(config: ProcessorConfig)(implicit spark: SparkSession) extends 
         .withColumn(ModificationDate, lit(null))
         .withColumn(Pool, lit(null))
         .withColumn(Terrace, lit(null))
-        .withColumn(Date, lit(date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))))
+        .withColumn(Date, lit(dateStr))
         .dropDuplicates(Title, Price, Description, Surface, Operation)
         .select(schema.fields.map(field => col(field.name).cast(field.dataType)):_*)
-      case None => spark.createDataFrame(spark.sparkContext.emptyRDD[Row], schema)
-    }
+    }.getOrElse(emptyDataFrame)
 
-    lazy val sanitedFotocasaProperties: DataFrame = readSanitedOptional("fotocasa", "properties", date) match {
-      case Some(fotocasaProperties) => fotocasaProperties
+    lazy val sanitedFotocasaProperties: DataFrame = readSanitedOptional("fotocasa", "properties", date).map { fotocasaProperties =>
+      fotocasaProperties
         .withColumn(Surface, col("features__size"))
         .withColumn(Rooms, col("features__rooms"))
         .withColumn(Bathrooms, col("features__bathrooms"))
@@ -108,18 +109,15 @@ class Properties(config: ProcessorConfig)(implicit spark: SparkSession) extends 
         .withColumn(Pool, lit(null))
         .withColumn(Description, lit(null))
         .withColumn(Terrace, lit(null))
-        .withColumn(Date, lit(date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))))
+        .withColumn(Date, lit(dateStr))
         .dropDuplicates(Title, Price, Description, Surface, Operation)
         .select(schema.fields.map(field => col(field.name).cast(field.dataType)):_*)
-      case None => spark.createDataFrame(spark.sparkContext.emptyRDD[Row], schema)
-    }
+    }.getOrElse(emptyDataFrame)
   }
 
-  override protected def build(): DataFrame = {
-    sources.sanitedWallapopProperties
-      .union(sources.sanitedPisosProperties)
-      .union(sources.sanitedFotocasaProperties)
-  }
+  override protected def build(): DataFrame = 
+    Seq(sources.sanitedWallapopProperties, sources.sanitedPisosProperties, sources.sanitedFotocasaProperties)
+      .reduce(_ union _)
 
 }
 
