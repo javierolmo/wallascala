@@ -25,7 +25,10 @@ extends SparkWriter(format=format, saveMode=saveMode, options=options, partition
 
   def write(dataFrame: DataFrame)(implicit spark: SparkSession): Unit = {
     val writer = baseWriter(withRepartition(withCoalesce(dataFrame)))
-    hiveTable.fold(writer.save(path))(table => writer.option("path", path).saveAsTable(table))
+    hiveTable match {
+      case Some(value) => writer.option("path", path).saveAsTable(value)
+      case None => writer.save(path)
+    }
   }
 }
 
