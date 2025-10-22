@@ -2,7 +2,7 @@ package com.javi.personal.wallascala.cleaner
 
 import com.javi.personal.wallascala.cleaner.FieldCleaner.{castField, createErrorStruct}
 import org.apache.spark.sql.Column
-import org.apache.spark.sql.functions.{array, lit, struct, typedLit, when}
+import org.apache.spark.sql.functions.{array, expr, lit, struct, typedLit, when}
 import org.apache.spark.sql.types._
 
 case class FieldCleaner(
@@ -21,7 +21,7 @@ case class FieldCleaner(
     val rightSide = when(!errorCasting and !excludedByFilter, castedField)
     val leftSide = array(
       when(errorCasting, createErrorStruct(inputField, name, dataType, "Error casting")).otherwise(typedLit[StructType](null)),
-      when(excludedByFilter, createErrorStruct(inputField, name, dataType, "Does not match filter " + excludedByFilter.expr.sql)).otherwise(typedLit[StructType](null))
+      when(excludedByFilter, createErrorStruct(inputField, name, dataType, "Does not match filter")).otherwise(typedLit[StructType](null))
     )
     (leftSide, rightSide)
   }
