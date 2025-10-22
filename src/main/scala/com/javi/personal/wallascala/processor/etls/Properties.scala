@@ -42,11 +42,11 @@ class Properties(config: ProcessorConfig)(implicit spark: SparkSession) extends 
 
   private def emptyDataFrame: DataFrame = spark.createDataFrame(spark.sparkContext.emptyRDD[Row], schema)
 
-  private object sources {
-    private val date = config.date
-    private val dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-    
-    lazy val sanitedWallapopProperties: DataFrame = readSanitedOptional("wallapop", "properties", date).map { wallapopProperties =>
+  private val date = config.date
+  private val dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+
+  private def getSanitedWallapopProperties: DataFrame = 
+    readSanitedOptional("wallapop", "properties", date).map { wallapopProperties =>
       val sanitedProvinces: DataFrame = readSanited("opendatasoft", "provincias-espanolas")
       wallapopProperties
         .withColumn("province_code", (col("location__postal_code").cast(IntegerType)/1000).cast(IntegerType))
@@ -66,7 +66,8 @@ class Properties(config: ProcessorConfig)(implicit spark: SparkSession) extends 
         .select(schema.fields.map(field => col(field.name).cast(field.dataType)):_*)
     }.getOrElse(emptyDataFrame)
 
-    lazy val sanitedPisosProperties: DataFrame = readSanitedOptional("pisos", "properties", date).map { pisosProperties =>
+  private def getSanitedPisosProperties: DataFrame = 
+    readSanitedOptional("pisos", "properties", date).map { pisosProperties =>
       pisosProperties
         .withColumn(Surface, col("size"))
         .withColumn(Bathrooms, col("bathrooms"))
@@ -89,7 +90,8 @@ class Properties(config: ProcessorConfig)(implicit spark: SparkSession) extends 
         .select(schema.fields.map(field => col(field.name).cast(field.dataType)):_*)
     }.getOrElse(emptyDataFrame)
 
-    lazy val sanitedFotocasaProperties: DataFrame = readSanitedOptional("fotocasa", "properties", date).map { fotocasaProperties =>
+  private def getSanitedFotocasaProperties: DataFrame = 
+    readSanitedOptional("fotocasa", "properties", date).map { fotocasaProperties =>
       fotocasaProperties
         .withColumn(Surface, col("features__size"))
         .withColumn(Rooms, col("features__rooms"))
@@ -113,12 +115,15 @@ class Properties(config: ProcessorConfig)(implicit spark: SparkSession) extends 
         .dropDuplicates(Title, Price, Description, Surface, Operation)
         .select(schema.fields.map(field => col(field.name).cast(field.dataType)):_*)
     }.getOrElse(emptyDataFrame)
-  }
 
   override protected def build(): DataFrame = {
-    sources.sanitedWallapopProperties
-      .union(sources.sanitedPisosProperties)
-      .union(sources.sanitedFotocasaProperties)
+    val sanitedWallapopProperties = getSanitedWallapopProperties
+    val sanitedPisosProperties = getSanitedPisosProperties
+    val sanitedFotocasaProperties = getSanitedFotocasaProperties
+    
+    sanitedWallapopProperties
+      .union(sanitedPisosProperties)
+      .union(sanitedFotocasaProperties)
   }
 
 }

@@ -40,15 +40,19 @@ class WallapopProperties(config: ProcessorConfig)(implicit spark: SparkSession) 
     )
   )
 
-  private object sources {
-    lazy val sanitedWallapopProperties: DataFrame = readSanited("wallapop", "properties", config.date)
-    lazy val sanitedProvinces: DataFrame = readSanited("opendatasoft", "provincias-espanolas")
-  }
+  private def getSanitedWallapopProperties: DataFrame = 
+    readSanited("wallapop", "properties", config.date)
+  
+  private def getSanitedProvinces: DataFrame = 
+    readSanited("opendatasoft", "provincias-espanolas")
 
-  override protected def build(): DataFrame =
-    sources.sanitedWallapopProperties
+  override protected def build(): DataFrame = {
+    val sanitedWallapopProperties = getSanitedWallapopProperties
+    val sanitedProvinces = getSanitedProvinces
+    
+    sanitedWallapopProperties
       .withColumn("province_code", (col("location__postal_code").cast(IntegerType)/1000).cast(IntegerType))
-      .join(sources.sanitedProvinces.as("p"), col("province_code") === sources.sanitedProvinces("codigo").cast(IntegerType), "left")
+      .join(sanitedProvinces.as("p"), col("province_code") === sanitedProvinces("codigo").cast(IntegerType), "left")
       .withColumnRenamed("location__city", City)
       .withColumnRenamed("location__country_code", Country)
       .withColumnRenamed("location__postal_code", PostalCode)
@@ -62,6 +66,7 @@ class WallapopProperties(config: ProcessorConfig)(implicit spark: SparkSession) 
       .withColumn(Date, lit(config.date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))))
       .dropDuplicates(Title, Price, Description, Surface, Operation)
       .select(schema.fields.map(field => col(field.name).cast(field.dataType)):_*)
+  }
 
 }
 
