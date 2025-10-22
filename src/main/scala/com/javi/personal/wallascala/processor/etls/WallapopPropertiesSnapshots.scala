@@ -40,20 +40,17 @@ class WallapopPropertiesSnapshots(config: ProcessorConfig)(implicit spark: Spark
   ))
 
   private object sources {
-    def wallapopProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES, Option.empty)
+    def wallapopProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES)
   }
 
-  override protected def build(): DataFrame = {
-    val result = sources.wallapopProperties
+  override protected def build(): DataFrame =
+    sources.wallapopProperties
       .withColumn(StartDate, min(col(WallapopProperties.Date)).over(Window.partitionBy(Id)))
       .withColumn(EndDate, max(col(WallapopProperties.Date)).over(Window.partitionBy(Id)))
       .withColumn(AbsoluteMaxDate, max(col(WallapopProperties.Date)).over())
       .withColumn(EndDate, when(col(EndDate) === col(AbsoluteMaxDate), lit(null)).otherwise(col(EndDate)))
       .withColumn(RowNumber, row_number().over(Window.partitionBy(Id).orderBy(col(WallapopProperties.Date).desc)))
       .filter(col(RowNumber) === 1)
-
-    result
-  }
 
 }
 

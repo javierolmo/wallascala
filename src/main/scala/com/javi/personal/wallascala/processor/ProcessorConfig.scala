@@ -5,7 +5,7 @@ import scopt.{OParser, OParserBuilder}
 
 import java.time.LocalDate
 
-case class ProcessorConfig(datasetName: String, date: LocalDate, targetPath: String, coalesce: Option[Int] = Option.empty, repartition: Option[Int] = Option.empty)
+case class ProcessorConfig(datasetName: String, date: LocalDate, targetPath: String, coalesce: Option[Int] = None, repartition: Option[Int] = None)
 
 object ProcessorConfig {
 
@@ -45,10 +45,8 @@ object ProcessorConfig {
   }
 
   def parse(args: Array[String]): ProcessorConfig =
-    OParser.parse(parser, args, dummy) match {
-      case Some(config) => config
-      case None => throw WallaScalaException(f"Could not parse arguments: [${args.mkString(", ")}]")
-    }
+    OParser.parse(parser, args, dummy)
+      .getOrElse(throw WallaScalaException(f"Could not parse arguments: [${args.mkString(", ")}]"))
 
   private def dummy: ProcessorConfig = ProcessorConfig("", LocalDate.now, "")
 

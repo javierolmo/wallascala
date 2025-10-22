@@ -5,12 +5,8 @@ import org.apache.spark.sql.functions.to_timestamp
 import org.apache.spark.sql.types._
 
 case class MetadataCatalog(items: Seq[CleanerMetadata]) {
-
-    def findByCatalogItem(id: String): Option[CleanerMetadata] = items.find(metadata => metadata.id == id)
-
-    def availableIds(): Seq[String] = items.map(metadata => metadata.id)
-
-
+    def findByCatalogItem(id: String): Option[CleanerMetadata] = items.find(_.id == id)
+    def availableIds(): Seq[String] = items.map(_.id)
 }
 
 object MetadataCatalog {

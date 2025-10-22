@@ -21,10 +21,8 @@ abstract class Processor(config: ProcessorConfig)(implicit spark: SparkSession) 
   protected def build(): DataFrame
 
   final def execute(): Unit = {
-    val cols: Array[Column] = schema.fields.map(field => col(field.name).cast(field.dataType))
+    val cols = schema.fields.map(field => col(field.name).cast(field.dataType))
     val dataFrame = build().select(cols:_*)
-
-    // Write dataframe
     writer.write(dataFrame)(spark)
   }
 

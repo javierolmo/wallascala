@@ -11,10 +11,7 @@ abstract class SparkReader
 
   protected def baseReader(): DataFrameReader = {
     val reader = spark.read.format(format).options(options)
-    schema match {
-      case Some(value) => reader.schema(value)
-      case None => reader
-    }
+    schema.map(reader.schema).getOrElse(reader)
   }
 
   def read(): DataFrame

@@ -9,11 +9,16 @@ object SparkSessionFactory {
     val builder = SparkSession.builder()
       .config(sparkConf(extraConf))
       .appName("wallascala")
+      .applyIf(!runsInCluster)(_.master("local[*]"))
 
-    val builderWithMaster = if (runsInCluster) builder else builder.master("local[*]")
-    val spark = builderWithMaster.getOrCreate()
+    val spark = builder.getOrCreate()
     initializeDatabases(spark)
     spark
+  }
+
+  private implicit class BuilderOps(builder: SparkSession.Builder) {
+    def applyIf(condition: Boolean)(f: SparkSession.Builder => SparkSession.Builder): SparkSession.Builder =
+      if (condition) f(builder) else builder
   }
 
   private def sparkConf(extraConf: Seq[(String, String)] = Seq()): SparkConf = {
@@ -28,12 +33,9 @@ object SparkSessionFactory {
 
   private def runsInCluster: Boolean = sys.env.contains("MASTER")
 
-  private def initializeDatabases(spark: SparkSession): Unit = {
-    spark.sql(s"CREATE DATABASE IF NOT EXISTS raw")
-    spark.sql(s"CREATE DATABASE IF NOT EXISTS sanited")
-    spark.sql(s"CREATE DATABASE IF NOT EXISTS excluded")
-    spark.sql(s"CREATE DATABASE IF NOT EXISTS processed")
-  }
+  private def initializeDatabases(spark: SparkSession): Unit = 
+    Seq("raw", "sanited", "excluded", "processed")
+      .foreach(db => spark.sql(s"CREATE DATABASE IF NOT EXISTS $db"))
 
   private def readEnvironmentVariable(variableName: String): String =
     sys.env.getOrElse(variableName, throw new RuntimeException(s"Environment variable $variableName not found"))

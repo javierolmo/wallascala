@@ -13,19 +13,15 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
  * @param spark The SparkSession to use.
  */
 case class SparkFileWriter
-  (path: String, hiveTable: Option[String] = Option.empty, format: String = "parquet", saveMode: String = "overwrite", options: Map[String, String] = Map(), coalesce: Option[Int] = Option.empty, partitionBy: Seq[String] = Seq(), repartition: Option[Int] = Option.empty)
+  (path: String, hiveTable: Option[String] = None, format: String = "parquet", saveMode: String = "overwrite", options: Map[String, String] = Map(), coalesce: Option[Int] = None, partitionBy: Seq[String] = Seq(), repartition: Option[Int] = None)
   (implicit spark: SparkSession)
 extends SparkWriter(format=format, saveMode=saveMode, options=options, partitionBy=partitionBy) {
 
-  private def withCoalesce(dataFrame: DataFrame): DataFrame = coalesce match {
-    case Some(value) => dataFrame.coalesce(value)
-    case None => dataFrame
-  }
+  private def withCoalesce(dataFrame: DataFrame): DataFrame = 
+    coalesce.map(dataFrame.coalesce).getOrElse(dataFrame)
 
-  private def withRepartition(dataFrame: DataFrame): DataFrame = repartition match {
-    case Some(value) => dataFrame.repartition(value)
-    case None => dataFrame
-  }
+  private def withRepartition(dataFrame: DataFrame): DataFrame = 
+    repartition.map(dataFrame.repartition).getOrElse(dataFrame)
 
   def write(dataFrame: DataFrame)(implicit spark: SparkSession): Unit = {
     val writer = baseWriter(withRepartition(withCoalesce(dataFrame)))
@@ -38,7 +34,7 @@ extends SparkWriter(format=format, saveMode=saveMode, options=options, partition
 
 object SparkFileWriter {
 
-  def write(dataFrame: DataFrame, path: String, hiveTable: Option[String] = Option.empty, format: String = "parquet", saveMode: String = "overwrite", options: Map[String, String] = Map(), coalesce: Option[Int] = Option.empty, partitionBy: Seq[String] = Seq()) (implicit spark: SparkSession): Unit =
+  def write(dataFrame: DataFrame, path: String, hiveTable: Option[String] = None, format: String = "parquet", saveMode: String = "overwrite", options: Map[String, String] = Map(), coalesce: Option[Int] = None, partitionBy: Seq[String] = Seq()) (implicit spark: SparkSession): Unit =
     SparkFileWriter(path, hiveTable, format, saveMode, options, coalesce, partitionBy).write(dataFrame)
 
 }
