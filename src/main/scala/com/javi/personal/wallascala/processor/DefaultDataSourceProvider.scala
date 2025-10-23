@@ -28,12 +28,12 @@ class DefaultDataSourceProvider extends DataSourceProvider with com.javi.persona
     readOptional(location)
   }
 
-  private def read(location: StorageAccountLocation, format: String = "parquet")(implicit spark: SparkSession): DataFrame = {
-    logger.debug("Reading data from location: {}", location.url)
+  private def read(location: StorageAccountLocation, format: String = com.javi.personal.wallascala.DataFormat.PARQUET)(implicit spark: SparkSession): DataFrame = {
+    logger.debug("Reading data from location: {} with format: {}", location.url, format)
     spark.read.format(format).load(location.url)
   }
 
-  private def readOptional(location: StorageAccountLocation, format: String = "parquet")(implicit spark: SparkSession): Option[DataFrame] =
+  private def readOptional(location: StorageAccountLocation, format: String = com.javi.personal.wallascala.DataFormat.PARQUET)(implicit spark: SparkSession): Option[DataFrame] =
     try {
       Some(read(location, format))
     } catch {

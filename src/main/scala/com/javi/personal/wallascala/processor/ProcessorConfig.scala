@@ -5,7 +5,20 @@ import scopt.{OParser, OParserBuilder}
 
 import java.time.LocalDate
 
-case class ProcessorConfig(datasetName: String, date: LocalDate, targetPath: String, coalesce: Option[Int] = None, repartition: Option[Int] = None)
+case class ProcessorConfig(datasetName: String, date: LocalDate, targetPath: String, coalesce: Option[Int] = None, repartition: Option[Int] = None) {
+  
+  /**
+   * Validates the configuration. Should be called after construction.
+   * @throws WallaScalaException if validation fails
+   */
+  def validate(): Unit = {
+    import com.javi.personal.wallascala.ValidationHelper._
+    requireNonEmpty(datasetName, "datasetName")
+    requireNonEmpty(targetPath, "targetPath")
+    coalesce.foreach(c => requirePositive(c, "coalesce"))
+    repartition.foreach(r => requirePositive(r, "repartition"))
+  }
+}
 
 object ProcessorConfig {
 
@@ -44,9 +57,12 @@ object ProcessorConfig {
     )
   }
 
-  def parse(args: Array[String]): ProcessorConfig =
-    OParser.parse(parser, args, dummy)
+  def parse(args: Array[String]): ProcessorConfig = {
+    val config = OParser.parse(parser, args, dummy)
       .getOrElse(throw WallaScalaException(f"Could not parse arguments: [${args.mkString(", ")}]"))
+    config.validate()
+    config
+  }
 
   private def dummy: ProcessorConfig = ProcessorConfig("", LocalDate.now, "")
 

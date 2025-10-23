@@ -33,7 +33,7 @@ object Launcher extends SparkUtils with com.javi.personal.wallascala.Logging {
   }
 
   private def buildReader(config: LauncherConfig)(implicit spark: SparkSession): SparkReader = config.sourceFormat match {
-    case "jdbc" => 
+    case com.javi.personal.wallascala.DataFormat.JDBC => 
       logger.error("JDBC source format is not supported")
       throw com.javi.personal.wallascala.WallaScalaException("JDBC source format is not supported yet.")
     case _ => new SparkFileReader(
@@ -46,20 +46,20 @@ object Launcher extends SparkUtils with com.javi.personal.wallascala.Logging {
   }
 
   private def buildWriter(config: LauncherConfig)(implicit spark: SparkSession): SparkWriter = config.targetFormat match {
-    case "jdbc" =>
+    case com.javi.personal.wallascala.DataFormat.JDBC =>
       val Array(database, table) = config.targetTable.get.split("\\.")
       SparkSqlWriter(
         database = database,
         table = table,
         format = config.targetFormat,
-        saveMode = config.mode.getOrElse("overwrite")
+        saveMode = config.mode.getOrElse(com.javi.personal.wallascala.SaveMode.OVERWRITE)
       )
     case _ => SparkFileWriter(
       path = config.targetPath.get,
       hiveTable = config.targetTable,
       format = config.targetFormat,
       coalesce = config.coalesce,
-      saveMode = config.mode.getOrElse("overwrite")
+      saveMode = config.mode.getOrElse(com.javi.personal.wallascala.SaveMode.OVERWRITE)
     )
   }
 

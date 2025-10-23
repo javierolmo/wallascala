@@ -8,14 +8,20 @@ case class LauncherConfig(
                            sourceTable: Option[String] = None,
                            targetTable: Option[String] = None,
                            targetPath: Option[String] = None,
-                           sourceFormat: String = "parquet",
-                           targetFormat: String = "parquet",
+                           sourceFormat: String = com.javi.personal.wallascala.DataFormat.PARQUET,
+                           targetFormat: String = com.javi.personal.wallascala.DataFormat.PARQUET,
                            coalesce: Option[Int] = None,
                            select: Option[Seq[String]] = None,
                            flattenFields: Boolean = false,
                            newColumns: Seq[String] = Seq.empty,
                            mode: Option[String] = None
-                         )
+                         ) {
+  // Validate configuration on construction
+  import com.javi.personal.wallascala.ValidationHelper._
+  requireNonEmpty(sourceFormat, "sourceFormat")
+  requireNonEmpty(targetFormat, "targetFormat")
+  coalesce.foreach(c => requirePositive(c, "coalesce"))
+}
 
 object LauncherConfig {
   private val PROGRAM_NAME = "wallascala-ingestor"
@@ -74,9 +80,10 @@ object LauncherConfig {
         .text("Mode of the write operation"),
       help("help").text("prints this usage text"),
       checkConfig { config =>
-        if (config.sourceFormat == "jdbc" && config.sourceTable.isEmpty)
+        import com.javi.personal.wallascala.DataFormat
+        if (config.sourceFormat == DataFormat.JDBC && config.sourceTable.isEmpty)
           failure("sourceFormat = jdbc needs sourceTable parameter value")
-        else if (config.targetFormat == "jdbc" && config.targetTable.isEmpty)
+        else if (config.targetFormat == DataFormat.JDBC && config.targetTable.isEmpty)
           failure("targetFormat = jdbc needs targetTable parameter value")
         else
           success
