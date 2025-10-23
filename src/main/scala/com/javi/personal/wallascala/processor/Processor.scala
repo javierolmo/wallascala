@@ -1,6 +1,6 @@
 package com.javi.personal.wallascala.processor
 
-import com.javi.personal.wallascala.SparkUtils
+import com.javi.personal.wallascala.utils.{DataSourceProvider, DefaultDataSourceProvider}
 import com.javi.personal.wallascala.utils.writers.{SparkFileWriter, SparkWriter}
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.StructType
@@ -10,7 +10,22 @@ import org.reflections.Reflections
 import java.time.LocalDate
 import scala.collection.JavaConverters._
 
-abstract class Processor(config: ProcessorConfig)(implicit spark: SparkSession) extends SparkUtils {
+abstract class Processor(config: ProcessorConfig, val dataSourceProvider: DataSourceProvider = new DefaultDataSourceProvider())(implicit spark: SparkSession) {
+
+  protected def readSanited(source: String, datasetName: String)(implicit spark: SparkSession): DataFrame =
+    dataSourceProvider.readSanited(source, datasetName)
+
+  protected def readSanited(source: String, datasetName: String, date: LocalDate)(implicit spark: SparkSession): DataFrame =
+    dataSourceProvider.readSanited(source, datasetName, date)
+
+  protected def readSanitedOptional(source: String, datasetName: String, date: LocalDate)(implicit spark: SparkSession): Option[DataFrame] =
+    dataSourceProvider.readSanitedOptional(source, datasetName, date)
+
+  protected def readProcessed(dataset: ProcessedTables, dateOption: Option[LocalDate] = None)(implicit spark: SparkSession): DataFrame =
+    dataSourceProvider.readProcessed(dataset, dateOption)
+
+  protected def readProcessedOptional(dataset: ProcessedTables, dateOption: Option[LocalDate] = None)(implicit spark: SparkSession): Option[DataFrame] =
+    dataSourceProvider.readProcessedOptional(dataset, dateOption)
 
   protected val datasetName: ProcessedTables = getClass.getAnnotation(classOf[ETL]).table()
   protected val schema: StructType = StructType(Seq())
