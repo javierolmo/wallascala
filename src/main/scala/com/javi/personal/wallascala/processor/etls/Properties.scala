@@ -47,8 +47,8 @@ class Properties(config: ProcessorConfig, dataSourceProvider: DataSourceProvider
     private val date = config.date
     private val dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
     
-    lazy val sanitedWallapopProperties: DataFrame = readSanitedOptional("wallapop", "properties", date).map { wallapopProperties =>
-      val sanitedProvinces: DataFrame = readSanited("opendatasoft", "provincias-espanolas")
+    lazy val sanitedWallapopProperties: DataFrame = dataSourceProvider.readSanitedOptional("wallapop", "properties", date).map { wallapopProperties =>
+      val sanitedProvinces: DataFrame = dataSourceProvider.readSanited("opendatasoft", "provincias-espanolas")
       wallapopProperties
         .withColumn("province_code", (col("location__postal_code").cast(IntegerType)/1000).cast(IntegerType))
         .join(sanitedProvinces.as("p"), col("province_code") === sanitedProvinces("codigo").cast(IntegerType), "left")
@@ -67,7 +67,7 @@ class Properties(config: ProcessorConfig, dataSourceProvider: DataSourceProvider
         .select(schema.fields.map(field => col(field.name).cast(field.dataType)):_*)
     }.getOrElse(emptyDataFrame)
 
-    lazy val sanitedPisosProperties: DataFrame = readSanitedOptional("pisos", "properties", date).map { pisosProperties =>
+    lazy val sanitedPisosProperties: DataFrame = dataSourceProvider.readSanitedOptional("pisos", "properties", date).map { pisosProperties =>
       pisosProperties
         .withColumn(Surface, col("size"))
         .withColumn(Bathrooms, col("bathrooms"))
@@ -90,7 +90,7 @@ class Properties(config: ProcessorConfig, dataSourceProvider: DataSourceProvider
         .select(schema.fields.map(field => col(field.name).cast(field.dataType)):_*)
     }.getOrElse(emptyDataFrame)
 
-    lazy val sanitedFotocasaProperties: DataFrame = readSanitedOptional("fotocasa", "properties", date).map { fotocasaProperties =>
+    lazy val sanitedFotocasaProperties: DataFrame = dataSourceProvider.readSanitedOptional("fotocasa", "properties", date).map { fotocasaProperties =>
       fotocasaProperties
         .withColumn(Surface, col("features__size"))
         .withColumn(Rooms, col("features__rooms"))

@@ -41,7 +41,7 @@ class WallapopPropertiesSnapshots(config: ProcessorConfig, dataSourceProvider: D
   ))
 
   private object sources {
-    def wallapopProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES)
+    def wallapopProperties: DataFrame = dataSourceProvider.readProcessed(ProcessedTables.WALLAPOP_PROPERTIES)
   }
 
   override protected def build(): DataFrame =

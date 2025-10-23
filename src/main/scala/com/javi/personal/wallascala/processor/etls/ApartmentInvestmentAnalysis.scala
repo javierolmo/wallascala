@@ -9,8 +9,8 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 case class ApartmentInvestmentAnalysis(config: ProcessorConfig, override val dataSourceProvider: DataSourceProvider = new DefaultDataSourceProvider())(implicit spark: SparkSession) extends Processor(config, dataSourceProvider) {
   override protected val schema: StructType = StructType(Seq()) // TODO: fill this
 
-  private lazy val properties = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES, Some(config.date))
-  private lazy val postalCodeAnalysis = readProcessed(ProcessedTables.PROPERTIES, Some(config.date))
+  private lazy val properties = dataSourceProvider.readProcessed(ProcessedTables.WALLAPOP_PROPERTIES, Some(config.date))
+  private lazy val postalCodeAnalysis = dataSourceProvider.readProcessed(ProcessedTables.PROPERTIES, Some(config.date))
 
   override protected def build(): DataFrame = properties
 }

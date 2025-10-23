@@ -42,8 +42,8 @@ class WallapopProperties(config: ProcessorConfig, dataSourceProvider: DataSource
   )
 
   private object sources {
-    lazy val sanitedWallapopProperties: DataFrame = readSanited("wallapop", "properties", config.date)
-    lazy val sanitedProvinces: DataFrame = readSanited("opendatasoft", "provincias-espanolas")
+    lazy val sanitedWallapopProperties: DataFrame = dataSourceProvider.readSanited("wallapop", "properties", config.date)
+    lazy val sanitedProvinces: DataFrame = dataSourceProvider.readSanited("opendatasoft", "provincias-espanolas")
   }
 
   override protected def build(): DataFrame =
