@@ -3,15 +3,17 @@ package com.javi.personal.wallascala
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
-object SparkSessionFactory {
+object SparkSessionFactory extends Logging {
 
   def build(extraConf: Seq[(String, String)] = Seq()): SparkSession = {
+    logger.info("Building Spark session with extra configurations: {}", extraConf.mkString(", "))
     val builder = SparkSession.builder()
       .config(sparkConf(extraConf))
       .appName("wallascala")
       .applyIf(!runsInCluster)(_.master("local[*]"))
 
     val spark = builder.getOrCreate()
+    logger.info("Spark session created successfully")
     initializeDatabases(spark)
     spark
   }
@@ -34,11 +36,18 @@ object SparkSessionFactory {
 
   private def runsInCluster: Boolean = sys.env.contains("MASTER")
 
-  private def initializeDatabases(spark: SparkSession): Unit = 
-    Seq("raw", "sanited", "excluded", "processed")
-      .foreach(db => spark.sql(s"CREATE DATABASE IF NOT EXISTS $db"))
+  private def initializeDatabases(spark: SparkSession): Unit = {
+    logger.info("Initializing databases: {}", DatabaseNames.all.mkString(", "))
+    DatabaseNames.all.foreach { db =>
+      spark.sql(s"CREATE DATABASE IF NOT EXISTS $db")
+      logger.debug("Database '{}' initialized", db)
+    }
+  }
 
   private def readEnvironmentVariable(variableName: String): String =
-    sys.env.getOrElse(variableName, throw new RuntimeException(s"Environment variable $variableName not found"))
+    sys.env.getOrElse(variableName, {
+      logger.error("Required environment variable '{}' not found", variableName)
+      throw WallaScalaException(s"Environment variable $variableName not found")
+    })
 
 }

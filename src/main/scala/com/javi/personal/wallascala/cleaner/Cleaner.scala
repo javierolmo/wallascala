@@ -6,16 +6,30 @@ import com.javi.personal.wallascala.utils.writers.SparkFileWriter
 import org.apache.spark.sql.functions.{array, array_except, col, flatten, lit, size}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-object Cleaner {
+object Cleaner extends com.javi.personal.wallascala.Logging {
 
   def execute(config: CleanerConfig, metadataCatalog: MetadataCatalog = MetadataCatalog.default())(implicit spark: SparkSession): Unit = {
-    val cleanerMetadata = metadataCatalog.findByCatalogItem(config.id).getOrElse(throw new IllegalArgumentException(s"No metadata found for id '${config.id}'"))
+    logger.info("Starting cleaner execution for id: {}", config.id)
+    val cleanerMetadata = metadataCatalog.findByCatalogItem(config.id).getOrElse {
+      logger.error("No metadata found for id '{}'", config.id)
+      throw com.javi.personal.wallascala.WallaScalaException(s"No metadata found for id '${config.id}'")
+    }
+    logger.debug("Found metadata for id: {}", config.id)
+    
+    logger.info("Reading raw data from: {}", config.sourcePath)
     val rawDF: DataFrame = SparkFileReader.read(config.sourcePath)
+    logger.info("Raw data read successfully, row count: {}", rawDF.count())
 
+    logger.info("Validating data")
     val result = validate(rawDF, cleanerMetadata)
+    logger.info("Validation complete. Valid records: {}, Invalid records: {}", 
+      result.validRecords.count(), result.invalidRecords.count())
 
+    logger.info("Writing valid records to: {}", config.targetPath)
     SparkFileWriter.write(result.validRecords, config.targetPath)
+    logger.info("Writing invalid records to: {}", config.targetPathExclusions)
     SparkFileWriter.write(result.invalidRecords, config.targetPathExclusions)
+    logger.info("Cleaner execution completed successfully")
   }
 
   private def validate(inputDF: DataFrame, metadata: CleanerMetadata): ValidationResult = {

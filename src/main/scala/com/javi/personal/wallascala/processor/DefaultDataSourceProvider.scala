@@ -5,7 +5,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDate
 
-class DefaultDataSourceProvider extends DataSourceProvider {
+class DefaultDataSourceProvider extends DataSourceProvider with com.javi.personal.wallascala.Logging {
 
   override def readSanited(source: String, datasetName: String)(implicit spark: SparkSession): DataFrame =
     read(PathBuilder.buildSanitedPath(source, datasetName))
@@ -28,10 +28,18 @@ class DefaultDataSourceProvider extends DataSourceProvider {
     readOptional(location)
   }
 
-  private def read(location: StorageAccountLocation, format: String = "parquet")(implicit spark: SparkSession): DataFrame =
+  private def read(location: StorageAccountLocation, format: String = "parquet")(implicit spark: SparkSession): DataFrame = {
+    logger.debug("Reading data from location: {}", location.url)
     spark.read.format(format).load(location.url)
+  }
 
   private def readOptional(location: StorageAccountLocation, format: String = "parquet")(implicit spark: SparkSession): Option[DataFrame] =
-    try Some(read(location, format)) catch { case _: Exception => None }
+    try {
+      Some(read(location, format))
+    } catch {
+      case e: Exception =>
+        logger.warn("Failed to read from location: {}. Reason: {}", location.url, e.getMessage)
+        None
+    }
 
 }

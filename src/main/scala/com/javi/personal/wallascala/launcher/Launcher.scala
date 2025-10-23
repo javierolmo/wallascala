@@ -6,27 +6,41 @@ import com.javi.personal.wallascala.utils.writers.{SparkFileWriter, SparkSqlWrit
 import org.apache.spark.sql.functions.lit
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-object Launcher extends SparkUtils {
+object Launcher extends SparkUtils with com.javi.personal.wallascala.Logging {
 
   def execute(config: LauncherConfig)(implicit spark: SparkSession): Unit = {
+    logger.info("Starting launcher execution")
     val reader = buildReader(config)
     val writer = buildWriter(config)
     
+    logger.info("Reading data from source")
     val dataFrame = reader.read()
       .applyIf(config.flattenFields, SparkReader.flattenFields)
+    logger.info("Data read successfully, row count: {}", dataFrame.count())
       
     val dataFrameWithColumns = config.newColumns
       .map(_.split("="))
       .filter(_.length == 2)
       .foldLeft(dataFrame) { case (df, Array(name, value)) => df.withColumn(name, lit(value)) }
+    
+    if (config.newColumns.nonEmpty) {
+      logger.debug("Added {} new columns to dataframe", config.newColumns.size)
+    }
       
+    logger.info("Writing data to target")
     writer.write(dataFrameWithColumns)
+    logger.info("Launcher execution completed successfully")
   }
 
   private def buildReader(config: LauncherConfig)(implicit spark: SparkSession): SparkReader = config.sourceFormat match {
-    case "jdbc" => throw new UnsupportedOperationException("JDBC source format is not supported yet.")
+    case "jdbc" => 
+      logger.error("JDBC source format is not supported")
+      throw com.javi.personal.wallascala.WallaScalaException("JDBC source format is not supported yet.")
     case _ => new SparkFileReader(
-      path = config.sourcePath.getOrElse(throw new IllegalArgumentException("Source path is required.")), 
+      path = config.sourcePath.getOrElse {
+        logger.error("Source path is required but not provided")
+        throw com.javi.personal.wallascala.WallaScalaException("Source path is required.")
+      }, 
       format = config.sourceFormat
     )
   }
