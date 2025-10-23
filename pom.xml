@@ -157,6 +157,27 @@
         <testSourceDirectory>src/test/scala</testSourceDirectory>
         <plugins>
 
+            <!-- Build Helper Plugin for Integration Tests -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>add-integration-test-sources</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>add-test-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>src/integration-test/scala</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- Compile -->
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
@@ -164,8 +185,22 @@
                 <version>4.9.2</version>
                 <executions>
                     <execution>
+                        <id>compile</id>
                         <goals>
                             <goal>compile</goal>
+                            <goal>testCompile</goal>
+                        </goals>
+                        <configuration>
+                            <args>
+                                <arg>-dependencyfile</arg>
+                                <arg>${project.build.directory}/.scala_dependencies</arg>
+                            </args>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>integration-test-compile</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
                             <goal>testCompile</goal>
                         </goals>
                         <configuration>
@@ -183,16 +218,30 @@
                 <groupId>org.scalatest</groupId>
                 <artifactId>scalatest-maven-plugin</artifactId>
                 <version>2.0.0</version>
-                <configuration>
-                    <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
-                    <filereports>TestSuiteReport.txt</filereports>
-                </configuration>
                 <executions>
                     <execution>
                         <id>test</id>
                         <goals>
                             <goal>test</goal>
                         </goals>
+                        <configuration>
+                            <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+                            <filereports>TestSuiteReport.txt</filereports>
+                            <suffixes>Test</suffixes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>integration-test</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <reportsDirectory>${project.build.directory}/failsafe-reports</reportsDirectory>
+                            <filereports>IntegrationTestSuiteReport.txt</filereports>
+                            <suffixes>IntegrationTest</suffixes>
+                            <testFailureIgnore>true</testFailureIgnore>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

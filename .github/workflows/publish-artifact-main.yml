@@ -15,7 +15,7 @@
         - name: Set up JDK
           uses: actions/setup-java@v4.2.1
           with:
-            java-version: '8'
+            java-version: '17'
             distribution: 'corretto'
 
         - name: Build jar with dependencies
