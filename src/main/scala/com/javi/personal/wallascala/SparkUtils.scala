@@ -10,12 +10,6 @@ trait SparkUtils {
 
   protected val dataSourceProvider: DataSourceProvider = new DefaultDataSourceProvider()
 
-  @deprecated("")
-  protected def ymdCondition(date: LocalDate): Column =
-    col("year") === lit(date.getYear) &&
-      col("month") === lit(date.getMonthValue) &&
-      col("day") === lit(date.getDayOfMonth)
-
   protected def readSanited(source: String, datasetName: String)(implicit spark: SparkSession): DataFrame =
     dataSourceProvider.readSanited(source, datasetName)
 
