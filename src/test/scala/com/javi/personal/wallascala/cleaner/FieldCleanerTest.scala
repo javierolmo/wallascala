@@ -14,7 +14,10 @@ import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, equal}
 
 class FieldCleanerTest extends AnyFlatSpec {
 
-  private val spark = SparkSession.builder().master("local[*]").getOrCreate()
+  private val spark = SparkSession.builder()
+    .master("local[*]")
+    .config("spark.sql.ansi.enabled", "false")
+    .getOrCreate()
 
   import spark.implicits._
 
@@ -113,7 +116,7 @@ class FieldCleanerTest extends AnyFlatSpec {
     val (errors, result) = cleaner.clean(col("some_field"))
     val cleanedDF = df.withColumn("errors", errors).withColumn("result", result)
     (
-      cleanedDF("result").expr.dataType,
+      cleanedDF.schema("result").dataType,
       cleanedDF.select("result").collect().headOption.map(_.getAs[Any](0)).flatMap(Option(_))
     )
   }

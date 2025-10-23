@@ -25,6 +25,7 @@ object SparkSessionFactory {
     val conf = new SparkConf()
     conf.set("spark.sql.parquet.int96RebaseModeInWrite", "CORRECTED")
     conf.set("spark.sql.sources.partitionOverwriteMode","dynamic")
+    conf.set("spark.sql.ansi.enabled", "false")
     conf.set("fs.azure.account.key.tfgbs.blob.core.windows.net", readEnvironmentVariable("TFGBS_KEY"))
     conf.set("fs.azure.account.key.tfgbs.dfs.core.windows.net", readEnvironmentVariable("TFGBS_KEY"))
     extraConf.foreach { case (key, value) => conf.set(key, value) }
