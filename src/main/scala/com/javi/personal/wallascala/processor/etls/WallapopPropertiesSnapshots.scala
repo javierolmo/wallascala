@@ -1,14 +1,15 @@
 package com.javi.personal.wallascala.processor.etls
 
 import com.javi.personal.wallascala.processor.etls.WallapopPropertiesSnapshots._
-import com.javi.personal.wallascala.processor.{DataSourceProvider, DefaultDataSourceProvider, ETL, ProcessedTables, Processor, ProcessorConfig}
+import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor, ProcessorConfig}
+import com.javi.personal.wallascala.utils.{DataSourceProvider, DefaultDataSourceProvider}
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 @ETL(table = ProcessedTables.WALLAPOP_PROPERTIES_SNAPSHOTS)
-class WallapopPropertiesSnapshots(config: ProcessorConfig, override val dataSourceProvider: DataSourceProvider = new DefaultDataSourceProvider())(implicit spark: SparkSession) extends Processor(config) {
+class WallapopPropertiesSnapshots(config: ProcessorConfig, dataSourceProvider: DataSourceProvider = new DefaultDataSourceProvider())(implicit spark: SparkSession) extends Processor(config, dataSourceProvider) {
 
   override protected val schema: StructType = StructType(Array(
       StructField(Id, StringType),
@@ -40,7 +41,7 @@ class WallapopPropertiesSnapshots(config: ProcessorConfig, override val dataSour
   ))
 
   private object sources {
-    def wallapopProperties: DataFrame = readProcessed(ProcessedTables.WALLAPOP_PROPERTIES)
+    def wallapopProperties: DataFrame = dataSourceProvider.readProcessed(ProcessedTables.WALLAPOP_PROPERTIES)
   }
 
   override protected def build(): DataFrame =

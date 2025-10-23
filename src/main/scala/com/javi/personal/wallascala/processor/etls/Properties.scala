@@ -1,7 +1,8 @@
 package com.javi.personal.wallascala.processor.etls
 
 import com.javi.personal.wallascala.processor.etls.Properties._
-import com.javi.personal.wallascala.processor.{DataSourceProvider, DefaultDataSourceProvider, ETL, ProcessedTables, Processor, ProcessorConfig}
+import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor, ProcessorConfig}
+import com.javi.personal.wallascala.utils.{DataSourceProvider, DefaultDataSourceProvider}
 import org.apache.spark.sql.functions.{col, concat, lit, to_date}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
@@ -9,7 +10,7 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import java.time.format.DateTimeFormatter
 
 @ETL(table = ProcessedTables.PROPERTIES)
-class Properties(config: ProcessorConfig, override val dataSourceProvider: DataSourceProvider = new DefaultDataSourceProvider())(implicit spark: SparkSession) extends Processor(config) {
+class Properties(config: ProcessorConfig, dataSourceProvider: DataSourceProvider = new DefaultDataSourceProvider())(implicit spark: SparkSession) extends Processor(config, dataSourceProvider) {
 
   override protected val schema: StructType = StructType(Array(
       StructField(Id, StringType),
@@ -46,8 +47,8 @@ class Properties(config: ProcessorConfig, override val dataSourceProvider: DataS
     private val date = config.date
     private val dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
     
-    lazy val sanitedWallapopProperties: DataFrame = readSanitedOptional("wallapop", "properties", date).map { wallapopProperties =>
-      val sanitedProvinces: DataFrame = readSanited("opendatasoft", "provincias-espanolas")
+    lazy val sanitedWallapopProperties: DataFrame = dataSourceProvider.readSanitedOptional("wallapop", "properties", date).map { wallapopProperties =>
+      val sanitedProvinces: DataFrame = dataSourceProvider.readSanited("opendatasoft", "provincias-espanolas")
       wallapopProperties
         .withColumn("province_code", (col("location__postal_code").cast(IntegerType)/1000).cast(IntegerType))
         .join(sanitedProvinces.as("p"), col("province_code") === sanitedProvinces("codigo").cast(IntegerType), "left")
@@ -66,7 +67,7 @@ class Properties(config: ProcessorConfig, override val dataSourceProvider: DataS
         .select(schema.fields.map(field => col(field.name).cast(field.dataType)):_*)
     }.getOrElse(emptyDataFrame)
 
-    lazy val sanitedPisosProperties: DataFrame = readSanitedOptional("pisos", "properties", date).map { pisosProperties =>
+    lazy val sanitedPisosProperties: DataFrame = dataSourceProvider.readSanitedOptional("pisos", "properties", date).map { pisosProperties =>
       pisosProperties
         .withColumn(Surface, col("size"))
         .withColumn(Bathrooms, col("bathrooms"))
@@ -89,7 +90,7 @@ class Properties(config: ProcessorConfig, override val dataSourceProvider: DataS
         .select(schema.fields.map(field => col(field.name).cast(field.dataType)):_*)
     }.getOrElse(emptyDataFrame)
 
-    lazy val sanitedFotocasaProperties: DataFrame = readSanitedOptional("fotocasa", "properties", date).map { fotocasaProperties =>
+    lazy val sanitedFotocasaProperties: DataFrame = dataSourceProvider.readSanitedOptional("fotocasa", "properties", date).map { fotocasaProperties =>
       fotocasaProperties
         .withColumn(Surface, col("features__size"))
         .withColumn(Rooms, col("features__rooms"))

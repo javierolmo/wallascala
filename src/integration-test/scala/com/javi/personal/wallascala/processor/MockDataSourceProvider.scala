@@ -1,5 +1,6 @@
 package com.javi.personal.wallascala.processor
 
+import com.javi.personal.wallascala.utils.DataSourceProvider
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDate

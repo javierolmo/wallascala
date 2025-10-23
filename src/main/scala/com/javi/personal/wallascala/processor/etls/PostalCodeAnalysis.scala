@@ -1,18 +1,19 @@
 package com.javi.personal.wallascala.processor.etls
 
 import com.javi.personal.wallascala.processor.etls.PostalCodeAnalysis._
-import com.javi.personal.wallascala.processor.{DataSourceProvider, DefaultDataSourceProvider, ETL, ProcessedTables, Processor, ProcessorConfig}
+import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor, ProcessorConfig}
+import com.javi.personal.wallascala.utils.{DataSourceProvider, DefaultDataSourceProvider}
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 @ETL(table = ProcessedTables.POSTAL_CODE_ANALYSIS)
-case class PostalCodeAnalysis (config: ProcessorConfig, override val dataSourceProvider: DataSourceProvider = new DefaultDataSourceProvider())(implicit spark: SparkSession) extends Processor(config) {
+case class PostalCodeAnalysis (config: ProcessorConfig, override val dataSourceProvider: DataSourceProvider = new DefaultDataSourceProvider())(implicit spark: SparkSession) extends Processor(config, dataSourceProvider) {
 
   // override protected val finalColumns: Array[String] = Array(City, PostalCode, Type, Operation, AveragePrice, AverageSurface, AveragePriceM2, Count) // TODO
 
   object sources {
-    lazy val properties: DataFrame = readProcessed(ProcessedTables.PROPERTIES)
+    lazy val properties: DataFrame = dataSourceProvider.readProcessed(ProcessedTables.PROPERTIES)
       .filter(col(Properties.Date).leq(config.date))
       .withColumn("row_number", row_number().over(Window.partitionBy(Properties.Id).orderBy(col(Properties.Date).desc)))
       .filter(col("row_number") === 1)

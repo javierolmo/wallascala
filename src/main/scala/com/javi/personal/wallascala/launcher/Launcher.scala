@@ -1,12 +1,12 @@
 package com.javi.personal.wallascala.launcher
 
-import com.javi.personal.wallascala.SparkUtils
+import com.javi.personal.wallascala.utils.DataFrameOps._
 import com.javi.personal.wallascala.utils.reader.{SparkFileReader, SparkReader}
 import com.javi.personal.wallascala.utils.writers.{SparkFileWriter, SparkSqlWriter, SparkWriter}
 import org.apache.spark.sql.functions.lit
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-object Launcher extends SparkUtils {
+object Launcher {
 
   def execute(config: LauncherConfig)(implicit spark: SparkSession): Unit = {
     val reader = buildReader(config)
