@@ -8,7 +8,7 @@ import java.time.LocalDate
 
 trait SparkUtils {
 
-  protected def dataSourceProvider: DataSourceProvider = new DefaultDataSourceProvider()
+  protected val dataSourceProvider: DataSourceProvider = new DefaultDataSourceProvider()
 
   @deprecated("")
   protected def ymdCondition(date: LocalDate): Column =

@@ -1,7 +1,7 @@
 package com.javi.personal.wallascala.processor.etls
 
 import com.javi.personal.wallascala.processor.etls.Properties._
-import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor, ProcessorConfig}
+import com.javi.personal.wallascala.processor.{DataSourceProvider, DefaultDataSourceProvider, ETL, ProcessedTables, Processor, ProcessorConfig}
 import org.apache.spark.sql.functions.{col, concat, lit, to_date}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
@@ -9,7 +9,7 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import java.time.format.DateTimeFormatter
 
 @ETL(table = ProcessedTables.PROPERTIES)
-class Properties(config: ProcessorConfig)(implicit spark: SparkSession) extends Processor(config) {
+class Properties(config: ProcessorConfig, override val dataSourceProvider: DataSourceProvider = new DefaultDataSourceProvider())(implicit spark: SparkSession) extends Processor(config) {
 
   override protected val schema: StructType = StructType(Array(
       StructField(Id, StringType),

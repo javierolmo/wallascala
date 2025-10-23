@@ -20,6 +20,9 @@ abstract class Processor(config: ProcessorConfig)(implicit spark: SparkSession) 
   )
   protected def build(): DataFrame
 
+  // Public method for testing
+  def buildForTesting(): DataFrame = build()
+
   final def execute(): Unit = {
     val cols = schema.fields.map(field => col(field.name).cast(field.dataType))
     val dataFrame = build().select(cols:_*)
@@ -41,12 +44,16 @@ object Processor {
   }
 
   def build(config: ProcessorConfig)(implicit spark: SparkSession): Processor = {
+    build(config, new DefaultDataSourceProvider())
+  }
+
+  def build(config: ProcessorConfig, dataSourceProvider: DataSourceProvider)(implicit spark: SparkSession): Processor = {
     val elts: Seq[Class[_]] = new Reflections("com.javi.personal.wallascala.processor.etls")
       .getTypesAnnotatedWith(classOf[ETL]).asScala.toSeq
     val selectedEtl = elts
       .find(_.getAnnotation(classOf[ETL]).table().getName == config.datasetName)
       .getOrElse(throw new Exception(s"ETL not found for table ${config.datasetName}"))
-    selectedEtl.getConstructors.head.newInstance(config, spark).asInstanceOf[Processor]
+    selectedEtl.getConstructors.head.newInstance(config, dataSourceProvider, spark).asInstanceOf[Processor]
   }
 
 }

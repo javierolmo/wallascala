@@ -1,13 +1,13 @@
 package com.javi.personal.wallascala.processor.etls
 
 import com.javi.personal.wallascala.processor.etls.PostalCodeAnalysis._
-import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor, ProcessorConfig}
+import com.javi.personal.wallascala.processor.{DataSourceProvider, DefaultDataSourceProvider, ETL, ProcessedTables, Processor, ProcessorConfig}
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 @ETL(table = ProcessedTables.POSTAL_CODE_ANALYSIS)
-case class PostalCodeAnalysis (config: ProcessorConfig)(implicit spark: SparkSession) extends Processor(config) {
+case class PostalCodeAnalysis (config: ProcessorConfig, override val dataSourceProvider: DataSourceProvider = new DefaultDataSourceProvider())(implicit spark: SparkSession) extends Processor(config) {
 
   // override protected val finalColumns: Array[String] = Array(City, PostalCode, Type, Operation, AveragePrice, AverageSurface, AveragePriceM2, Count) // TODO
 
