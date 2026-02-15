@@ -1,9 +1,11 @@
 # Changelog
 
+## [1.2.5] - 2026-02-15
+### Changed
+- Adecuación procesos a nueva estructura del datalake
+
 ## [1.2.4] - 2026-02-15
-
-### Cambios y mejoras
-
+### Changed
 - Arreglado el workflow de despliegue de relases.
 
 ---

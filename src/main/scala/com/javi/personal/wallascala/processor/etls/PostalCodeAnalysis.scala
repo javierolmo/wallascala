@@ -13,7 +13,7 @@ case class PostalCodeAnalysis (config: ProcessorConfig, override val dataSourceP
   // override protected val finalColumns: Array[String] = Array(City, PostalCode, Type, Operation, AveragePrice, AverageSurface, AveragePriceM2, Count) // TODO
 
   object sources {
-    lazy val properties: DataFrame = dataSourceProvider.readProcessed(ProcessedTables.PROPERTIES)
+    lazy val properties: DataFrame = dataSourceProvider.readGold(ProcessedTables.PROPERTIES)
       .filter(col(Properties.Date).leq(config.date))
       .withColumn("row_number", row_number().over(Window.partitionBy(Properties.Id).orderBy(col(Properties.Date).desc)))
       .filter(col("row_number") === 1)

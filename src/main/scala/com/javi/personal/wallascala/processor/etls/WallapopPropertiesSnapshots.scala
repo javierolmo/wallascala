@@ -35,28 +35,50 @@ class WallapopPropertiesSnapshots(config: ProcessorConfig, dataSourceProvider: D
       StructField(Pool, BooleanType),
       StructField(Description, StringType),
       StructField(Terrace, BooleanType),
-      StructField(Type, StringType),
-      StructField(StartDate, DateType),
-      StructField(EndDate, DateType)
+      StructField(Type, StringType)
   ))
 
   private object sources {
-    def wallapopProperties: DataFrame = dataSourceProvider.readProcessed(ProcessedTables.WALLAPOP_PROPERTIES)
+    def wallapopProperties: DataFrame = dataSourceProvider.readGold(ProcessedTables.WALLAPOP_PROPERTIES)
   }
 
-  override protected def build(): DataFrame =
+  override protected def build(): DataFrame = {
+    val provinciasData = dataSourceProvider.readSilver("opendatasoft", "provincias-espanolas")
+
     sources.wallapopProperties
-      .withColumn(StartDate, min(col(WallapopProperties.Date)).over(Window.partitionBy(Id)))
-      .withColumn(EndDate, max(col(WallapopProperties.Date)).over(Window.partitionBy(Id)))
-      .withColumn(AbsoluteMaxDate, max(col(WallapopProperties.Date)).over())
-      .withColumn(EndDate, when(col(EndDate) === col(AbsoluteMaxDate), lit(null)).otherwise(col(EndDate)))
-      .withColumn(RowNumber, row_number().over(Window.partitionBy(Id).orderBy(col(WallapopProperties.Date).desc)))
+      .withColumn("province_code", (col("location__postal_code").cast(IntegerType) / 1000).cast(IntegerType))
+      .join(provinciasData.as("p"), col("province_code") === provinciasData("codigo").cast(IntegerType), "left")
+      .withColumnRenamed("id", Id)
+      .withColumnRenamed("title", Title)
+      .withColumnRenamed("price__amount", Price)
+      .withColumnRenamed("type_attributes__surface", Surface)
+      .withColumnRenamed("type_attributes__rooms", Rooms)
+      .withColumnRenamed("type_attributes__bathrooms", Bathrooms)
+      .withColumnRenamed("price__currency", Currency)
+      .withColumnRenamed("location__city", City)
+      .withColumnRenamed("location__country_code", Country)
+      .withColumnRenamed("location__postal_code", PostalCode)
+      .withColumnRenamed("location__region", Region)
+      .withColumnRenamed("provincia", Province)
+      .withColumnRenamed("type_attributes__operation", Operation)
+      .withColumnRenamed("type_attributes__type", Type)
+      .withColumnRenamed("description", Description)
+      .withColumnRenamed("modified_at", ModificationDate)
+      .withColumn(Source, lit("wallapop"))
+      .withColumn(Link, concat(lit("https://es.wallapop.com/item/"), col("web_slug")))
+      .withColumn(CreationDate, to_date(col(ModificationDate)))
+      .withColumn(Elevator, lit(null).cast(BooleanType))
+      .withColumn(Garage, lit(null).cast(BooleanType))
+      .withColumn(Garden, lit(null).cast(BooleanType))
+      .withColumn(Pool, lit(null).cast(BooleanType))
+      .withColumn(Terrace, lit(null).cast(BooleanType))
+      .withColumn(RowNumber, row_number().over(Window.partitionBy(Id).orderBy(col(ModificationDate).desc, col(CreationDate).desc)))
       .filter(col(RowNumber) === 1)
+  }
 
 }
 
 object WallapopPropertiesSnapshots {
-  private val AbsoluteMaxDate = "absolute_max_date"
   private val RowNumber = "row_number"
 
   val Id = "id"
@@ -83,6 +105,4 @@ object WallapopPropertiesSnapshots {
   val Description = "description"
   val Terrace = "terrace"
   val Type = "type"
-  val StartDate = "start_date"
-  val EndDate = "end_date"
 }

@@ -19,26 +19,26 @@ class MockDataSourceProvider extends DataSourceProvider {
     processedDataSources.put((dataset, date), dataFrame)
   }
 
-  override def readSanited(source: String, datasetName: String)(implicit spark: SparkSession): DataFrame = {
+  override def readSilver(source: String, datasetName: String)(implicit spark: SparkSession): DataFrame = {
     sanitedDataSources.getOrElse((source, datasetName, None), 
       throw new RuntimeException(s"No mock data registered for sanited source: $source, dataset: $datasetName"))
   }
 
-  override def readSanited(source: String, datasetName: String, date: LocalDate)(implicit spark: SparkSession): DataFrame = {
+  override def readSilver(source: String, datasetName: String, date: LocalDate)(implicit spark: SparkSession): DataFrame = {
     sanitedDataSources.getOrElse((source, datasetName, Some(date)), 
       throw new RuntimeException(s"No mock data registered for sanited source: $source, dataset: $datasetName, date: $date"))
   }
 
-  override def readSanitedOptional(source: String, datasetName: String, date: LocalDate)(implicit spark: SparkSession): Option[DataFrame] = {
+  override def readSilverOption(source: String, datasetName: String, date: LocalDate)(implicit spark: SparkSession): Option[DataFrame] = {
     sanitedDataSources.get((source, datasetName, Some(date)))
   }
 
-  override def readProcessed(dataset: ProcessedTables, dateOption: Option[LocalDate] = None)(implicit spark: SparkSession): DataFrame = {
+  override def readGold(dataset: ProcessedTables, dateOption: Option[LocalDate] = None)(implicit spark: SparkSession): DataFrame = {
     processedDataSources.getOrElse((dataset, dateOption), 
       throw new RuntimeException(s"No mock data registered for processed dataset: ${dataset.getName}, date: $dateOption"))
   }
 
-  override def readProcessedOptional(dataset: ProcessedTables, dateOption: Option[LocalDate] = None)(implicit spark: SparkSession): Option[DataFrame] = {
+  override def readGoldOption(dataset: ProcessedTables, dateOption: Option[LocalDate] = None)(implicit spark: SparkSession): Option[DataFrame] = {
     processedDataSources.get((dataset, dateOption))
   }
 }

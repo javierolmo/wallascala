@@ -26,8 +26,6 @@ object SparkSessionFactory {
     conf.set("spark.sql.parquet.int96RebaseModeInWrite", "CORRECTED")
     conf.set("spark.sql.sources.partitionOverwriteMode","dynamic")
     conf.set("spark.sql.ansi.enabled", "false")
-    conf.set("fs.azure.account.key.tfgbs.blob.core.windows.net", readEnvironmentVariable("TFGBS_KEY"))
-    conf.set("fs.azure.account.key.tfgbs.dfs.core.windows.net", readEnvironmentVariable("TFGBS_KEY"))
     extraConf.foreach { case (key, value) => conf.set(key, value) }
     conf
   }
@@ -35,7 +33,7 @@ object SparkSessionFactory {
   private def runsInCluster: Boolean = sys.env.contains("MASTER")
 
   private def initializeDatabases(spark: SparkSession): Unit = 
-    Seq("raw", "sanited", "excluded", "processed")
+    Seq("staging", "bronze", "silver", "gold")
       .foreach(db => spark.sql(s"CREATE DATABASE IF NOT EXISTS $db"))
 
   private def readEnvironmentVariable(variableName: String): String =
