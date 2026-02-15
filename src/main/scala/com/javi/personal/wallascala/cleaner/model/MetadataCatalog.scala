@@ -18,7 +18,8 @@ object MetadataCatalog {
       fotocasaProperties,
       provinciasEspanolas,
       pisosProperties,
-      zipBoundaries
+      zipBoundaries,
+      wallapopProperties2
     )
   )
 
@@ -74,6 +75,35 @@ object MetadataCatalog {
       FieldCleaner("web_slug", StringType),
       FieldCleaner("source", StringType),
       FieldCleaner("date", StringType),
+    )
+  )
+
+  private val wallapopProperties2: CleanerMetadata = CleanerMetadata(
+    id = "wallapop_properties_2",
+    fields = Seq(
+      FieldCleaner("category_id", IntegerType, filter = Some(_.equalTo("200"))),
+      FieldCleaner("description", StringType),
+      FieldCleaner("id", StringType),
+      // FieldCleaner("images", ArrayType(null)),
+      FieldCleaner("location__city", StringType),
+      FieldCleaner("location__country_code", StringType),
+      FieldCleaner("location__postal_code", IntegerType),
+      FieldCleaner("location__latitude", DoubleType),
+      FieldCleaner("location__longitude", DoubleType),
+      FieldCleaner("location__region", StringType),
+      FieldCleaner("location__region2", StringType),
+      FieldCleaner("modified_at", TimestampType, transform = Some(to_timestamp)),
+      FieldCleaner("price__amount", DoubleType),
+      FieldCleaner("price__currency", StringType),
+      // FieldCleaner("taxonomy", ArrayType(null)),
+      FieldCleaner("title", StringType),
+      FieldCleaner("type_attributes__bathrooms", IntegerType),
+      FieldCleaner("type_attributes__operation", StringType),
+      FieldCleaner("type_attributes__rooms", IntegerType),
+      FieldCleaner("type_attributes__surface", IntegerType),
+      FieldCleaner("type_attributes__type", StringType),
+      FieldCleaner("user_id", StringType),
+      FieldCleaner("web_slug", StringType)
     )
   )
 
