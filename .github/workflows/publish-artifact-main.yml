@@ -25,7 +25,7 @@
           uses: bacongobbler/azure-blob-storage-upload@main
           with:
             source_dir: 'target'
-            container_name: 'artifacts-main'
+            container_name: 'releases'
             connection_string: ${{ secrets.AZURE_BLOBSTORAGE_CONNECTION_STRING }}
             overwrite: 'true'
             extra_args: '--pattern *jar-with-dependencies.jar'
