@@ -2,30 +2,29 @@ package com.javi.personal.wallascala
 
 object PathBuilder {
 
-  private val ACCOUNT = "tfgbs"
-  private val CONTAINER = "datalake"
+  private val ACCOUNT = "tfgdatalake"
   private val V2 = true
 
   private val locationTemplate = StorageAccountLocation(
     account = ACCOUNT,
-    container = CONTAINER,
+    container = "",
     path = "",
     v2 = V2
   )
 
   def buildStagingPath(source: String, datasetName: String): StorageAccountLocation =
-    locationTemplate.copy(path = f"staging/$source/$datasetName")
+    locationTemplate.copy(path = f"$source/$datasetName", container = "staging")
 
-  def buildRawPath(source: String, datasetName: String): StorageAccountLocation =
-    locationTemplate.copy(path = f"raw/$source/$datasetName")
+  def buildBronzePath(source: String, datasetName: String): StorageAccountLocation =
+    locationTemplate.copy(path = f"$source/$datasetName", container = "bronze")
 
-  def buildSanitedPath(source: String, datasetName: String): StorageAccountLocation =
-    locationTemplate.copy(path = f"sanited/$source/$datasetName")
+  def buildSilverPath(source: String, datasetName: String): StorageAccountLocation =
+    locationTemplate.copy(path = f"$source/$datasetName", container = "silver")
 
-  def buildExcludedPath(source: String, datasetName: String): StorageAccountLocation =
-    locationTemplate.copy(path = f"excluded/$source/$datasetName")
+  def buildSilverExcludedPath(source: String, datasetName: String): StorageAccountLocation =
+    locationTemplate.copy(path = f"excluded/$source/$datasetName", container = "silver")
 
-  def buildProcessedPath(datasetName: String): StorageAccountLocation =
-    locationTemplate.copy(path = f"processed/$datasetName")
+  def buildGoldPath(datasetName: String): StorageAccountLocation =
+    locationTemplate.copy(path = f"$datasetName", container = "gold")
 
 }

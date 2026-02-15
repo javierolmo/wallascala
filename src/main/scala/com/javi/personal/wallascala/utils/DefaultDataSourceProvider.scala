@@ -9,23 +9,23 @@ import java.time.LocalDate
 class DefaultDataSourceProvider extends DataSourceProvider {
 
   override def readSilver(source: String, datasetName: String)(implicit spark: SparkSession): DataFrame =
-    read(PathBuilder.buildSanitedPath(source, datasetName))
+    read(PathBuilder.buildSilverPath(source, datasetName))
 
   override def readSilver(source: String, datasetName: String, date: LocalDate)(implicit spark: SparkSession): DataFrame =
-    read(PathBuilder.buildSanitedPath(source, datasetName).cd(date))
+    read(PathBuilder.buildSilverPath(source, datasetName).cd(date))
 
   override def readSilverOption(source: String, datasetName: String, date: LocalDate)(implicit spark: SparkSession): Option[DataFrame] =
-    readOption(PathBuilder.buildSanitedPath(source, datasetName).cd(date))
+    readOption(PathBuilder.buildSilverPath(source, datasetName).cd(date))
 
   override def readGold(dataset: ProcessedTables, dateOption: Option[LocalDate] = None)(implicit spark: SparkSession): DataFrame = {
-    val location = dateOption.map(date => PathBuilder.buildProcessedPath(dataset.getName).cd(date))
-      .getOrElse(PathBuilder.buildProcessedPath(dataset.getName))
+    val location = dateOption.map(date => PathBuilder.buildGoldPath(dataset.getName).cd(date))
+      .getOrElse(PathBuilder.buildGoldPath(dataset.getName))
     read(location)
   }
 
   override def readGoldOption(dataset: ProcessedTables, dateOption: Option[LocalDate] = None)(implicit spark: SparkSession): Option[DataFrame] = {
-    val location = dateOption.map(date => PathBuilder.buildProcessedPath(dataset.getName).cd(date))
-      .getOrElse(PathBuilder.buildProcessedPath(dataset.getName))
+    val location = dateOption.map(date => PathBuilder.buildGoldPath(dataset.getName).cd(date))
+      .getOrElse(PathBuilder.buildGoldPath(dataset.getName))
     readOption(location)
   }
 

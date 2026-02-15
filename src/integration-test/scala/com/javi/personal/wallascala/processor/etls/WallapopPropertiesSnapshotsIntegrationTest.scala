@@ -17,7 +17,7 @@ class WallapopPropertiesSnapshotsIntegrationTest extends AnyFlatSpec with Matche
 
   import spark.implicits._
 
-  "WallapopPropertiesSnapshots ETL" should "create snapshots with start and end dates" in {
+  "WallapopPropertiesSnapshots ETL" should "get the latest record for each property" in {
     // Given: Test date and config
     val testDate = LocalDate.of(2024, 1, 15)
     val config = ProcessorConfig("wallapop_properties_snapshots", testDate, "/tmp/test-output")
@@ -25,89 +25,84 @@ class WallapopPropertiesSnapshotsIntegrationTest extends AnyFlatSpec with Matche
     // Given: Mock data source provider
     val mockDataSource = new MockDataSourceProvider()
     
-    // Given: Sample wallapop properties data with multiple dates (using StringType for dates)
-    val wallapopPropertiesSchema = StructType(Array(
+    // Given: Sample raw wallapop properties data with multiple versions per property
+    val wallapopPropertiesRawSchema = StructType(Array(
       StructField("id", StringType),
       StructField("title", StringType),
-      StructField("price", IntegerType),
-      StructField("surface", IntegerType),
-      StructField("rooms", IntegerType),
-      StructField("bathrooms", IntegerType),
-      StructField("link", StringType),
-      StructField("source", StringType),
-      StructField("creation_date", StringType),
-      StructField("currency", StringType),
-      StructField("elevator", BooleanType),
-      StructField("garage", BooleanType),
-      StructField("garden", BooleanType),
-      StructField("city", StringType),
-      StructField("country", StringType),
-      StructField("postal_code", IntegerType),
-      StructField("province", StringType),
-      StructField("region", StringType),
-      StructField("modification_date", StringType),
-      StructField("operation", StringType),
-      StructField("pool", BooleanType),
+      StructField("price__amount", IntegerType),
+      StructField("type_attributes__surface", IntegerType),
+      StructField("type_attributes__rooms", IntegerType),
+      StructField("type_attributes__bathrooms", IntegerType),
+      StructField("price__currency", StringType),
+      StructField("location__city", StringType),
+      StructField("location__country_code", StringType),
+      StructField("location__postal_code", IntegerType),
+      StructField("location__region", StringType),
+      StructField("type_attributes__operation", StringType),
+      StructField("type_attributes__type", StringType),
       StructField("description", StringType),
-      StructField("terrace", BooleanType),
-      StructField("type", StringType),
-      StructField("date", StringType)
+      StructField("modified_at", StringType),
+      StructField("web_slug", StringType)
+    ))
+
+    val wallapopPropertiesRawData = Seq(
+      // Property 1: multiple versions, latest should have price 240000 and modification_date 2024-01-10
+      Row("prop1", "Piso Madrid", 250000, 80, 2, 1, "EUR", "Madrid", "ES", 28001,
+          "Comunidad de Madrid", "sale", "flat", "Description 1", "2024-01-01", "piso-madrid-1"),
+      Row("prop1", "Piso Madrid", 245000, 80, 2, 1, "EUR", "Madrid", "ES", 28001,
+          "Comunidad de Madrid", "sale", "flat", "Description 1", "2024-01-05", "piso-madrid-1"),
+      Row("prop1", "Piso Madrid", 240000, 80, 2, 1, "EUR", "Madrid", "ES", 28001,
+          "Comunidad de Madrid", "sale", "flat", "Description 1", "2024-01-10", "piso-madrid-1"),
+      // Property 2: two versions, latest should have price 295000 and modification_date 2024-01-08
+      Row("prop2", "Apartamento Barcelona", 300000, 100, 3, 2, "EUR", "Barcelona", "ES", 8001,
+          "Cataluña", "sale", "flat", "Description 2", "2024-01-05", "apartamento-barcelona-1"),
+      Row("prop2", "Apartamento Barcelona", 295000, 100, 3, 2, "EUR", "Barcelona", "ES", 8001,
+          "Cataluña", "sale", "flat", "Description 2", "2024-01-08", "apartamento-barcelona-1")
+    )
+
+    val wallapopPropertiesRawDF = spark.createDataFrame(
+      spark.sparkContext.parallelize(wallapopPropertiesRawData),
+      wallapopPropertiesRawSchema
+    )
+
+    // Given: Mock provincias data
+    val provinciasSchema = StructType(Array(
+      StructField("codigo", IntegerType),
+      StructField("provincia", StringType),
+      StructField("ccaa", StringType)
     ))
     
-    val wallapopPropertiesData = Seq(
-      // Property 1: appeared on 2024-01-01, still active (latest date 2024-01-15)
-      Row("prop1", "Piso Madrid", 250000, 80, 2, 1, "http://link1", "wallapop",
-          "2024-01-01", "EUR", true, false, false, "Madrid", "ES", 28001,
-          "Madrid", "Comunidad de Madrid", "2024-01-01", "sale", false,
-          "Description 1", false, "flat", "2024-01-01"),
-      Row("prop1", "Piso Madrid", 245000, 80, 2, 1, "http://link1", "wallapop",
-          "2024-01-01", "EUR", true, false, false, "Madrid", "ES", 28001,
-          "Madrid", "Comunidad de Madrid", "2024-01-05", "sale", false,
-          "Description 1", false, "flat", "2024-01-10"),
-      Row("prop1", "Piso Madrid", 240000, 80, 2, 1, "http://link1", "wallapop",
-          "2024-01-01", "EUR", true, false, false, "Madrid", "ES", 28001,
-          "Madrid", "Comunidad de Madrid", "2024-01-10", "sale", false,
-          "Description 1", false, "flat", "2024-01-15"),
-      // Property 2: appeared on 2024-01-05, disappeared on 2024-01-12
-      Row("prop2", "Apartamento Barcelona", 300000, 100, 3, 2, "http://link2", "wallapop",
-          "2024-01-05", "EUR", false, true, false, "Barcelona", "ES", 8001,
-          "Barcelona", "Cataluña", "2024-01-05", "sale", true,
-          "Description 2", true, "flat", "2024-01-05"),
-      Row("prop2", "Apartamento Barcelona", 295000, 100, 3, 2, "http://link2", "wallapop",
-          "2024-01-05", "EUR", false, true, false, "Barcelona", "ES", 8001,
-          "Barcelona", "Cataluña", "2024-01-08", "sale", true,
-          "Description 2", true, "flat", "2024-01-12")
+    val provinciasData = Seq(
+      Row(28, "Madrid", "Comunidad de Madrid"),
+      Row(8, "Barcelona", "Cataluña")
     )
     
-    val wallapopPropertiesDF = spark.createDataFrame(
-      spark.sparkContext.parallelize(wallapopPropertiesData),
-      wallapopPropertiesSchema
+    val provinciasDF = spark.createDataFrame(
+      spark.sparkContext.parallelize(provinciasData),
+      provinciasSchema
     )
     
-    // Register mock data source
-    mockDataSource.registerProcessedDataSource(ProcessedTables.WALLAPOP_PROPERTIES, None, wallapopPropertiesDF)
-    
+    // Register mock data sources
+    mockDataSource.registerSanitedDataSource("wallapop", "properties", Some(testDate), wallapopPropertiesRawDF)
+    mockDataSource.registerSanitedDataSource("opendatasoft", "provincias-espanolas", None, provinciasDF)
+
     // When: Execute the ETL
     val etl = new WallapopPropertiesSnapshots(config, mockDataSource)
     val result = etl.buildForTesting()
     
-    // Then: Verify the result
+    // Then: Verify the result has 2 records (one per property - the latest for each)
     result.count() shouldBe 2
     
-    // Verify property 1 (still active, no end date)
+    // Verify property 1: should have the latest price 240000
     val prop1 = result.filter($"id" === "prop1")
     prop1.count() shouldBe 1
-    prop1.select("start_date").as[String].collect().head shouldBe "2024-01-01"
-    // End date should be null for properties still active
-    val prop1EndDate = prop1.select("end_date").collect().head.getAs[String](0)
-    Option(prop1EndDate) shouldBe None
-    prop1.select("price").as[Int].collect().head shouldBe 240000 // Latest price
-    
-    // Verify property 2 (inactive, has end date)
+    prop1.select("price").as[Int].collect().head shouldBe 240000
+    prop1.select("title").as[String].collect().head shouldBe "Piso Madrid"
+
+    // Verify property 2: should have the latest price 295000
     val prop2 = result.filter($"id" === "prop2")
     prop2.count() shouldBe 1
-    prop2.select("start_date").as[String].collect().head shouldBe "2024-01-05"
-    prop2.select("end_date").as[String].collect().head shouldBe "2024-01-12"
-    prop2.select("price").as[Int].collect().head shouldBe 295000 // Latest price
+    prop2.select("price").as[Int].collect().head shouldBe 295000
+    prop2.select("title").as[String].collect().head shouldBe "Apartamento Barcelona"
   }
 }

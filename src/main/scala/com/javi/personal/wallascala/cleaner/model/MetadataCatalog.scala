@@ -82,6 +82,7 @@ object MetadataCatalog {
     id = "wallapop_properties_2",
     fields = Seq(
       FieldCleaner("category_id", IntegerType, filter = Some(_.equalTo("200"))),
+      FieldCleaner("created_at", TimestampType, transform = Some(to_timestamp)),
       FieldCleaner("description", StringType),
       FieldCleaner("id", StringType),
       // FieldCleaner("images", ArrayType(null)),
