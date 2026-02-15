@@ -19,9 +19,9 @@ case class PriceChanges(config: ProcessorConfig, override val dataSourceProvider
   ))
 
   private object sources {
-    lazy val todayProperties: DataFrame = dataSourceProvider.readProcessed(ProcessedTables.WALLAPOP_PROPERTIES, Some(config.date))
+    lazy val todayProperties: DataFrame = dataSourceProvider.readGold(ProcessedTables.WALLAPOP_PROPERTIES, Some(config.date))
       .select(Properties.Id, Properties.Price).as("tp")
-    lazy val yesterdayProperties: DataFrame = dataSourceProvider.readProcessed(ProcessedTables.WALLAPOP_PROPERTIES, Some(config.date.minusDays(1)))
+    lazy val yesterdayProperties: DataFrame = dataSourceProvider.readGold(ProcessedTables.WALLAPOP_PROPERTIES, Some(config.date.minusDays(1)))
       .select(Properties.Id, Properties.Price).as("yp")
   }
 
