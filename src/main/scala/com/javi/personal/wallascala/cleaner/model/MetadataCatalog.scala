@@ -1,7 +1,7 @@
 package com.javi.personal.wallascala.cleaner.model
 
 import com.javi.personal.wallascala.cleaner.FieldCleaner
-import org.apache.spark.sql.functions.to_timestamp
+import org.apache.spark.sql.functions.{to_date, to_timestamp}
 import org.apache.spark.sql.types._
 
 case class MetadataCatalog(items: Seq[CleanerMetadata]) {
@@ -19,7 +19,8 @@ object MetadataCatalog {
       provinciasEspanolas,
       pisosProperties,
       zipBoundaries,
-      wallapopProperties2
+      wallapopProperties2,
+      pisosProperties
     )
   )
 
@@ -181,15 +182,17 @@ object MetadataCatalog {
       FieldCleaner("title", StringType, transform = Some(Transformations.removeLineBreaks)),
       FieldCleaner("price", IntegerType, transform = Some(Transformations.removeNonNumeric)),
       FieldCleaner("url", StringType),
-      FieldCleaner("description", StringType, transform = Some(Transformations.removeLineBreaks)),
-      FieldCleaner("address", StringType),
+      FieldCleaner("fullDescription", StringType, transform = Some(Transformations.removeLineBreaks)),
       FieldCleaner("rooms", IntegerType, transform = Some(Transformations.removeNonNumeric)),
       FieldCleaner("bathrooms", IntegerType, transform = Some(Transformations.removeNonNumeric)),
-      FieldCleaner("size", IntegerType, transform = Some(Transformations.removeNonNumeric)),
+      FieldCleaner("surface", IntegerType, transform = Some(Transformations.removeNonNumeric)),
       FieldCleaner("floor", IntegerType, transform = Some(Transformations.removeNonNumeric)),
-      FieldCleaner("city", StringType),
-      FieldCleaner("operation", StringType),
-      FieldCleaner("type", StringType)
+      FieldCleaner("imageUrl", StringType),
+      FieldCleaner("lastUpdateDate", DateType, transform = Some(to_date)),
+      FieldCleaner("latitude", DoubleType),
+      FieldCleaner("longitude", DoubleType),
+      FieldCleaner("propertyType", StringType),
+      FieldCleaner("location", StringType)
     )
   )
 

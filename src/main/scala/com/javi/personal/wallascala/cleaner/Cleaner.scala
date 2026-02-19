@@ -20,6 +20,10 @@ object Cleaner {
 
   private def validate(inputDF: DataFrame, metadata: CleanerMetadata): ValidationResult = {
 
+    val dfWithAllFields = metadata.fields.foldLeft(inputDF) { (df, field) =>
+      if (!df.columns.contains(field.name)) df.withColumn(field.name, lit(null).cast(field.dataType)) else df
+    }
+
     def cleanField(df: DataFrame, field: FieldCleaner): DataFrame = {
       val (error, result) = field.clean(col(field.name))
       df
@@ -28,7 +32,7 @@ object Cleaner {
     }
 
     val dfCleaned = metadata.fields
-      .foldLeft(inputDF)(cleanField)
+      .foldLeft(dfWithAllFields)(cleanField)
       .withColumn("errors", {
         val errorsArray = flatten(array(metadata.fields.map(field => col(s"${field.name}_error")):_*))
         val exclusions = array(lit(null))
@@ -38,7 +42,7 @@ object Cleaner {
 
     val dfInvalidRecords = dfCleaned
       .filter(col("hasErrors"))
-      .select((Seq(col("errors")) ++ metadata.fields.map(x => col(x.name))): _*)
+      .select(Seq(col("errors")) ++ metadata.fields.map(x => col(x.name)): _*)
     val dfValidRecords = dfCleaned
       .filter(!col("hasErrors"))
       .select(metadata.fields.map(x => col(s"${x.name}_result").as(x.name)): _*)
