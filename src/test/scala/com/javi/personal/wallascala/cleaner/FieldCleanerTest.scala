@@ -1,16 +1,14 @@
 package com.javi.personal.wallascala.cleaner
 
 import com.javi.personal.wallascala.cleaner.model.Transformations
-import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
-import org.apache.spark.sql.execution.vectorized.ColumnVectorUtils
 import org.apache.spark.sql.functions.col
-import org.apache.spark.sql.types.{DataType, IntegerType, StringType, StructField, StructType}
-import org.apache.spark.sql.vectorized.ColumnarRow
-import org.apache.spark.sql.{Column, DataFrame, Row, SparkSession}
+import org.apache.spark.sql.types.{ArrayType, DataType, DoubleType, IntegerType, StringType, StructField, StructType}
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.should.Matchers.not.be
-import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, equal}
+import org.scalatest.matchers.should.Matchers._
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+
+import scala.language.postfixOps
 
 class FieldCleanerTest extends AnyFlatSpec {
 
