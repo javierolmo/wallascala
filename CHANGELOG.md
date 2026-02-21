@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.2.8] - 2026-02-21
+### Changed
+- Disable DB creations to prevent using databricks unity catalog
+
 ## [1.2.7] - 2026-02-21
 ### Changed
 - Arreglado PisosProcessor

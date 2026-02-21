@@ -12,7 +12,6 @@ object SparkSessionFactory {
       .applyIf(!runsInCluster)(_.master("local[*]"))
 
     val spark = builder.getOrCreate()
-    initializeDatabases(spark)
     spark
   }
 
@@ -31,10 +30,6 @@ object SparkSessionFactory {
   }
 
   private def runsInCluster: Boolean = sys.env.contains("MASTER")
-
-  private def initializeDatabases(spark: SparkSession): Unit = 
-    Seq("staging", "bronze", "silver", "gold")
-      .foreach(db => spark.sql(s"CREATE DATABASE IF NOT EXISTS $db"))
 
   private def readEnvironmentVariable(variableName: String): String =
     sys.env.getOrElse(variableName, throw new RuntimeException(s"Environment variable $variableName not found"))
