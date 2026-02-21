@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.7] - 2026-02-21
+### Changed
+- Arreglado PisosProcessor
+- Cruce de datos entre pisos y polígonos de codigos postales para obtener localización
+
 ## [1.2.6] - 2026-02-15
 ### Changed
 - Actualización esquema pisos.com

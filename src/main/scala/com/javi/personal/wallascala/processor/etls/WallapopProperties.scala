@@ -22,7 +22,6 @@ class WallapopProperties(config: ProcessorConfig, dataSourceProvider: DataSource
       StructField(Link, StringType),
       StructField(Source, StringType),
       StructField(CreationDate, DateType),
-      StructField(Currency, StringType),
       StructField(Elevator, BooleanType),
       StructField(Garage, BooleanType),
       StructField(Garden, BooleanType),
@@ -37,6 +36,8 @@ class WallapopProperties(config: ProcessorConfig, dataSourceProvider: DataSource
       StructField(Description, StringType),
       StructField(Terrace, BooleanType),
       StructField(Type, StringType),
+      StructField(Latitude, DoubleType),
+      StructField(Longitude, DoubleType),
       StructField(Date, DateType)
     )
   )
@@ -56,7 +57,6 @@ class WallapopProperties(config: ProcessorConfig, dataSourceProvider: DataSource
       .withColumnRenamed("type_attributes__surface", Surface)
       .withColumnRenamed("type_attributes__rooms", Rooms)
       .withColumnRenamed("type_attributes__bathrooms", Bathrooms)
-      .withColumnRenamed("price__currency", Currency)
       .withColumnRenamed("location__city", City)
       .withColumnRenamed("location__country_code", Country)
       .withColumnRenamed("location__postal_code", PostalCode)
@@ -74,6 +74,8 @@ class WallapopProperties(config: ProcessorConfig, dataSourceProvider: DataSource
       .withColumn(Garden, lit(null).cast(BooleanType))
       .withColumn(Pool, lit(null).cast(BooleanType))
       .withColumn(Terrace, lit(null).cast(BooleanType))
+      .withColumnRenamed("location__latitude", Latitude)
+      .withColumnRenamed("location__longitude", Longitude)
       .withColumn(Date, lit(config.date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))))
       .dropDuplicates(Title, Price, Description, Surface, Operation)
       .select(schema.fields.map(field => col(field.name).cast(field.dataType)):_*)
@@ -90,7 +92,6 @@ object WallapopProperties {
   val Link = "link"
   val Source = "source"
   val CreationDate = "creation_date"
-  val Currency = "currency"
   val Elevator = "elevator"
   val Garage =  "garage"
   val Garden = "garden"
@@ -105,5 +106,7 @@ object WallapopProperties {
   val Description = "description"
   val Terrace = "terrace"
   val Type = "type"
+  val Latitude = "latitude"
+  val Longitude = "longitude"
   val Date = "date"
 }

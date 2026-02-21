@@ -1,8 +1,8 @@
 package com.javi.personal.wallascala.cleaner
 
-import com.javi.personal.wallascala.cleaner.FieldCleaner.{castField, createErrorStruct}
+import com.javi.personal.wallascala.cleaner.FieldCleaner.{ErrorStruct, castField, createErrorStruct}
 import org.apache.spark.sql.Column
-import org.apache.spark.sql.functions.{array, expr, lit, struct, typedLit, when}
+import org.apache.spark.sql.functions.{array, lit, struct, when}
 import org.apache.spark.sql.types._
 
 case class FieldCleaner(
@@ -13,15 +13,14 @@ case class FieldCleaner(
                          defaultValue: Option[Any] = None) {
 
   def clean(inputField: Column): (Column, Column) = {
-    val nulledField = when(inputField === "null", null).otherwise(inputField)
-    val defaultedField = defaultValue.map(value => when(nulledField.isNull, lit(value)).otherwise(nulledField)).getOrElse(nulledField)
+    val defaultedField = defaultValue.map(value => when(inputField.isNull, lit(value)).otherwise(inputField)).getOrElse(inputField)
     val excludedByFilter = filter.map(!_.apply(defaultedField)).getOrElse(lit(false))
-    val castedField = castField(defaultedField, dataType, transform, filter)
+    val castedField = castField(defaultedField, dataType, transform)
     val errorCasting = inputField.isNotNull and castedField.isNull
     val rightSide = when(!errorCasting and !excludedByFilter, castedField)
     val leftSide = array(
-      when(errorCasting, createErrorStruct(inputField, name, dataType, "Error casting")).otherwise(typedLit[StructType](null)),
-      when(excludedByFilter, createErrorStruct(inputField, name, dataType, "Does not match filter")).otherwise(typedLit[StructType](null))
+      when(errorCasting, createErrorStruct(inputField, name, dataType, "Error casting")).otherwise(lit(null).cast(ErrorStruct)),
+      when(excludedByFilter, createErrorStruct(inputField, name, dataType, "Does not match filter")).otherwise(lit(null).cast(ErrorStruct))
     )
     (leftSide, rightSide)
   }
@@ -49,7 +48,7 @@ object FieldCleaner {
       lit(message).as(Message)
     ).cast(ErrorStruct)
 
-  private def castField(inputField: Column, dataType: DataType, function: Option[Column => Column], filter: Option[Column => Column]): Column =
+  private def castField(inputField: Column, dataType: DataType, function: Option[Column => Column]): Column =
     function.map(_(inputField)).getOrElse(inputField).cast(dataType)
 
 }

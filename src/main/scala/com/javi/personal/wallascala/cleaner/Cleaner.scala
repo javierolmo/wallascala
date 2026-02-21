@@ -27,8 +27,8 @@ object Cleaner {
     def cleanField(df: DataFrame, field: FieldCleaner): DataFrame = {
       val (error, result) = field.clean(col(field.name))
       df
-        .withColumn(f"${field.name}_result", result)
-        .withColumn(f"${field.name}_error", error)
+        .withColumn(s"${field.name}_result", result)
+        .withColumn(s"${field.name}_error", error)
     }
 
     val dfCleaned = metadata.fields

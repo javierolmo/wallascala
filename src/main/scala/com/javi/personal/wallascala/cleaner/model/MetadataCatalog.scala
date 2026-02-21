@@ -18,18 +18,22 @@ object MetadataCatalog {
       fotocasaProperties,
       provinciasEspanolas,
       pisosProperties,
-      zipBoundaries,
-      wallapopProperties2,
-      pisosProperties
+      zipCodes,
+      wallapopProperties2
     )
   )
 
-  private val zipBoundaries: CleanerMetadata = CleanerMetadata(
-    id = "zip_boundaries",
+  private val zipCodes: CleanerMetadata = CleanerMetadata(
+    id = "zip_codes",
     fields = Seq(
-      FieldCleaner("properties__CODIGO_INE", IntegerType),
-      FieldCleaner("properties__COD_POSTAL", IntegerType, filter = Some(_.isNotNull)),
-      FieldCleaner("geometry__coordinates", ArrayType(ArrayType(ArrayType(DoubleType))), filter = Some(_.isNotNull)),
+      FieldCleaner("codigo_postal", IntegerType),
+      FieldCleaner("municipio_id", IntegerType, filter = Some(_.isNotNull)),
+      FieldCleaner("coordinates", ArrayType(StructType(Seq(
+        StructField("latitude", DoubleType),
+        StructField("longitude", DoubleType)
+      ))), filter = Some(_.isNotNull)),
+      FieldCleaner("nombre", StringType, filter = Some(_.isNotNull)),
+      FieldCleaner("provincia", StringType, filter = Some(_.isNotNull)),
     )
   )
 
