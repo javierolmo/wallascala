@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.3.0] - 2026-02-22
+### Added
+- Add configuration for properties_full processor, and new argument -c (--coalesce) for procesor
+
 ## [1.2.8] - 2026-02-21
 ### Changed
 - Disable DB creations to prevent using databricks unity catalog

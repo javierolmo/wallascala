@@ -9,8 +9,6 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.locationtech.jts.geom.{Coordinate, GeometryFactory}
 
-import java.time.format.DateTimeFormatter
-
 @ETL(table = ProcessedTables.PISOS_PROPERTIES)
 class PisosProperties(config: ProcessorConfig, dataSourceProvider: DataSourceProvider = new DefaultDataSourceProvider())(implicit spark: SparkSession) extends Processor(config, dataSourceProvider) {
 
@@ -39,8 +37,7 @@ class PisosProperties(config: ProcessorConfig, dataSourceProvider: DataSourcePro
       StructField(Terrace, BooleanType),
       StructField(Type, StringType),
       StructField(Latitude, DoubleType),
-      StructField(Longitude, DoubleType),
-      StructField(Date, DateType)
+      StructField(Longitude, DoubleType)
     )
   )
 
@@ -78,7 +75,6 @@ class PisosProperties(config: ProcessorConfig, dataSourceProvider: DataSourcePro
       .withColumnRenamed("propertyType", Type)
       .withColumnRenamed("latitude", Latitude)
       .withColumnRenamed("longitude", Longitude)
-      .withColumnRenamed("lastUpdateDate", ModificationDate)
 
     // Agrupar las coordenadas por código postal para crear polígonos
     val zipCodesWithPolygon = sources.zipCodes
@@ -100,7 +96,7 @@ class PisosProperties(config: ProcessorConfig, dataSourceProvider: DataSourcePro
       .withColumn(Operation, lit(null).cast(StringType))
       .withColumn(Pool, lit(null).cast(BooleanType))
       .withColumn(Terrace, lit(null).cast(BooleanType))
-      .withColumn(Date, lit(config.date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))))
+      .withColumn(ModificationDate, col("lastUpdateDate"))
       .withColumn("row_number", row_number().over(Window.partitionBy(Id).orderBy(col(ModificationDate).desc)))
       .filter(col("row_number") === 1)
   }
