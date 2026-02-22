@@ -8,15 +8,16 @@ import org.apache.spark.sql.{Column, DataFrame, SparkSession}
 import org.reflections.Reflections
 
 import java.time.LocalDate
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 abstract class Processor(config: ProcessorConfig, val dataSourceProvider: DataSourceProvider = new DefaultDataSourceProvider())(implicit spark: SparkSession) {
 
   protected val datasetName: ProcessedTables = getClass.getAnnotation(classOf[ETL]).table()
-  protected val schema: StructType = StructType(Seq())
+  protected val schema: StructType
   protected def writer: SparkWriter = SparkFileWriter(
     path = config.targetPath,
-    repartition = config.repartition
+    repartition = config.repartition,
+    coalesce = config.coalesce
   )
   protected def build(): DataFrame
 

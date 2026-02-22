@@ -39,6 +39,10 @@ object ProcessorConfig {
       opt[String]('r', "repartition")
         .optional()
         .action((x, c) => c.copy(repartition = Some(x.toInt)))
+        .text("number of partitions to repartition the data"),
+      opt[String]('c', "coalesce")
+        .optional()
+        .action((x, c) => c.copy(coalesce = Some(x.toInt)))
         .text("number of partitions to coalesce the data"),
       help("help").text("prints this usage text")
     )

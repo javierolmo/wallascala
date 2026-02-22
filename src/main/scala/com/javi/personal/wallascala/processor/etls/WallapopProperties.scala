@@ -37,8 +37,7 @@ class WallapopProperties(config: ProcessorConfig, dataSourceProvider: DataSource
       StructField(Terrace, BooleanType),
       StructField(Type, StringType),
       StructField(Latitude, DoubleType),
-      StructField(Longitude, DoubleType),
-      StructField(Date, DateType)
+      StructField(Longitude, DoubleType)
     )
   )
 
@@ -76,7 +75,6 @@ class WallapopProperties(config: ProcessorConfig, dataSourceProvider: DataSource
       .withColumn(Terrace, lit(null).cast(BooleanType))
       .withColumnRenamed("location__latitude", Latitude)
       .withColumnRenamed("location__longitude", Longitude)
-      .withColumn(Date, lit(config.date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))))
       .dropDuplicates(Title, Price, Description, Surface, Operation)
       .select(schema.fields.map(field => col(field.name).cast(field.dataType)):_*)
 
@@ -108,5 +106,4 @@ object WallapopProperties {
   val Type = "type"
   val Latitude = "latitude"
   val Longitude = "longitude"
-  val Date = "date"
 }
