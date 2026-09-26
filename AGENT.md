@@ -24,4 +24,4 @@ Al solicitar abrir o preparar una PR:
    ```markdown
    ## [x.y.z] - YYYY-MM-DD
    ### <Added|Changed|Fixed|Removed>
-   - Descripción concisa
+   - Descripción concisa. Debe ser mínima. Si puede ser un único punto, mejor.

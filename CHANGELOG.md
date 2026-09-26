@@ -2,8 +2,7 @@
 
 ## [1.3.1] - 2026-09-26
 ### Changed
-- Soporte para Databricks Runtime 19 (Spark 4.2.0 y Scala 2.13.18)
-- Limpieza y actualización de dependencias y plugins en el POM
+- Soporte para Databricks Runtime 19 (Spark 4.2.0 y Scala 2.13.18) y optimización de dependencias
 
 ## [1.3.0] - 2026-02-22
 ### Added
