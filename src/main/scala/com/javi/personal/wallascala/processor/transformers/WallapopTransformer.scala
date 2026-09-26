@@ -5,7 +5,12 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.{col, concat, lit, to_date}
 import org.apache.spark.sql.types.{BooleanType, IntegerType}
 
-object WallapopTransformer {
+case class WallapopSources(sanitedWallapop: DataFrame, provinces: DataFrame)
+
+object WallapopTransformer extends Transformer[WallapopSources, DataFrame] {
+
+  override def transform(sources: WallapopSources): DataFrame =
+    transform(sources.sanitedWallapop, sources.provinces)
 
   def transform(sanitedWallapop: DataFrame, provinces: DataFrame): DataFrame = {
     sanitedWallapop

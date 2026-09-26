@@ -20,4 +20,13 @@ public enum ProcessedTables {
         return this.name;
     }
 
+    public static ProcessedTables fromString(String name) {
+        for (ProcessedTables table : values()) {
+            if (table.name.equalsIgnoreCase(name) || table.name().equalsIgnoreCase(name)) {
+                return table;
+            }
+        }
+        throw new IllegalArgumentException("Unknown processed table: " + name + ". Valid values are: " + java.util.Arrays.toString(values()));
+    }
+
 }

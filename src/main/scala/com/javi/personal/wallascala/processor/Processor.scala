@@ -39,12 +39,13 @@ abstract class Processor(
 object Processor {
 
   def build(tableName: String, date: LocalDate, targetPath: String)(implicit spark: SparkSession): Processor = {
-    val config = ProcessorConfig(tableName, date, targetPath)
+    val table = ProcessedTables.fromString(tableName)
+    val config = ProcessorConfig(table, date, targetPath)
     build(config)
   }
 
   def build(table: ProcessedTables, date: LocalDate, targetPath: String)(implicit spark: SparkSession): Processor = {
-    val config = ProcessorConfig(table.getName, date, targetPath)
+    val config = ProcessorConfig(table, date, targetPath)
     build(config)
   }
 
@@ -57,10 +58,10 @@ object Processor {
   }
 
   def build(config: ProcessorConfig, dataSourceProvider: DataSourceProvider, customWriter: Option[SparkWriter])(implicit spark: SparkSession): Processor = {
-    config.datasetName match {
-      case "wallapop_properties" => new WallapopProperties(config, dataSourceProvider, customWriter)
-      case "pisos_properties" => new PisosProperties(config, dataSourceProvider, customWriter)
-      case "properties_full" => new PropertiesFullProcessor(config, dataSourceProvider, customWriter)
+    config.dataset match {
+      case ProcessedTables.WALLAPOP_PROPERTIES => new WallapopProperties(config, dataSourceProvider, customWriter)
+      case ProcessedTables.PISOS_PROPERTIES => new PisosProperties(config, dataSourceProvider, customWriter)
+      case ProcessedTables.PROPERTIES_FULL => new PropertiesFullProcessor(config, dataSourceProvider, customWriter)
       case _ =>
         val elts: Seq[Class[_]] = new Reflections("com.javi.personal.wallascala.processor.etls")
           .getTypesAnnotatedWith(classOf[ETL]).asScala.toSeq

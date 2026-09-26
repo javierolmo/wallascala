@@ -66,7 +66,7 @@ class ProcessorTest extends AnyFlatSpec with Matchers {
 
     val stubProvider = new StubDataSourceProvider(wallapopDf, provincesDf)
     val testWriter = new TestWriter()
-    val config = ProcessorConfig("wallapop_properties", LocalDate.of(2024, 1, 1), "dummy/path")
+    val config = ProcessorConfig(ProcessedTables.WALLAPOP_PROPERTIES, LocalDate.of(2024, 1, 1), "dummy/path")
 
     val processor = new WallapopProperties(config, stubProvider, Some(testWriter))
     val resultDf = processor.execute()

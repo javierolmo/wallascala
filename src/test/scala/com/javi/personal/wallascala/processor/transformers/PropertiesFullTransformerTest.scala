@@ -38,4 +38,12 @@ class PropertiesFullTransformerTest extends AnyFlatSpec with Matchers {
     rows("p-2") shouldEqual "Pisos Unico"
   }
 
+  it should "transform using PropertiesFullSources case class input" in {
+    val wallapopDf = Seq(("w-1", "Walla", Date.valueOf("2024-01-01"))).toDF("id", "title", "modification_date")
+    val pisosDf = Seq(("p-1", "Pisos", Date.valueOf("2024-01-01"))).toDF("id", "title", "modification_date")
+
+    val result = PropertiesFullTransformer.transform(PropertiesFullSources(wallapopDf, pisosDf))
+    result.count() shouldEqual 2
+  }
+
 }

@@ -5,7 +5,15 @@ import scopt.{OParser, OParserBuilder}
 
 import java.time.LocalDate
 
-case class ProcessorConfig(datasetName: String, date: LocalDate, targetPath: String, coalesce: Option[Int] = None, repartition: Option[Int] = None)
+case class ProcessorConfig(
+  dataset: ProcessedTables,
+  date: LocalDate,
+  targetPath: String,
+  coalesce: Option[Int] = None,
+  repartition: Option[Int] = None
+) {
+  def datasetName: String = dataset.getName
+}
 
 object ProcessorConfig {
 
@@ -21,8 +29,16 @@ object ProcessorConfig {
       head(PROGRAM_NAME, VERSION),
       opt[String]('n', "datasetName")
         .required()
-        .action((x, c) => c.copy(datasetName = x))
-        .text("dataset to ingest"),
+        .action((x, c) => c.copy(dataset = ProcessedTables.fromString(x)))
+        .validate(x =>
+          try {
+            ProcessedTables.fromString(x)
+            success
+          } catch {
+            case e: IllegalArgumentException => failure(e.getMessage)
+          }
+        )
+        .text(s"dataset to ingest (${ProcessedTables.values().map(_.getName).mkString(", ")})"),
       opt[String]('d', "date")
         .required()
         .action((x, c) => {
@@ -52,6 +68,6 @@ object ProcessorConfig {
     OParser.parse(parser, args, dummy)
       .getOrElse(throw WallaScalaException(f"Could not parse arguments: [${args.mkString(", ")}]"))
 
-  private def dummy: ProcessorConfig = ProcessorConfig("", LocalDate.now, "")
+  private def dummy: ProcessorConfig = ProcessorConfig(ProcessedTables.WALLAPOP_PROPERTIES, LocalDate.now, "")
 
 }

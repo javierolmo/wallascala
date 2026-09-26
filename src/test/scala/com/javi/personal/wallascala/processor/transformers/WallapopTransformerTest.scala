@@ -105,4 +105,19 @@ class WallapopTransformerTest extends AnyFlatSpec with Matchers {
     result.count() shouldEqual 1
   }
 
+  it should "transform using WallapopSources case class input" in {
+    val wallapopInput = Seq(
+      ("item-1", "Title", 50000, 40, 1, 1, "Madrid", "ES", 28001, "Madrid", "sale", "flat", "Desc", "2024-01-01", "slug", "2024-01-01", 40.0, -3.0)
+    ).toDF(
+      "id", "title", "price__amount", "type_attributes__surface", "type_attributes__rooms", "type_attributes__bathrooms",
+      "location__city", "location__country_code", "location__postal_code", "location__region", "type_attributes__operation",
+      "type_attributes__type", "description", "modified_at", "web_slug", "created_at", "location__latitude", "location__longitude"
+    )
+    val provincesInput = Seq((28, "Madrid")).toDF("codigo", "provincia")
+
+    val result = WallapopTransformer.transform(WallapopSources(wallapopInput, provincesInput))
+    result.count() shouldEqual 1
+    result.first().getAs[String]("id") shouldEqual "item-1"
+  }
+
 }

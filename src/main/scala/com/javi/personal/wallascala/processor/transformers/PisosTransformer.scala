@@ -7,7 +7,9 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.locationtech.jts.geom.{Coordinate, GeometryFactory}
 
-object PisosTransformer {
+case class PisosSources(sanitedPisos: DataFrame, zipCodes: DataFrame)
+
+object PisosTransformer extends Transformer[PisosSources, DataFrame] {
 
   val pointInPolygon = udf((lat: Double, lon: Double, coordinates: Seq[Map[String, Double]]) => {
     val gf = new GeometryFactory()
@@ -22,6 +24,9 @@ object PisosTransformer {
         polygon.contains(point)
     }
   })
+
+  override def transform(sources: PisosSources): DataFrame =
+    transform(sources.sanitedPisos, sources.zipCodes)
 
   def transform(sanitedPisos: DataFrame, zipCodes: DataFrame): DataFrame = {
     val pisosRenamed = sanitedPisos
