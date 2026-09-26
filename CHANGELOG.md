@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.3.1] - 2026-09-26
+### Changed
+- Soporte para Databricks Runtime 19 (Spark 4.2.0 y Scala 2.13.18) y optimización de dependencias
+
 ## [1.3.0] - 2026-02-22
 ### Added
 - Add configuration for properties_full processor, and new argument -c (--coalesce) for procesor
