@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.3.2] - 2026-09-26
+### Changed
+- Refactorización de `processor`: desacoplamiento de transformers, configuración tipada y mejoras para testeo
+
 ## [1.3.1] - 2026-09-26
 ### Changed
 - Soporte para Databricks Runtime 19 (Spark 4.2.0 y Scala 2.13.18) y optimización de dependencias
