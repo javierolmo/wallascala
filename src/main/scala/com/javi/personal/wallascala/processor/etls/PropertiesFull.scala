@@ -3,12 +3,9 @@ package com.javi.personal.wallascala.processor.etls
 import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor, ProcessorConfig}
 import com.javi.personal.wallascala.utils.{DataSourceProvider, DefaultDataSourceProvider}
 import org.apache.spark.sql._
-import org.apache.spark.sql.expressions.Window
-import org.apache.spark.sql.functions.{col, row_number}
 import org.apache.spark.sql.types.StructType
 
 import java.sql.Date
-import java.time.format.DateTimeFormatter
 
 case class PropertiesFull(
                            id: String,
@@ -38,8 +35,15 @@ case class PropertiesFull(
                            longitude: Double
 )
 
+import com.javi.personal.wallascala.processor.transformers.PropertiesFullTransformer
+import com.javi.personal.wallascala.utils.writers.SparkWriter
+
 @ETL(table = ProcessedTables.PROPERTIES_FULL)
-class PropertiesFullProcessor(config: ProcessorConfig, dataSourceProvider: DataSourceProvider = new DefaultDataSourceProvider())(implicit spark: SparkSession) extends Processor(config, dataSourceProvider) {
+class PropertiesFullProcessor(
+  config: ProcessorConfig,
+  dataSourceProvider: DataSourceProvider = new DefaultDataSourceProvider(),
+  customWriter: Option[SparkWriter] = None
+)(implicit spark: SparkSession) extends Processor(config, dataSourceProvider, customWriter) {
 
   import org.apache.spark.sql.Encoders._
   // Encoder implicito disponible
@@ -50,30 +54,17 @@ class PropertiesFullProcessor(config: ProcessorConfig, dataSourceProvider: DataS
   private def emptyDataFrame: DataFrame = spark.createDataFrame(spark.sparkContext.emptyRDD[Row], schema)
 
   private object sources {
-    private val date = config.date
-    private val dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-    
-    lazy val wallapopProperties: Dataset[PropertiesFull] =
+    lazy val wallapopProperties: DataFrame =
       dataSourceProvider.readGoldOption(ProcessedTables.WALLAPOP_PROPERTIES)
         .getOrElse(emptyDataFrame)
-        .withColumn("row_number", row_number().over(Window.partitionBy("id").orderBy(col("modification_date").desc)))
-        .filter(col("row_number") === 1)
-        .select(schema.fields.map(f => col(f.name)): _*)
-        .as[PropertiesFull]
 
-    lazy val pisosProperties: Dataset[PropertiesFull] =
+    lazy val pisosProperties: DataFrame =
       dataSourceProvider.readGoldOption(ProcessedTables.PISOS_PROPERTIES)
         .getOrElse(emptyDataFrame)
-        .withColumn("row_number", row_number().over(Window.partitionBy("id").orderBy(col("modification_date").desc)))
-        .filter(col("row_number") === 1)
-        .select(schema.fields.map(f => col(f.name)): _*)
-        .as[PropertiesFull]
   }
 
   override protected def build(): DataFrame = {
-    sources.wallapopProperties
-      .union(sources.pisosProperties)
-      .toDF()
+    PropertiesFullTransformer.transform(sources.wallapopProperties, sources.pisosProperties)
   }
 
 }

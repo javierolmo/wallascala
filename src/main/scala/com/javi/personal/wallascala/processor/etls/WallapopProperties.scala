@@ -1,16 +1,19 @@
 package com.javi.personal.wallascala.processor.etls
 
 import com.javi.personal.wallascala.processor.etls.WallapopProperties._
+import com.javi.personal.wallascala.processor.transformers.WallapopTransformer
 import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor, ProcessorConfig}
+import com.javi.personal.wallascala.utils.writers.SparkWriter
 import com.javi.personal.wallascala.utils.{DataSourceProvider, DefaultDataSourceProvider}
-import org.apache.spark.sql.functions.{col, concat, lit, to_date}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-import java.time.format.DateTimeFormatter
-
 @ETL(table = ProcessedTables.WALLAPOP_PROPERTIES)
-class WallapopProperties(config: ProcessorConfig, dataSourceProvider: DataSourceProvider = new DefaultDataSourceProvider())(implicit spark: SparkSession) extends Processor(config, dataSourceProvider) {
+class WallapopProperties(
+  config: ProcessorConfig,
+  dataSourceProvider: DataSourceProvider = new DefaultDataSourceProvider(),
+  customWriter: Option[SparkWriter] = None
+)(implicit spark: SparkSession) extends Processor(config, dataSourceProvider, customWriter) {
 
   override protected val schema: StructType = StructType(Array(
       StructField(Id, StringType),
@@ -47,36 +50,7 @@ class WallapopProperties(config: ProcessorConfig, dataSourceProvider: DataSource
   }
 
   override protected def build(): DataFrame =
-    sources.sanitedWallapopProperties
-      .withColumn("province_code", (col("location__postal_code").cast(IntegerType)/1000).cast(IntegerType))
-      .join(sources.sanitedProvinces.as("p"), col("province_code") === sources.sanitedProvinces("codigo").cast(IntegerType), "left")
-      .withColumnRenamed("id", Id)
-      .withColumnRenamed("title", Title)
-      .withColumnRenamed("price__amount", Price)
-      .withColumnRenamed("type_attributes__surface", Surface)
-      .withColumnRenamed("type_attributes__rooms", Rooms)
-      .withColumnRenamed("type_attributes__bathrooms", Bathrooms)
-      .withColumnRenamed("location__city", City)
-      .withColumnRenamed("location__country_code", Country)
-      .withColumnRenamed("location__postal_code", PostalCode)
-      .withColumnRenamed("location__region", Region)
-      .withColumnRenamed("provincia", Province)
-      .withColumnRenamed("type_attributes__operation", Operation)
-      .withColumnRenamed("type_attributes__type", Type)
-      .withColumnRenamed("description", Description)
-      .withColumn(ModificationDate, to_date(col("modified_at")))
-      .withColumn(Source, lit("wallapop"))
-      .withColumn(Link, concat(lit("https://es.wallapop.com/item/"), col("web_slug")))
-      .withColumn(CreationDate, to_date(col("created_at")))
-      .withColumn(Elevator, lit(null).cast(BooleanType))
-      .withColumn(Garage, lit(null).cast(BooleanType))
-      .withColumn(Garden, lit(null).cast(BooleanType))
-      .withColumn(Pool, lit(null).cast(BooleanType))
-      .withColumn(Terrace, lit(null).cast(BooleanType))
-      .withColumnRenamed("location__latitude", Latitude)
-      .withColumnRenamed("location__longitude", Longitude)
-      .dropDuplicates(Title, Price, Description, Surface, Operation)
-      .select(schema.fields.map(field => col(field.name).cast(field.dataType)):_*)
+    WallapopTransformer.transform(sources.sanitedWallapopProperties, sources.sanitedProvinces)
 
 }
 
