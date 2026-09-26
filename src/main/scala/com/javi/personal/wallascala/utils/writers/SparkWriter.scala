@@ -9,7 +9,12 @@ import org.apache.spark.sql.{DataFrame, DataFrameWriter, Row, SparkSession}
  * @param options The options of the DataFrame to write.
  * @param spark The SparkSession to use.
  */
-abstract class SparkWriter(format: String, saveMode: String, options: Map[String, String], partitionBy: Seq[String])(implicit spark: SparkSession) {
+abstract class SparkWriter(
+  format: String = "parquet",
+  saveMode: String = "overwrite",
+  options: Map[String, String] = Map.empty,
+  partitionBy: Seq[String] = Seq.empty
+)(implicit spark: SparkSession) {
 
   /**
    * This method returns a DataFrameWriter[Row] with the basic configuration.
