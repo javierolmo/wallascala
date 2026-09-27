@@ -1,5 +1,6 @@
 package com.javi.personal.wallascala.processor.transformers
 
+import org.apache.spark.sql.AnalysisException
 import org.apache.spark.sql.SparkSession
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -18,15 +19,15 @@ class PropertiesFullTransformerTest extends AnyFlatSpec with Matchers {
 
   it should "deduplicate latest record by modification_date for each dataset and union them" in {
     val wallapopDf = Seq(
-      ("w-1", "Walla Antiguo", Date.valueOf("2024-01-01")),
-      ("w-1", "Walla Nuevo", Date.valueOf("2024-01-05"))
-    ).toDF("id", "title", "modification_date")
+      ("w-1", "Walla Antiguo", Date.valueOf("2024-01-01"), 2024, 1, 1),
+      ("w-1", "Walla Nuevo", Date.valueOf("2024-01-05"), 2024, 1, 5)
+    ).toDF("id", "title", "modification_date", "year", "month", "day")
 
     val pisosDf = Seq(
-      ("p-1", "Pisos Antiguo", Date.valueOf("2024-01-02")),
-      ("p-1", "Pisos Nuevo", Date.valueOf("2024-01-10")),
-      ("p-2", "Pisos Unico", Date.valueOf("2024-01-03"))
-    ).toDF("id", "title", "modification_date")
+      ("p-1", "Pisos Antiguo", Date.valueOf("2024-01-02"), 2024, 1, 2),
+      ("p-1", "Pisos Nuevo", Date.valueOf("2024-01-10"), 2024, 1, 10),
+      ("p-2", "Pisos Unico", Date.valueOf("2024-01-03"), 2024, 1, 3)
+    ).toDF("id", "title", "modification_date", "year", "month", "day")
 
     val result = PropertiesFullTransformer.transform(wallapopDf, pisosDf)
 
@@ -39,11 +40,70 @@ class PropertiesFullTransformerTest extends AnyFlatSpec with Matchers {
   }
 
   it should "transform using PropertiesFullSources case class input" in {
-    val wallapopDf = Seq(("w-1", "Walla", Date.valueOf("2024-01-01"))).toDF("id", "title", "modification_date")
-    val pisosDf = Seq(("p-1", "Pisos", Date.valueOf("2024-01-01"))).toDF("id", "title", "modification_date")
+    val wallapopDf = Seq(("w-1", "Walla", Date.valueOf("2024-01-01"), 2024, 1, 1)).toDF("id", "title", "modification_date", "year", "month", "day")
+    val pisosDf = Seq(("p-1", "Pisos", Date.valueOf("2024-01-01"), 2024, 1, 1)).toDF("id", "title", "modification_date", "year", "month", "day")
 
     val result = PropertiesFullTransformer.transform(PropertiesFullSources(wallapopDf, pisosDf))
     result.count() shouldEqual 2
+  }
+
+  it should "deduplicate latest record by modification_date for wallapop, pisos and fotocasa and union all three" in {
+    val wallapopDf = Seq(
+      ("w-1", "Walla Antiguo", Date.valueOf("2024-01-01"), 2024, 1, 1),
+      ("w-1", "Walla Nuevo", Date.valueOf("2024-01-05"), 2024, 1, 5)
+    ).toDF("id", "title", "modification_date", "year", "month", "day")
+
+    val pisosDf = Seq(
+      ("p-1", "Pisos Antiguo", Date.valueOf("2024-01-02"), 2024, 1, 2),
+      ("p-1", "Pisos Nuevo", Date.valueOf("2024-01-10"), 2024, 1, 10)
+    ).toDF("id", "title", "modification_date", "year", "month", "day")
+
+    val fotocasaDf = Seq(
+      ("f-1", "Foto Antiguo", Date.valueOf("2024-01-03"), 2024, 1, 3),
+      ("f-1", "Foto Nuevo", Date.valueOf("2024-01-15"), 2024, 1, 15),
+      ("f-2", "Foto Unico", Date.valueOf("2024-01-04"), 2024, 1, 4)
+    ).toDF("id", "title", "modification_date", "year", "month", "day")
+
+    val result = PropertiesFullTransformer.transform(wallapopDf, pisosDf, fotocasaDf)
+
+    result.count() shouldEqual 4
+
+    val rows = result.collect().map(r => (r.getAs[String]("id"), r.getAs[String]("title"))).toMap
+    rows("w-1") shouldEqual "Walla Nuevo"
+    rows("p-1") shouldEqual "Pisos Nuevo"
+    rows("f-1") shouldEqual "Foto Nuevo"
+    rows("f-2") shouldEqual "Foto Unico"
+  }
+
+  it should "calculate load_date from year, month, and day fields of its sources" in {
+    val wallapopDf = Seq(
+      ("w-1", "Walla", Date.valueOf("2024-01-01"), 2026, 2, 13)
+    ).toDF("id", "title", "modification_date", "year", "month", "day")
+
+    val pisosDf = Seq(
+      ("p-1", "Pisos", Date.valueOf("2024-01-02"), "2026", "09", "27")
+    ).toDF("id", "title", "modification_date", "year", "month", "day")
+
+    val fotocasaDf = Seq(
+      ("f-1", "Foto", Date.valueOf("2024-01-03"), 2026, 9, 27)
+    ).toDF("id", "title", "modification_date", "year", "month", "day")
+
+    val result = PropertiesFullTransformer.transform(wallapopDf, pisosDf, fotocasaDf)
+
+    result.count() shouldEqual 3
+    val rows = result.collect().map(r => (r.getAs[String]("id"), r.getAs[Date]("load_date"))).toMap
+    rows("w-1") shouldEqual Date.valueOf("2026-02-13")
+    rows("p-1") shouldEqual Date.valueOf("2026-09-27")
+    rows("f-1") shouldEqual Date.valueOf("2026-09-27")
+  }
+
+  it should "fail if year, month, or day is missing from a source" in {
+    val invalidDf = Seq(("w-1", "Walla", Date.valueOf("2024-01-01"))).toDF("id", "title", "modification_date")
+    val validDf = Seq(("p-1", "Pisos", Date.valueOf("2024-01-01"), 2024, 1, 1)).toDF("id", "title", "modification_date", "year", "month", "day")
+
+    assertThrows[AnalysisException] {
+      PropertiesFullTransformer.transform(invalidDf, validDf)
+    }
   }
 
 }

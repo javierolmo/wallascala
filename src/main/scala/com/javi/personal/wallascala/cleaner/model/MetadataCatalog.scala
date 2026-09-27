@@ -162,20 +162,23 @@ object MetadataCatalog {
   private val fotocasaProperties: CleanerMetadata = CleanerMetadata(
     id = "fotocasa_properties",
     fields = Seq(
-      FieldCleaner("address", StringType),
-      FieldCleaner("description", StringType),
-      FieldCleaner("features__bathrooms", IntegerType),
-      FieldCleaner("features__floor", IntegerType),
-      FieldCleaner("features__rooms", IntegerType),
-      FieldCleaner("features__size", IntegerType),
-      FieldCleaner("id", IntegerType),
-      FieldCleaner("price", IntegerType),
-      FieldCleaner("timeAgo", IntegerType),
-      FieldCleaner("title", StringType),
-      FieldCleaner("url", StringType),
-      FieldCleaner("city", StringType),
-      FieldCleaner("operation", StringType),
-      FieldCleaner("type", StringType)
+      FieldCleaner("id", LongType),
+      FieldCleaner("baños", IntegerType, transform = Some(Transformations.removeNonNumeric)),
+      FieldCleaner("coordenadas__accuracy", LongType),
+      FieldCleaner("coordenadas__latitude", DoubleType),
+      FieldCleaner("coordenadas__longitude", DoubleType),
+      FieldCleaner("fecha_scraping", TimestampType, transform = Some(to_timestamp)),
+      FieldCleaner("habitaciones", IntegerType, transform = Some(Transformations.removeNonNumeric)),
+      FieldCleaner("metros", IntegerType, transform = Some(Transformations.removeNonNumeric)),
+      FieldCleaner("municipio", StringType),
+      FieldCleaner("operacion", StringType),
+      FieldCleaner("precio", IntegerType, transform = Some(Transformations.removeNonNumeric)),
+      FieldCleaner("provincia", StringType),
+      FieldCleaner("publicado_hace", StringType),
+      FieldCleaner("tipo_detalle", StringType),
+      FieldCleaner("tipo_inmueble", StringType),
+      FieldCleaner("ubicacion", StringType),
+      FieldCleaner("url", StringType)
     )
   )
 

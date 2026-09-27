@@ -32,7 +32,8 @@ case class PropertiesFull(
                            terrace: Boolean,
                            `type`: String,
                            latitude: Double,
-                           longitude: Double
+                           longitude: Double,
+                           load_date: Date
 )
 
 import com.javi.personal.wallascala.processor.transformers.PropertiesFullTransformer
@@ -61,10 +62,14 @@ class PropertiesFullProcessor(
     lazy val pisosProperties: DataFrame =
       dataSourceProvider.readGoldOption(ProcessedTables.PISOS_PROPERTIES)
         .getOrElse(emptyDataFrame)
+
+    lazy val fotocasaProperties: DataFrame =
+      dataSourceProvider.readGoldOption(ProcessedTables.FOTOCASA_PROPERTIES)
+        .getOrElse(emptyDataFrame)
   }
 
   override protected def build(): DataFrame = {
-    PropertiesFullTransformer.transform(sources.wallapopProperties, sources.pisosProperties)
+    PropertiesFullTransformer.transform(sources.wallapopProperties, sources.pisosProperties, sources.fotocasaProperties)
   }
 
 }

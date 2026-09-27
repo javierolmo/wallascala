@@ -3,7 +3,8 @@ package com.javi.personal.wallascala.processor;
 public enum ProcessedTables {
     WALLAPOP_PROPERTIES("wallapop_properties"),
     PROPERTIES_FULL("properties_full"),
-    PISOS_PROPERTIES("pisos_properties");
+    PISOS_PROPERTIES("pisos_properties"),
+    FOTOCASA_PROPERTIES("fotocasa_properties");
 
     private final String name;
 

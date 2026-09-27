@@ -29,7 +29,23 @@ object PisosTransformer extends Transformer[PisosSources, DataFrame] {
     transform(sources.sanitedPisos, sources.zipCodes)
 
   def transform(sanitedPisos: DataFrame, zipCodes: DataFrame): DataFrame = {
+    val rawPropertyType = lower(col("propertyType"))
+    val mappedType = when(rawPropertyType.isin("piso", "ático", "atico", "dúplex", "duplex", "estudio", "loft", "apartamento", "flat"), "Flat")
+      .when(rawPropertyType.isin("casa", "chalet", "adossat", "pareado", "house"), "House")
+      .when(rawPropertyType.isin("garaje", "parking", "garage"), "Garage")
+      .when(rawPropertyType.isin("local", "oficina", "nave", "business", "building", "edificio", "premises / office"), "Premises / Office")
+      .when(rawPropertyType.isin("terreno", "finca", "suelo", "parcela", "land"), "Land")
+      .when(rawPropertyType.isin("habitación", "habitacion", "room"), "Room")
+      .when(rawPropertyType.isin("trastero", "box room"), "Box Room")
+      .otherwise(col("propertyType"))
+
+    val mappedOperation = when(lower(col("url")).contains("/comprar/"), "Sell")
+      .when(lower(col("url")).contains("/alquilar/"), "Rent")
+      .otherwise(lit(null).cast(StringType))
+
     val pisosRenamed = sanitedPisos
+      .withColumn(Type, mappedType)
+      .withColumn(Operation, mappedOperation)
       .withColumnRenamed("id", Id)
       .withColumnRenamed("title", Title)
       .withColumnRenamed("price", Price)
@@ -38,7 +54,6 @@ object PisosTransformer extends Transformer[PisosSources, DataFrame] {
       .withColumnRenamed("bathrooms", Bathrooms)
       .withColumnRenamed("url", Link)
       .withColumnRenamed("fullDescription", Description)
-      .withColumnRenamed("propertyType", Type)
       .withColumnRenamed("latitude", Latitude)
       .withColumnRenamed("longitude", Longitude)
 
@@ -57,12 +72,12 @@ object PisosTransformer extends Transformer[PisosSources, DataFrame] {
       .withColumn(PostalCode, col("codigo_postal").cast(IntegerType))
       .withColumn(Province, col("provincia"))
       .withColumn(Region, lit(null).cast(StringType))
-      .withColumn(Operation, lit(null).cast(StringType))
       .withColumn(Pool, lit(null).cast(BooleanType))
       .withColumn(Terrace, lit(null).cast(BooleanType))
       .withColumn(ModificationDate, col("lastUpdateDate"))
       .withColumn("row_number", row_number().over(Window.partitionBy(Id).orderBy(col(ModificationDate).desc)))
       .filter(col("row_number") === 1)
+      .drop("row_number")
   }
 
 }
