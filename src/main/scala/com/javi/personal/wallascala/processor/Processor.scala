@@ -1,6 +1,6 @@
 package com.javi.personal.wallascala.processor
 
-import com.javi.personal.wallascala.processor.etls.{PisosProperties, PropertiesFullProcessor, WallapopProperties}
+import com.javi.personal.wallascala.processor.etls.{FotocasaProperties, PisosProperties, PropertiesFullProcessor, WallapopProperties}
 import com.javi.personal.wallascala.utils.DataFrameOps._
 import com.javi.personal.wallascala.utils.{DataSourceProvider, DefaultDataSourceProvider}
 import com.javi.personal.wallascala.utils.writers.{SparkFileWriter, SparkWriter}
@@ -61,6 +61,7 @@ object Processor {
     config.dataset match {
       case ProcessedTables.WALLAPOP_PROPERTIES => new WallapopProperties(config, dataSourceProvider, customWriter)
       case ProcessedTables.PISOS_PROPERTIES => new PisosProperties(config, dataSourceProvider, customWriter)
+      case ProcessedTables.FOTOCASA_PROPERTIES => new FotocasaProperties(config, dataSourceProvider, customWriter)
       case ProcessedTables.PROPERTIES_FULL => new PropertiesFullProcessor(config, dataSourceProvider, customWriter)
       case _ =>
         val elts: Seq[Class[_]] = new Reflections("com.javi.personal.wallascala.processor.etls")

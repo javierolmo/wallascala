@@ -37,4 +37,20 @@ class MetadataCatalogTest extends AnyFlatSpec with Matchers {
     result should contain theSameElementsAs Seq("1", "2")
   }
 
+  it should "contain fotocasa_properties in default catalog with correct fields" in {
+    val catalog = MetadataCatalog.default()
+    val fotocasa = catalog.findByCatalogItem("fotocasa_properties")
+
+    fotocasa should be ('defined)
+    catalog.findByCatalogItem("fotocasa_properties_old") should be (None)
+    catalog.findByCatalogItem("fotocasa_properties_2") should be (None)
+    val fieldNames = fotocasa.get.fields.map(_.name)
+    fieldNames should contain theSameElementsAs Seq(
+      "baños", "coordenadas__accuracy", "coordenadas__latitude", "coordenadas__longitude",
+      "fecha_scraping", "habitaciones", "id", "metros", "municipio", "operacion",
+      "precio", "provincia", "publicado_hace", "tipo_detalle", "tipo_inmueble",
+      "ubicacion", "url"
+    )
+  }
+
 }

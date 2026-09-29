@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.4.0] - 2026-09-28
+### Added
+- Integración de nueva fuente Fotocasa en cleaner y processor, cálculo espacial de código postal y consolidación en properties_full con load_date
+
 ## [1.3.2] - 2026-09-26
 ### Changed
 - Refactorización de `processor`: desacoplamiento de transformers, configuración tipada y mejoras para testeo

@@ -78,4 +78,40 @@ class ProcessorTest extends AnyFlatSpec with Matchers {
     resultDf.first().getAs[String]("id") shouldEqual "item-1"
   }
 
+  it should "execute fotocasa processor and return aligned DataFrame with properties_full schema" in {
+    val fotocasaDf = Seq(
+      (2, 0L, 42.235, -8.719, "2026-09-27 14:42:20", 4, 190446371L, 236, "Vigo", "comprar", 750000, "pontevedra-provincia", "47 DAYS", "Flat", "viviendas", "Centro", "https://url")
+    ).toDF(
+      "baños", "coordenadas__accuracy", "coordenadas__latitude", "coordenadas__longitude",
+      "fecha_scraping", "habitaciones", "id", "metros", "municipio", "operacion",
+      "precio", "provincia", "publicado_hace", "tipo_detalle", "tipo_inmueble", "ubicacion", "url"
+    )
+
+    val stubProvider = new DataSourceProvider {
+      override def readSilver(source: String, datasetName: String)(implicit spark: SparkSession): DataFrame = spark.emptyDataFrame
+      override def readSilver(source: String, datasetName: String, date: LocalDate)(implicit spark: SparkSession): DataFrame = fotocasaDf
+      override def readSilverOption(source: String, datasetName: String, date: LocalDate)(implicit spark: SparkSession): Option[DataFrame] = None
+      override def readGold(dataset: ProcessedTables, dateOption: Option[LocalDate])(implicit spark: SparkSession): DataFrame = spark.emptyDataFrame
+      override def readGoldOption(dataset: ProcessedTables, dateOption: Option[LocalDate])(implicit spark: SparkSession): Option[DataFrame] = None
+    }
+    val testWriter = new TestWriter()
+    val config = ProcessorConfig(ProcessedTables.FOTOCASA_PROPERTIES, LocalDate.of(2026, 9, 27), "dummy/path")
+
+    val processor = Processor.build(config, stubProvider, Some(testWriter))
+    val resultDf = processor.execute()
+
+    testWriter.written shouldEqual true
+    resultDf.count() shouldEqual 1
+    resultDf.columns should contain theSameElementsAs Seq(
+      "id", "title", "price", "surface", "rooms", "bathrooms", "link", "source",
+      "creation_date", "elevator", "garage", "garden", "city", "country", "postal_code",
+      "province", "region", "modification_date", "operation", "pool", "description",
+      "terrace", "type", "latitude", "longitude"
+    )
+    resultDf.first().getAs[String]("id") shouldEqual "190446371"
+    resultDf.first().getAs[String]("source") shouldEqual "fotocasa"
+    resultDf.first().getAs[String]("operation") shouldEqual "Sell"
+    resultDf.first().getAs[String]("type") shouldEqual "Flat"
+  }
+
 }
