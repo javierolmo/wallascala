@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.4.1] - 2026-09-29
+### Fixed
+- Usar `try_cast` nativo en `FieldCleaner` para evitar fallo al castear valores no numéricos con ANSI SQL activo
+
 ## [1.4.0] - 2026-09-28
 ### Added
 - Integración de nueva fuente Fotocasa en cleaner y processor, cálculo espacial de código postal y consolidación en properties_full con load_date
