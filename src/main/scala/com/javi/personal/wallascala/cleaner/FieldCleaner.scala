@@ -49,6 +49,6 @@ object FieldCleaner {
     ).cast(ErrorStruct)
 
   private def castField(inputField: Column, dataType: DataType, function: Option[Column => Column]): Column =
-    function.map(_(inputField)).getOrElse(inputField).cast(dataType)
+    function.map(_(inputField)).getOrElse(inputField).try_cast(dataType)
 
 }

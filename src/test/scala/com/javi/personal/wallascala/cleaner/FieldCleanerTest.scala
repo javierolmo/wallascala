@@ -79,6 +79,16 @@ class FieldCleanerTest extends AnyFlatSpec {
     dataType shouldEqual IntegerType
   }
 
+  it should "handle empty string or non-numeric input without erroring when casting to integer" in {
+    val input: String = "no_numbers"
+    val cleaner = FieldCleaner("some_field", IntegerType, transform = Some(Transformations.removeNonNumeric))
+
+    val (dataType, value) = executeCleaner(input, cleaner)
+
+    value shouldEqual None
+    dataType shouldEqual IntegerType
+  }
+
   it should "Filter should be applied before cast" in {
     val input: String = "some_value"
     val cleaner = FieldCleaner("some_field", StringType, filter = Some(_.isin("some_value")))
