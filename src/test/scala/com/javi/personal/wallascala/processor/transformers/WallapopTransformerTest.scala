@@ -182,4 +182,22 @@ class WallapopTransformerTest extends AnyFlatSpec with Matchers {
     row.getAs[Date]("modification_date") shouldEqual Date.valueOf("2026-09-30")
   }
 
+  it should "recover corrupted epoch milliseconds timestamps with year > 2050" in {
+    val wallapopInput = Seq(
+      ("w-corrupt-1", "Piso", 100000, 60, 2, 1, "Madrid", "ES", 28001, "Madrid", "sale", "flat", "Desc", "+58011-09-30 02:07:08", "slug-corrupt", "+58011-09-29 23:12:36", 40.0, -3.0, 2026, 9, 30)
+    ).toDF(
+      "id", "title", "price__amount", "type_attributes__surface", "type_attributes__rooms", "type_attributes__bathrooms",
+      "location__city", "location__country_code", "location__postal_code", "location__region", "type_attributes__operation",
+      "type_attributes__type", "description", "modified_at", "web_slug", "created_at", "location__latitude", "location__longitude",
+      "year", "month", "day"
+    )
+
+    val provincesInput = Seq((28, "Madrid", "Comunidad de Madrid")).toDF("codigo", "provincia", "ccaa")
+
+    val result = WallapopTransformer.transform(wallapopInput, provincesInput)
+    val row = result.first()
+    row.getAs[Date]("creation_date") shouldEqual Date.valueOf("2026-01-15")
+    row.getAs[Date]("modification_date") shouldEqual Date.valueOf("2026-01-15")
+  }
+
 }

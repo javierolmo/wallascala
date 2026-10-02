@@ -1,9 +1,9 @@
 package com.javi.personal.wallascala.processor.transformers
 
 import com.javi.personal.wallascala.processor.etls.WallapopProperties._
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{Column, DataFrame}
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{BooleanType, DateType, IntegerType, StringType}
+import org.apache.spark.sql.types.{BooleanType, DateType, IntegerType, LongType, StringType}
 
 case class WallapopSources(sanitedWallapop: DataFrame, provinces: DataFrame, zipCodes: DataFrame = null)
 
@@ -13,6 +13,16 @@ object WallapopSources {
 }
 
 object WallapopTransformer extends Transformer[WallapopSources, DataFrame] {
+
+  private def sanitizeDate(dateCol: Column, fallback: Column): Column = {
+    val ts = to_timestamp(dateCol)
+    val yr = year(ts)
+    val recoveredDate = to_date(from_unixtime(ts.cast(LongType) / 1000))
+    val normalDate = to_date(ts)
+    when(dateCol.isNotNull && yr.between(1990, 2050), normalDate)
+      .when(dateCol.isNotNull && yr > 2050 && year(recoveredDate).between(1990, 2050), recoveredDate)
+      .otherwise(fallback)
+  }
 
   override def transform(sources: WallapopSources): DataFrame =
     transform(sources.sanitedWallapop, sources.provinces, sources.zipCodes)
@@ -83,10 +93,10 @@ object WallapopTransformer extends Transformer[WallapopSources, DataFrame] {
       .withColumn(Type, PropertyTypeStandardizer.standardize(col("type_attributes__type")))
       .drop("type_attributes__type")
       .withColumnRenamed("description", Description)
-      .withColumn(ModificationDate, coalesce(to_date(col("modified_at")), scrapDate))
+      .withColumn(ModificationDate, sanitizeDate(col("modified_at"), scrapDate))
       .withColumn(Source, lit("wallapop"))
       .withColumn(Link, concat(lit("https://es.wallapop.com/item/"), col("web_slug")))
-      .withColumn(CreationDate, coalesce(to_date(col("created_at")), scrapDate))
+      .withColumn(CreationDate, sanitizeDate(col("created_at"), scrapDate))
       .withColumn(Elevator, lit(null).cast(BooleanType))
       .withColumn(Garage, lit(null).cast(BooleanType))
       .withColumn(Garden, lit(null).cast(BooleanType))

@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.4.3] - 2026-10-02
+### Fixed
+- Corrección y recuperación de fechas fuera de rango en Wallapop y sanitizado en properties_full para compatibilidad con Synapse Serverless.
+
 ## [1.4.2] - 2026-10-02
 ### Changed
 - Estandarización de tipos, operaciones y geografía, y mejoras en parseo de fechas y consistencia de esquemas.
