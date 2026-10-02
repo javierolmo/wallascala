@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.4.2] - 2026-10-02
+### Changed
+- Estandarización de tipos, operaciones y geografía, y mejoras en parseo de fechas y consistencia de esquemas.
+
 ## [1.4.1] - 2026-09-29
 ### Fixed
 - Usar `try_cast` nativo en `FieldCleaner` para evitar fallo al castear valores no numéricos con ANSI SQL activo

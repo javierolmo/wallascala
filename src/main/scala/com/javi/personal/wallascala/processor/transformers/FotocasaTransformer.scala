@@ -4,13 +4,17 @@ import com.javi.personal.wallascala.processor.etls.FotocasaProperties._
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types._
+import org.apache.spark.sql.types.{BooleanType, DateType, DoubleType, IntegerType, StringType}
 import org.locationtech.jts.geom.{Coordinate, GeometryFactory}
 
-case class FotocasaSources(sanitedFotocasa: DataFrame, zipCodes: DataFrame)
+case class FotocasaSources(sanitedFotocasa: DataFrame, zipCodes: DataFrame = null, provinces: DataFrame = null)
 
 object FotocasaSources {
-  def apply(sanitedFotocasa: DataFrame): FotocasaSources = FotocasaSources(sanitedFotocasa, null)
+  def apply(sanitedFotocasa: DataFrame): FotocasaSources =
+    FotocasaSources(sanitedFotocasa, null, null)
+
+  def apply(sanitedFotocasa: DataFrame, zipCodes: DataFrame): FotocasaSources =
+    FotocasaSources(sanitedFotocasa, zipCodes, null)
 }
 
 object FotocasaTransformer extends Transformer[FotocasaSources, DataFrame] {
@@ -33,25 +37,32 @@ object FotocasaTransformer extends Transformer[FotocasaSources, DataFrame] {
   })
 
   override def transform(sources: FotocasaSources): DataFrame =
-    transform(sources.sanitedFotocasa, sources.zipCodes)
+    transform(sources.sanitedFotocasa, sources.zipCodes, sources.provinces)
 
   def transform(sanitedFotocasa: DataFrame): DataFrame =
-    transform(sanitedFotocasa, null)
+    transform(sanitedFotocasa, null, null)
 
-  def transform(sanitedFotocasa: DataFrame, zipCodes: DataFrame): DataFrame = {
-    val mappedOperation = when(lower(col("operacion")).isin("comprar", "sell", "compra", "venta"), "Sell")
-      .when(lower(col("operacion")).isin("alquiler", "rent", "alquilar"), "Rent")
-      .otherwise(col("operacion"))
+  def transform(sanitedFotocasa: DataFrame, zipCodes: DataFrame): DataFrame =
+    transform(sanitedFotocasa, zipCodes, null)
 
-    val rawType = lower(coalesce(col("tipo_detalle"), col("tipo_inmueble")))
-    val mappedType = when(rawType.isin("flat", "viviendas", "duplex", "dúplex", "penthouse", "ático", "atico", "studio", "estudio", "loft", "apartamento"), "Flat")
-      .when(rawType.isin("house", "countryhouse", "casas", "chalet", "adossat", "pareado"), "House")
-      .when(rawType.isin("business", "building", "locales", "edificios", "oficinas", "premises / office"), "Premises / Office")
-      .when(rawType.isin("garage", "garajes", "parking"), "Garage")
-      .when(rawType.isin("storage", "trasteros", "box room"), "Box Room")
-      .when(rawType.isin("land", "terrenos", "parcelas", "suelo"), "Land")
-      .when(rawType.isin("room", "habitaciones"), "Room")
-      .otherwise(coalesce(col("tipo_detalle"), col("tipo_inmueble")))
+  def transform(sanitedFotocasa: DataFrame, zipCodes: DataFrame, provinces: DataFrame): DataFrame = {
+    val scrapDate = if (sanitedFotocasa.columns.contains("year") && sanitedFotocasa.columns.contains("month") && sanitedFotocasa.columns.contains("day")) {
+      make_date(col("year").cast(IntegerType), col("month").cast(IntegerType), col("day").cast(IntegerType))
+    } else if (sanitedFotocasa.columns.contains("fecha_scraping")) {
+      to_date(col("fecha_scraping"))
+    } else {
+      lit(null).cast(DateType)
+    }
+
+    val mappedOperation = coalesce(
+      OperationStandardizer.standardize(col("operacion")),
+      OperationStandardizer.fromUrl(col("url"))
+    )
+
+    val mappedType = coalesce(
+      PropertyTypeStandardizer.standardize(coalesce(col("tipo_detalle"), col("tipo_inmueble"))),
+      PropertyTypeStandardizer.fromUrl(col("url"))
+    )
 
     val base = sanitedFotocasa
       .withColumn(Id, col("id").cast(StringType))
@@ -62,15 +73,14 @@ object FotocasaTransformer extends Transformer[FotocasaSources, DataFrame] {
       .withColumn(Bathrooms, col("baños").cast(IntegerType))
       .withColumn(Link, col("url"))
       .withColumn(Source, lit("fotocasa"))
-      .withColumn(CreationDate, lit(null).cast(DateType))
+      .withColumn(CreationDate, coalesce(lit(null).cast(DateType), scrapDate))
       .withColumn(Elevator, lit(null).cast(BooleanType))
       .withColumn(Garage, lit(null).cast(BooleanType))
       .withColumn(Garden, lit(null).cast(BooleanType))
-      .withColumn(City, col("municipio"))
+      .withColumn("raw_municipio", col("municipio"))
       .withColumn(Country, lit("ES"))
-      .withColumn(Province, initcap(regexp_replace(regexp_replace(col("provincia"), "-provincia$", ""), "-", " ")))
-      .withColumn(Region, lit(null).cast(StringType))
-      .withColumn(ModificationDate, to_date(col("fecha_scraping")))
+      .withColumn("raw_provincia_clean", initcap(regexp_replace(regexp_replace(col("provincia"), "-provincia$", ""), "-", " ")))
+      .withColumn(ModificationDate, coalesce(to_date(col("fecha_scraping")), scrapDate))
       .withColumn(Operation, mappedOperation)
       .withColumn(Pool, lit(null).cast(BooleanType))
       .withColumn(Description, lit(null).cast(StringType))
@@ -79,22 +89,58 @@ object FotocasaTransformer extends Transformer[FotocasaSources, DataFrame] {
       .withColumn(Latitude, col("coordenadas__latitude").cast(DoubleType))
       .withColumn(Longitude, col("coordenadas__longitude").cast(DoubleType))
 
-    val withPostalCode = if (zipCodes != null && zipCodes.columns.contains("coordinates") && zipCodes.columns.contains("codigo_postal")) {
+    val withZipCodes = if (zipCodes != null && !zipCodes.columns.isEmpty && zipCodes.columns.contains("coordinates") && zipCodes.columns.contains("codigo_postal")) {
+      val zipCols = if (zipCodes.columns.contains("nombre")) Seq("codigo_postal", "coordinates", "nombre") else Seq("codigo_postal", "coordinates")
       val zipCodesWithPolygon = broadcast(
         zipCodes
-          .select("codigo_postal", "coordinates")
+          .select(zipCols.map(col): _*)
           .withColumn("coordinates", expr("transform(coordinates, x -> map_from_arrays(array('latitude', 'longitude'), array(x.latitude, x.longitude)))"))
       )
 
-      base
-        .join(zipCodesWithPolygon, pointInPolygon(col(Latitude), col(Longitude), col("coordinates")) === lit(true), "left")
-        .withColumn(PostalCode, col("codigo_postal").cast(IntegerType))
-        .drop("codigo_postal", "coordinates")
+      val joined = base.join(zipCodesWithPolygon.as("z"), pointInPolygon(col(Latitude), col(Longitude), col("z.coordinates")) === lit(true), "left")
+        .withColumn(PostalCode, col("z.codigo_postal").cast(IntegerType))
+
+      if (zipCodes.columns.contains("nombre")) {
+        joined.withColumn(City, coalesce(col("z.nombre"), col("raw_municipio")))
+      } else {
+        joined.withColumn(City, col("raw_municipio"))
+      }
     } else {
-      base.withColumn(PostalCode, lit(null).cast(IntegerType))
+      base
+        .withColumn(PostalCode, lit(null).cast(IntegerType))
+        .withColumn(City, col("raw_municipio"))
     }
 
-    withPostalCode
+    val withProvinces = if (provinces != null && !provinces.columns.isEmpty && provinces.columns.contains("codigo")) {
+      val provCols = provinces.columns
+      val selectCols = Seq("codigo") ++ (if (provCols.contains("provincia")) Seq("provincia") else Seq.empty) ++ (if (provCols.contains("ccaa")) Seq("ccaa") else Seq.empty)
+      val provSubset = provinces.select(selectCols.map(c => col(c).as(s"prov_$c")): _*)
+
+      val joined = withZipCodes
+        .withColumn("province_code", (col(PostalCode) / 1000).cast(IntegerType))
+        .join(provSubset, col("province_code") === col("prov_codigo").cast(IntegerType), "left")
+
+      val withProv = if (provCols.contains("provincia")) {
+        joined.withColumn(Province, coalesce(col("prov_provincia"), col("raw_provincia_clean")))
+      } else {
+        joined.withColumn(Province, col("raw_provincia_clean"))
+      }
+
+      val withReg = if (provCols.contains("ccaa")) {
+        withProv.withColumn(Region, col("prov_ccaa"))
+      } else {
+        withProv.withColumn(Region, lit(null).cast(StringType))
+      }
+
+      withReg.drop(selectCols.map(c => s"prov_$c"): _*).drop("province_code", "raw_provincia_clean", "raw_municipio")
+    } else {
+      withZipCodes
+        .withColumn(Province, col("raw_provincia_clean"))
+        .withColumn(Region, lit(null).cast(StringType))
+        .drop("raw_provincia_clean", "raw_municipio")
+    }
+
+    withProvinces
       .withColumn("row_number", row_number().over(Window.partitionBy(Id).orderBy(col(ModificationDate).desc)))
       .filter(col("row_number") === 1)
       .drop("row_number")

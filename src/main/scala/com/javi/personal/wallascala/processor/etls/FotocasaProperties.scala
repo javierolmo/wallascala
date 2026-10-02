@@ -5,6 +5,7 @@ import com.javi.personal.wallascala.processor.transformers.FotocasaTransformer
 import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor, ProcessorConfig}
 import com.javi.personal.wallascala.utils.writers.SparkWriter
 import com.javi.personal.wallascala.utils.{DataSourceProvider, DefaultDataSourceProvider}
+import org.apache.spark.sql.functions.lit
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -45,12 +46,19 @@ class FotocasaProperties(
   )
 
   private object sources {
-    lazy val sanitedFotocasaProperties: DataFrame = dataSourceProvider.readSilver("fotocasa", "properties", config.date)
+    lazy val sanitedFotocasaProperties: DataFrame = {
+      val df = dataSourceProvider.readSilver("fotocasa", "properties", config.date)
+      val withYear = if (df.columns.contains("year")) df else df.withColumn("year", lit(config.date.getYear))
+      val withMonth = if (withYear.columns.contains("month")) withYear else withYear.withColumn("month", lit(config.date.getMonthValue))
+      val withDay = if (withMonth.columns.contains("day")) withMonth else withMonth.withColumn("day", lit(config.date.getDayOfMonth))
+      withDay
+    }
     lazy val zipCodes: DataFrame = dataSourceProvider.readSilver("cnig", "zip_codes")
+    lazy val sanitedProvinces: DataFrame = dataSourceProvider.readSilver("opendatasoft", "provincias-espanolas")
   }
 
   override protected def build(): DataFrame =
-    FotocasaTransformer.transform(sources.sanitedFotocasaProperties, sources.zipCodes)
+    FotocasaTransformer.transform(sources.sanitedFotocasaProperties, sources.zipCodes, sources.sanitedProvinces)
 
 }
 
@@ -79,5 +87,6 @@ object FotocasaProperties {
   val Terrace = "terrace"
   val Type = "type"
   val Latitude = "latitude"
+  val LongType = "long_type"
   val Longitude = "longitude"
 }

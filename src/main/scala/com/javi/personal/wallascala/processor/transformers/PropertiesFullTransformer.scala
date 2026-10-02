@@ -20,7 +20,21 @@ object PropertiesFullTransformer extends Transformer[PropertiesFullSources, Data
 
   def withLoadDate(df: DataFrame): DataFrame =
     if (df.columns.isEmpty) df
-    else df.withColumn("load_date", make_date(col("year").cast(IntegerType), col("month").cast(IntegerType), col("day").cast(IntegerType)))
+    else {
+      val withLd = if (df.columns.contains("year") && df.columns.contains("month") && df.columns.contains("day")) {
+        df.withColumn("load_date", make_date(col("year").cast(IntegerType), col("month").cast(IntegerType), col("day").cast(IntegerType)))
+      } else {
+        df
+      }
+      val withMod = if (withLd.columns.contains("modification_date") && withLd.columns.contains("load_date")) {
+        withLd.withColumn("modification_date", coalesce(to_date(col("modification_date")), col("load_date")))
+      } else withLd
+      val withCre = if (withMod.columns.contains("creation_date") && withMod.columns.contains("load_date")) {
+        withMod.withColumn("creation_date", coalesce(to_date(col("creation_date")), col("load_date")))
+      } else withMod
+
+      withCre
+    }
 
   def deduplicateLatest(df: DataFrame): DataFrame = {
     if (df.columns.isEmpty) {

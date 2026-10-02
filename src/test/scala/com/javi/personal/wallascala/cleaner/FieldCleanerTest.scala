@@ -1,9 +1,9 @@
 package com.javi.personal.wallascala.cleaner
 
 import com.javi.personal.wallascala.cleaner.model.Transformations
-import org.apache.spark.sql.functions.col
-import org.apache.spark.sql.types.{ArrayType, DataType, DoubleType, IntegerType, StringType, StructField, StructType}
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.functions.{array, array_except, col, lit}
+import org.apache.spark.sql.types._
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
@@ -119,13 +119,138 @@ class FieldCleanerTest extends AnyFlatSpec {
     dataType shouldEqual StringType
   }
 
+  "Regression: Fotocasa non-numeric fields" should "cast 'No disponible' with removeNonNumeric as null without Error casting" in {
+    val input: String = "No disponible"
+    val cleaner = FieldCleaner("baños", IntegerType, transform = Some(Transformations.removeNonNumeric))
+
+    val (dataType, value, errors) = executeCleanerWithErrors(input, cleaner)
+
+    dataType shouldEqual IntegerType
+    value shouldEqual None
+    errors shouldBe empty
+  }
+
+  "Regression: Wallapop international postal codes" should "report Error casting for non-numeric postal codes like '4900-809'" in {
+    val input: String = "4900-809"
+    val cleaner = FieldCleaner("location__postal_code", IntegerType)
+
+    val (dataType, value, errors) = executeCleanerWithErrors(input, cleaner)
+
+    dataType shouldEqual IntegerType
+    value shouldEqual None
+    errors should not be empty
+    errors.head.getAs[String]("message") shouldEqual "Error casting"
+    errors.head.getAs[String]("fieldName") shouldEqual "location__postal_code"
+  }
+
+  "Regression: Pisos date handling" should "clean date in array format '[2026,2,19]' successfully" in {
+    val input: String = "[2026,2,19]"
+    val cleaner = FieldCleaner("lastUpdateDate", DateType, transform = Some(Transformations.parseDate))
+
+    val (dataType, value, errors) = executeCleanerWithErrors(input, cleaner)
+
+    dataType shouldEqual DateType
+    value shouldEqual Some(java.sql.Date.valueOf("2026-02-19"))
+    errors shouldBe empty
+  }
+
+  it should "clean date in spaced array format '[2026, 2, 19]' successfully" in {
+    val input: String = "[2026, 2, 19]"
+    val cleaner = FieldCleaner("lastUpdateDate", DateType, transform = Some(Transformations.parseDate))
+
+    val (dataType, value, errors) = executeCleanerWithErrors(input, cleaner)
+
+    dataType shouldEqual DateType
+    value shouldEqual Some(java.sql.Date.valueOf("2026-02-19"))
+    errors shouldBe empty
+  }
+
+  it should "clean date in Spanish format '19/02/2026' successfully" in {
+    val input: String = "19/02/2026"
+    val cleaner = FieldCleaner("lastUpdateDate", DateType, transform = Some(Transformations.parseDate))
+
+    val (dataType, value, errors) = executeCleanerWithErrors(input, cleaner)
+
+    dataType shouldEqual DateType
+    value shouldEqual Some(java.sql.Date.valueOf("2026-02-19"))
+    errors shouldBe empty
+  }
+
+  it should "clean standard ISO date '2026-02-19' successfully without errors" in {
+    val input: String = "2026-02-19"
+    val cleaner = FieldCleaner("lastUpdateDate", DateType, transform = Some(Transformations.parseDate))
+
+    val (dataType, value, errors) = executeCleanerWithErrors(input, cleaner)
+
+    dataType shouldEqual DateType
+    value shouldEqual Some(java.sql.Date.valueOf("2026-02-19"))
+    errors shouldBe empty
+  }
+
+  it should "report Error casting when date format is truly invalid" in {
+    val input: String = "invalid-date-string"
+    val cleaner = FieldCleaner("lastUpdateDate", DateType, transform = Some(Transformations.parseDate))
+
+    val (dataType, value, errors) = executeCleanerWithErrors(input, cleaner)
+
+    dataType shouldEqual DateType
+    value shouldEqual None
+    errors should not be empty
+    errors.head.getAs[String]("message") shouldEqual "Error casting"
+  }
+
+  "Timestamp handling in FieldCleaner" should "clean ISO-8601 timestamp with Z" in {
+    val input: String = "2026-08-09T10:00:00.000Z"
+    val cleaner = FieldCleaner("created_at", TimestampType, transform = Some(Transformations.parseTimestamp))
+
+    val (dataType, value, errors) = executeCleanerWithErrors(input, cleaner)
+
+    dataType shouldEqual TimestampType
+    value should not be empty
+    errors shouldBe empty
+  }
+
+  it should "clean epoch milliseconds as timestamp" in {
+    val input: String = "1727733734000"
+    val cleaner = FieldCleaner("created_at", TimestampType, transform = Some(Transformations.parseTimestamp))
+
+    val (dataType, value, errors) = executeCleanerWithErrors(input, cleaner)
+
+    dataType shouldEqual TimestampType
+    value should not be empty
+    errors shouldBe empty
+  }
+
+  it should "clean Spanish timestamp format '27/09/2026 14:42:20'" in {
+    val input: String = "27/09/2026 14:42:20"
+    val cleaner = FieldCleaner("fecha_scraping", TimestampType, transform = Some(Transformations.parseTimestamp))
+
+    val (dataType, value, errors) = executeCleanerWithErrors(input, cleaner)
+
+    dataType shouldEqual TimestampType
+    value should not be empty
+    errors shouldBe empty
+  }
+
   private def executeCleaner(input: String, cleaner: FieldCleaner): (DataType, Option[Any]) = {
+    val (dt, value, _) = executeCleanerWithErrors(input, cleaner)
+    (dt, value)
+  }
+
+  private def executeCleanerWithErrors(input: String, cleaner: FieldCleaner): (DataType, Option[Any], Seq[Row]) = {
     val df: DataFrame = Seq(input).toDF("some_field")
     val (errors, result) = cleaner.clean(col("some_field"))
-    val cleanedDF = df.withColumn("errors", errors).withColumn("result", result)
+    val cleanedDF = df
+      .withColumn("errors", array_except(errors, array(lit(null))))
+      .withColumn("result", result)
+    val head = cleanedDF.collect().head
+    val errorsSeq: Seq[Row] = Option(head.getAs[scala.collection.Seq[Row]]("errors"))
+      .map(_.toSeq)
+      .getOrElse(Seq.empty)
     (
       cleanedDF.schema("result").dataType,
-      cleanedDF.select("result").collect().headOption.map(_.getAs[Any](0)).flatMap(Option(_))
+      Option(head.getAs[Any]("result")),
+      errorsSeq
     )
   }
 

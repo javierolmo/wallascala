@@ -16,7 +16,7 @@ case class PropertiesFull(
                            bathrooms: Integer,
                            link: String,
                            source: String,
-                           creation_date: String,
+                           creation_date: Date,
                            elevator: Boolean,
                            garage: Boolean,
                            garden: Boolean,
