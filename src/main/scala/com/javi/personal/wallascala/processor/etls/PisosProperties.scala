@@ -5,6 +5,7 @@ import com.javi.personal.wallascala.processor.transformers.PisosTransformer
 import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor, ProcessorConfig}
 import com.javi.personal.wallascala.utils.writers.SparkWriter
 import com.javi.personal.wallascala.utils.{DataSourceProvider, DefaultDataSourceProvider}
+import org.apache.spark.sql.functions.lit
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -45,16 +46,24 @@ class PisosProperties(
   )
 
   private object sources {
-    lazy val sanitedPisosProperties: DataFrame = dataSourceProvider.readSilver("pisos", "properties", config.date)
+    lazy val sanitedPisosProperties: DataFrame = {
+      val df = dataSourceProvider.readSilver("pisos", "properties", config.date)
+      val withYear = if (df.columns.contains("year")) df else df.withColumn("year", lit(config.date.getYear))
+      val withMonth = if (withYear.columns.contains("month")) withYear else withYear.withColumn("month", lit(config.date.getMonthValue))
+      val withDay = if (withMonth.columns.contains("day")) withMonth else withMonth.withColumn("day", lit(config.date.getDayOfMonth))
+      withDay
+    }
     lazy val zipCodes: DataFrame = dataSourceProvider.readSilver("cnig", "zip_codes")
+    lazy val sanitedProvinces: DataFrame = dataSourceProvider.readSilver("opendatasoft", "provincias-espanolas")
   }
 
   override protected def build(): DataFrame =
-    PisosTransformer.transform(sources.sanitedPisosProperties, sources.zipCodes)
+    PisosTransformer.transform(sources.sanitedPisosProperties, sources.zipCodes, sources.sanitedProvinces)
 
 }
 
 object PisosProperties {
+
   val Id = "id"
   val Title = "title"
   val Price = "price"
@@ -65,7 +74,7 @@ object PisosProperties {
   val Source = "source"
   val CreationDate = "creation_date"
   val Elevator = "elevator"
-  val Garage =  "garage"
+  val Garage = "garage"
   val Garden = "garden"
   val City = "city"
   val Country = "country"
@@ -79,8 +88,6 @@ object PisosProperties {
   val Terrace = "terrace"
   val Type = "type"
   val Latitude = "latitude"
+  val LongType = "long_type"
   val Longitude = "longitude"
-  val Date = "date"
 }
-
-

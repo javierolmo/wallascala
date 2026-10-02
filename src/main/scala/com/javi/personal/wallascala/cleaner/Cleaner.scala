@@ -18,7 +18,7 @@ object Cleaner {
     SparkFileWriter.write(result.invalidRecords, config.targetPathExclusions)
   }
 
-  private def validate(inputDF: DataFrame, metadata: CleanerMetadata): ValidationResult = {
+  private[cleaner] def validate(inputDF: DataFrame, metadata: CleanerMetadata): ValidationResult = {
 
     val dfWithAllFields = metadata.fields.foldLeft(inputDF) { (df, field) =>
       if (!df.columns.contains(field.name)) df.withColumn(field.name, lit(null).cast(field.dataType)) else df

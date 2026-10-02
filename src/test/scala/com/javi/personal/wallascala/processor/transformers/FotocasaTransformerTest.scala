@@ -1,6 +1,8 @@
 package com.javi.personal.wallascala.processor.transformers
 
+import org.apache.spark.sql.Row
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.types._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -72,8 +74,8 @@ class FotocasaTransformerTest extends AnyFlatSpec with Matchers {
     row.getAs[String]("country") shouldEqual "ES"
     row.getAs[String]("source") shouldEqual "fotocasa"
     row.getAs[String]("link") shouldEqual "https://www.fotocasa.es/item/190446371"
-    row.getAs[String]("operation") shouldEqual "Sell"
-    row.getAs[String]("type") shouldEqual "Flat"
+    row.getAs[String]("operation") shouldEqual "SELL"
+    row.getAs[String]("type") shouldEqual "FLAT"
     row.getAs[Double]("latitude") shouldEqual 42.235
     row.getAs[Double]("longitude") shouldEqual -8.719
     row.getAs[Date]("modification_date") shouldEqual Date.valueOf("2026-09-27")
@@ -110,7 +112,7 @@ class FotocasaTransformerTest extends AnyFlatSpec with Matchers {
     result.first().getAs[String]("id") shouldEqual "200"
   }
 
-  it should "map operation and type correctly to match wallapop values" in {
+  it should "map operation and type correctly to match standard values" in {
     val fotocasaInput = Seq(
       (1, 0L, 42.0, -8.0, "2026-09-27 10:00:00", 1, 101L, 50, "Vigo", "alquiler", 800, "pontevedra-provincia", "1 DAY", "Flat", "viviendas", "Loc", "https://url1"),
       (1, 0L, 42.0, -8.0, "2026-09-27 10:00:00", 1, 102L, 100, "Vigo", "comprar", 200000, "pontevedra-provincia", "1 DAY", "Business", "locales", "Loc", "https://url2"),
@@ -125,23 +127,21 @@ class FotocasaTransformerTest extends AnyFlatSpec with Matchers {
     val result = FotocasaTransformer.transform(fotocasaInput)
     val map = result.collect().map(r => (r.getAs[String]("id"), (r.getAs[String]("operation"), r.getAs[String]("type")))).toMap
 
-    map("101") shouldEqual ("Rent", "Flat")
-    map("102") shouldEqual ("Sell", "Premises / Office")
-    map("103") shouldEqual ("Sell", "Premises / Office")
-    map("104") shouldEqual ("Sell", "House")
+    map("101") shouldEqual ("RENT", "FLAT")
+    map("102") shouldEqual ("SELL", "OFFICE")
+    map("103") shouldEqual ("SELL", "OFFICE")
+    map("104") shouldEqual ("SELL", "HOUSE")
   }
 
-  it should "resolve postal_code using zipCodes polygon" in {
+  it should "resolve postal_code, standardize City using zipCodes and enrich Region and Province with opendatasoft" in {
     val fotocasaInput = Seq(
-      (1, 0L, 42.235, -8.719, "2026-09-27 10:00:00", 1, 999L, 50, "Vigo", "comprar", 100000, "pontevedra-provincia", "1 DAY", "Flat", "viviendas", "Loc", "https://url")
+      (1, 0L, 42.235, -8.719, "2026-09-27 10:00:00", 1, 999L, 50, "Vigo Raw", "comprar", 100000, "pontevedra-provincia", "1 DAY", "Flat", "viviendas", "Loc", "https://url", 2026, 9, 30)
     ).toDF(
       "baños", "coordenadas__accuracy", "coordenadas__latitude", "coordenadas__longitude",
       "fecha_scraping", "habitaciones", "id", "metros", "municipio", "operacion",
-      "precio", "provincia", "publicado_hace", "tipo_detalle", "tipo_inmueble", "ubicacion", "url"
+      "precio", "provincia", "publicado_hace", "tipo_detalle", "tipo_inmueble", "ubicacion", "url",
+      "year", "month", "day"
     )
-
-    import org.apache.spark.sql.Row
-    import org.apache.spark.sql.types._
 
     val zipCodesSchema = new StructType()
       .add("codigo_postal", IntegerType)
@@ -156,8 +156,8 @@ class FotocasaTransformerTest extends AnyFlatSpec with Matchers {
     val zipCodesData = Seq(
       Row(
         36201,
-        "Vigo",
-        "Pontevedra",
+        "Vigo CNIG",
+        "Pontevedra CNIG",
         Seq(
           Row(42.230, -8.725),
           Row(42.240, -8.725),
@@ -173,11 +173,33 @@ class FotocasaTransformerTest extends AnyFlatSpec with Matchers {
       zipCodesSchema
     )
 
-    val result = FotocasaTransformer.transform(fotocasaInput, zipCodes)
+    val provinces = Seq((36, "Pontevedra", "Galicia")).toDF("codigo", "provincia", "ccaa")
+
+    val result = FotocasaTransformer.transform(fotocasaInput, zipCodes, provinces)
 
     result.count() shouldEqual 1
-    result.first().getAs[Int]("postal_code") shouldEqual 36201
+    val row = result.first()
+    row.getAs[Int]("postal_code") shouldEqual 36201
+    row.getAs[String]("city") shouldEqual "Vigo CNIG"
+    row.getAs[String]("province") shouldEqual "Pontevedra"
+    row.getAs[String]("region") shouldEqual "Galicia"
+    row.getAs[Date]("creation_date") shouldEqual Date.valueOf("2026-09-30")
+  }
+
+  it should "fallback modification_date to scrap date when fecha_scraping is null" in {
+    val fotocasaInput = Seq(
+      (1, 0L, 42.0, -8.0, null, 1, 888L, 50, "Vigo", "comprar", 100000, "pontevedra-provincia", "1 DAY", "Flat", "viviendas", "Loc", "https://url", 2026, 9, 30)
+    ).toDF(
+      "baños", "coordenadas__accuracy", "coordenadas__latitude", "coordenadas__longitude",
+      "fecha_scraping", "habitaciones", "id", "metros", "municipio", "operacion",
+      "precio", "provincia", "publicado_hace", "tipo_detalle", "tipo_inmueble", "ubicacion", "url",
+      "year", "month", "day"
+    )
+
+    val result = FotocasaTransformer.transform(fotocasaInput)
+    val row = result.first()
+    row.getAs[Date]("creation_date") shouldEqual Date.valueOf("2026-09-30")
+    row.getAs[Date]("modification_date") shouldEqual Date.valueOf("2026-09-30")
   }
 
 }
-

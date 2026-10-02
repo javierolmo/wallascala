@@ -5,6 +5,7 @@ import com.javi.personal.wallascala.processor.transformers.WallapopTransformer
 import com.javi.personal.wallascala.processor.{ETL, ProcessedTables, Processor, ProcessorConfig}
 import com.javi.personal.wallascala.utils.writers.SparkWriter
 import com.javi.personal.wallascala.utils.{DataSourceProvider, DefaultDataSourceProvider}
+import org.apache.spark.sql.functions.lit
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -45,12 +46,19 @@ class WallapopProperties(
   )
 
   private object sources {
-    lazy val sanitedWallapopProperties: DataFrame = dataSourceProvider.readSilver("wallapop", "properties", config.date)
+    lazy val sanitedWallapopProperties: DataFrame = {
+      val df = dataSourceProvider.readSilver("wallapop", "properties", config.date)
+      val withYear = if (df.columns.contains("year")) df else df.withColumn("year", lit(config.date.getYear))
+      val withMonth = if (withYear.columns.contains("month")) withYear else withYear.withColumn("month", lit(config.date.getMonthValue))
+      val withDay = if (withMonth.columns.contains("day")) withMonth else withMonth.withColumn("day", lit(config.date.getDayOfMonth))
+      withDay
+    }
     lazy val sanitedProvinces: DataFrame = dataSourceProvider.readSilver("opendatasoft", "provincias-espanolas")
+    lazy val zipCodes: DataFrame = dataSourceProvider.readSilver("cnig", "zip_codes")
   }
 
   override protected def build(): DataFrame =
-    WallapopTransformer.transform(sources.sanitedWallapopProperties, sources.sanitedProvinces)
+    WallapopTransformer.transform(sources.sanitedWallapopProperties, sources.sanitedProvinces, sources.zipCodes)
 
 }
 
@@ -65,7 +73,7 @@ object WallapopProperties {
   val Source = "source"
   val CreationDate = "creation_date"
   val Elevator = "elevator"
-  val Garage =  "garage"
+  val Garage = "garage"
   val Garden = "garden"
   val City = "city"
   val Country = "country"
@@ -79,5 +87,6 @@ object WallapopProperties {
   val Terrace = "terrace"
   val Type = "type"
   val Latitude = "latitude"
+  val LongType = "long_type"
   val Longitude = "longitude"
 }

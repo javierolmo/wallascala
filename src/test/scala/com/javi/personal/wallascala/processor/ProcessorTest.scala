@@ -1,12 +1,14 @@
 package com.javi.personal.wallascala.processor
 
-import com.javi.personal.wallascala.processor.etls.WallapopProperties
+import com.javi.personal.wallascala.processor.etls.{PropertiesFullProcessor, WallapopProperties}
 import com.javi.personal.wallascala.utils.DataSourceProvider
 import com.javi.personal.wallascala.utils.writers.SparkWriter
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.types._
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
+import java.sql.Date
 import java.time.LocalDate
 
 class ProcessorTest extends AnyFlatSpec with Matchers {
@@ -110,8 +112,84 @@ class ProcessorTest extends AnyFlatSpec with Matchers {
     )
     resultDf.first().getAs[String]("id") shouldEqual "190446371"
     resultDf.first().getAs[String]("source") shouldEqual "fotocasa"
-    resultDf.first().getAs[String]("operation") shouldEqual "Sell"
-    resultDf.first().getAs[String]("type") shouldEqual "Flat"
+    resultDf.first().getAs[String]("operation") shouldEqual "SELL"
+    resultDf.first().getAs[String]("type") shouldEqual "FLAT"
+  }
+
+  it should "execute properties_full processor ensuring correct DateType for creation_date, modification_date, and load_date" in {
+    val inputSchema = StructType(Seq(
+      StructField("id", StringType),
+      StructField("title", StringType),
+      StructField("price", IntegerType),
+      StructField("surface", IntegerType),
+      StructField("rooms", IntegerType),
+      StructField("bathrooms", IntegerType),
+      StructField("link", StringType),
+      StructField("source", StringType),
+      StructField("creation_date", DateType),
+      StructField("elevator", BooleanType),
+      StructField("garage", BooleanType),
+      StructField("garden", BooleanType),
+      StructField("city", StringType),
+      StructField("country", StringType),
+      StructField("postal_code", IntegerType),
+      StructField("province", StringType),
+      StructField("region", StringType),
+      StructField("modification_date", DateType),
+      StructField("operation", StringType),
+      StructField("pool", BooleanType),
+      StructField("description", StringType),
+      StructField("terrace", BooleanType),
+      StructField("type", StringType),
+      StructField("latitude", DoubleType),
+      StructField("longitude", DoubleType),
+      StructField("year", IntegerType),
+      StructField("month", IntegerType),
+      StructField("day", IntegerType)
+    ))
+
+    val rowData = Row(
+      "w-1", "Piso en Sol", 250000, 80, 2, 1, "https://link-1", "wallapop", Date.valueOf("2026-09-01"),
+      false, false, false, "Madrid", "ES", 28013, "Madrid", "Comunidad de Madrid",
+      Date.valueOf("2026-09-25"), "SELL", false, "Desc", false, "FLAT", 40.41, -3.70, 2026, 9, 30
+    )
+
+    val wallapopGold = spark.createDataFrame(
+      spark.sparkContext.parallelize(Seq(rowData)),
+      inputSchema
+    )
+
+    val stubProvider = new DataSourceProvider {
+      override def readSilver(source: String, datasetName: String)(implicit spark: SparkSession): DataFrame = spark.emptyDataFrame
+      override def readSilver(source: String, datasetName: String, date: LocalDate)(implicit spark: SparkSession): DataFrame = spark.emptyDataFrame
+      override def readSilverOption(source: String, datasetName: String, date: LocalDate)(implicit spark: SparkSession): Option[DataFrame] = None
+      override def readGold(dataset: ProcessedTables, dateOption: Option[LocalDate])(implicit spark: SparkSession): DataFrame = spark.emptyDataFrame
+      override def readGoldOption(dataset: ProcessedTables, dateOption: Option[LocalDate])(implicit spark: SparkSession): Option[DataFrame] = {
+        if (dataset == ProcessedTables.WALLAPOP_PROPERTIES) Some(wallapopGold)
+        else None
+      }
+    }
+
+    val testWriter = new TestWriter()
+    val config = ProcessorConfig(ProcessedTables.PROPERTIES_FULL, LocalDate.of(2026, 9, 30), "dummy/path")
+
+    val processor = Processor.build(config, stubProvider, Some(testWriter))
+    val resultDf = processor.execute()
+
+    testWriter.written shouldEqual true
+    resultDf.count() shouldEqual 1
+
+    val schema = resultDf.schema
+    schema("creation_date").dataType shouldEqual DateType
+    schema("modification_date").dataType shouldEqual DateType
+    schema("load_date").dataType shouldEqual DateType
+
+    val row = resultDf.first()
+    row.getAs[Date]("creation_date") shouldEqual Date.valueOf("2026-09-01")
+    row.getAs[Date]("modification_date") shouldEqual Date.valueOf("2026-09-25")
+    row.getAs[Date]("load_date") shouldEqual Date.valueOf("2026-09-30")
+    row.getAs[Int]("price") shouldEqual 250000
+    row.getAs[String]("source") shouldEqual "wallapop"
   }
 
 }

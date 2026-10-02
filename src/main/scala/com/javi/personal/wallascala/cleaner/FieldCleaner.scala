@@ -2,7 +2,7 @@ package com.javi.personal.wallascala.cleaner
 
 import com.javi.personal.wallascala.cleaner.FieldCleaner.{ErrorStruct, castField, createErrorStruct}
 import org.apache.spark.sql.Column
-import org.apache.spark.sql.functions.{array, lit, struct, when}
+import org.apache.spark.sql.functions.{array, lit, struct, trim, when}
 import org.apache.spark.sql.types._
 
 case class FieldCleaner(
@@ -15,8 +15,13 @@ case class FieldCleaner(
   def clean(inputField: Column): (Column, Column) = {
     val defaultedField = defaultValue.map(value => when(inputField.isNull, lit(value)).otherwise(inputField)).getOrElse(inputField)
     val excludedByFilter = filter.map(!_.apply(defaultedField)).getOrElse(lit(false))
-    val castedField = castField(defaultedField, dataType, transform)
-    val errorCasting = inputField.isNotNull and castedField.isNull
+    val transformedField = transform.map(_(defaultedField)).getOrElse(defaultedField)
+    val castedField = transformedField.try_cast(dataType)
+
+    val inputWasNonEmpty = inputField.isNotNull and (trim(inputField.cast(StringType)) =!= lit(""))
+    val transformedIsNonEmpty = transformedField.isNotNull and (trim(transformedField.cast(StringType)) =!= lit(""))
+
+    val errorCasting = inputWasNonEmpty and (transformedField.isNull or (transformedIsNonEmpty and castedField.isNull))
     val rightSide = when(!errorCasting and !excludedByFilter, castedField)
     val leftSide = array(
       when(errorCasting, createErrorStruct(inputField, name, dataType, "Error casting")).otherwise(lit(null).cast(ErrorStruct)),
@@ -33,7 +38,7 @@ object FieldCleaner {
   private val FieldValue = "fieldValue"
   private val FieldType = "fieldType"
   private val Message = "message"
-  private val ErrorStruct = StructType(Seq(
+  val ErrorStruct = StructType(Seq(
     StructField(FieldName, StringType),
     StructField(FieldValue, StringType),
     StructField(FieldType, StringType),

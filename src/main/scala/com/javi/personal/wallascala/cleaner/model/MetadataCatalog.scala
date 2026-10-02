@@ -1,7 +1,6 @@
 package com.javi.personal.wallascala.cleaner.model
 
 import com.javi.personal.wallascala.cleaner.FieldCleaner
-import org.apache.spark.sql.functions.{to_date, to_timestamp}
 import org.apache.spark.sql.types._
 
 case class MetadataCatalog(items: Seq[CleanerMetadata]) {
@@ -43,7 +42,7 @@ object MetadataCatalog {
       FieldCleaner("bathrooms", IntegerType),
       FieldCleaner("category_id", IntegerType, filter = Some(_.equalTo("200"))),
       FieldCleaner("condition", StringType),
-      FieldCleaner("creation_date", TimestampType, transform = Some(Transformations.millisecondsToTimestamp)),
+      FieldCleaner("creation_date", TimestampType, transform = Some(Transformations.parseTimestamp)),
       FieldCleaner("currency", StringType),
       FieldCleaner("distance", DoubleType),
       FieldCleaner("elevator", BooleanType),
@@ -61,7 +60,7 @@ object MetadataCatalog {
       FieldCleaner("location__city", StringType),
       FieldCleaner("location__country_code", StringType),
       FieldCleaner("location__postal_code", IntegerType),
-      FieldCleaner("modification_date", TimestampType, transform = Some(Transformations.millisecondsToTimestamp)),
+      FieldCleaner("modification_date", TimestampType, transform = Some(Transformations.parseTimestamp)),
       FieldCleaner("operation", StringType, filter = Some(_.isNotNull)),
       FieldCleaner("pool", BooleanType),
       FieldCleaner("price", DoubleType),
@@ -87,7 +86,7 @@ object MetadataCatalog {
     id = "wallapop_properties_2",
     fields = Seq(
       FieldCleaner("category_id", IntegerType, filter = Some(_.equalTo("200"))),
-      FieldCleaner("created_at", TimestampType, transform = Some(to_timestamp)),
+      FieldCleaner("created_at", TimestampType, transform = Some(Transformations.parseTimestamp)),
       FieldCleaner("description", StringType),
       FieldCleaner("id", StringType),
       // FieldCleaner("images", ArrayType(null)),
@@ -98,7 +97,7 @@ object MetadataCatalog {
       FieldCleaner("location__longitude", DoubleType),
       FieldCleaner("location__region", StringType),
       FieldCleaner("location__region2", StringType),
-      FieldCleaner("modified_at", TimestampType, transform = Some(to_timestamp)),
+      FieldCleaner("modified_at", TimestampType, transform = Some(Transformations.parseTimestamp)),
       FieldCleaner("price__amount", DoubleType),
       FieldCleaner("price__currency", StringType),
       // FieldCleaner("taxonomy", ArrayType(null)),
@@ -119,7 +118,7 @@ object MetadataCatalog {
       FieldCleaner("bathrooms", IntegerType),
       FieldCleaner("category_id", IntegerType, filter = Some(_.equalTo("200"))),
       FieldCleaner("condition", StringType),
-      FieldCleaner("creation_date", TimestampType, transform = Some(to_timestamp)),
+      FieldCleaner("creation_date", TimestampType, transform = Some(Transformations.parseTimestamp)),
       FieldCleaner("currency", StringType),
       FieldCleaner("distance", DoubleType),
       FieldCleaner("elevator", BooleanType),
@@ -137,7 +136,7 @@ object MetadataCatalog {
       FieldCleaner("location__city", StringType),
       FieldCleaner("location__country_code", StringType),
       FieldCleaner("location__postal_code", IntegerType),
-      FieldCleaner("modification_date", TimestampType, transform = Some(to_timestamp)),
+      FieldCleaner("modification_date", TimestampType, transform = Some(Transformations.parseTimestamp)),
       FieldCleaner("operation", StringType, filter = Some(_.isNotNull)),
       FieldCleaner("pool", BooleanType),
       FieldCleaner("price", DoubleType),
@@ -167,7 +166,7 @@ object MetadataCatalog {
       FieldCleaner("coordenadas__accuracy", LongType),
       FieldCleaner("coordenadas__latitude", DoubleType),
       FieldCleaner("coordenadas__longitude", DoubleType),
-      FieldCleaner("fecha_scraping", TimestampType, transform = Some(to_timestamp)),
+      FieldCleaner("fecha_scraping", TimestampType, transform = Some(Transformations.parseTimestamp)),
       FieldCleaner("habitaciones", IntegerType, transform = Some(Transformations.removeNonNumeric)),
       FieldCleaner("metros", IntegerType, transform = Some(Transformations.removeNonNumeric)),
       FieldCleaner("municipio", StringType),
@@ -195,7 +194,7 @@ object MetadataCatalog {
       FieldCleaner("surface", IntegerType, transform = Some(Transformations.removeNonNumeric)),
       FieldCleaner("floor", IntegerType, transform = Some(Transformations.removeNonNumeric)),
       FieldCleaner("imageUrl", StringType),
-      FieldCleaner("lastUpdateDate", DateType, transform = Some(to_date)),
+      FieldCleaner("lastUpdateDate", DateType, transform = Some(Transformations.parseDate)),
       FieldCleaner("latitude", DoubleType),
       FieldCleaner("longitude", DoubleType),
       FieldCleaner("propertyType", StringType),
@@ -213,15 +212,7 @@ object MetadataCatalog {
         StructField("lat", DoubleType),
         StructField("lon", DoubleType)
       ))),
-      FieldCleaner("geo_shape", StructType(Seq(
-        StructField("geometry", StructType(Seq(
-          StructField("coordinates", ArrayType(ArrayType(ArrayType(StringType)))),
-          StructField("type", DoubleType)
-        ))),
-        StructField("type", StringType)
-      ))),
-      FieldCleaner("provincia", StringType),
-      FieldCleaner("texto", StringType),
+      FieldCleaner("provincia", StringType)
     )
   )
 
