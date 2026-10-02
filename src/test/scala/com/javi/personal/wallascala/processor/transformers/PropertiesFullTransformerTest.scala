@@ -97,6 +97,21 @@ class PropertiesFullTransformerTest extends AnyFlatSpec with Matchers {
     rows("f-1") shouldEqual Date.valueOf("2026-09-27")
   }
 
+  it should "sanitize corrupt dates exceeding year 2050 to recovered date or fallback" in {
+    val wallapopDf = Seq(
+      ("w-corrupt", "Walla", "+58011-09-30", "+58011-09-29", 2026, 2, 13)
+    ).toDF("id", "title", "modification_date", "creation_date", "year", "month", "day")
+
+    val pisosDf = Seq(
+      ("p-1", "Pisos", "2026-02-18", "2026-02-18", 2026, 2, 18)
+    ).toDF("id", "title", "modification_date", "creation_date", "year", "month", "day")
+
+    val result = PropertiesFullTransformer.transform(wallapopDf, pisosDf)
+    val wallaRow = result.filter($"id" === "w-corrupt").first()
+    wallaRow.getAs[Date]("modification_date") shouldEqual Date.valueOf("2026-01-15")
+    wallaRow.getAs[Date]("creation_date") shouldEqual Date.valueOf("2026-01-15")
+  }
+
   it should "fail if year, month, or day is missing from a source" in {
     val invalidDf = Seq(("w-1", "Walla", Date.valueOf("2024-01-01"))).toDF("id", "title", "modification_date")
     val validDf = Seq(("p-1", "Pisos", Date.valueOf("2024-01-01"), 2024, 1, 1)).toDF("id", "title", "modification_date", "year", "month", "day")
