@@ -2,7 +2,8 @@
 .bsp
 project
 target
-wallascala.iml
+tfg-datalake-processors.iml
+*.iml
 src/operations
 spark-warehouse
 .DS_Store
