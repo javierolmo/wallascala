@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.javi.personal</groupId>
-    <artifactId>wallascala</artifactId>
-    <version>1.4.3</version>
+    <artifactId>tfg-datalake-processors</artifactId>
+    <version>1.5.0</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -22,7 +22,7 @@
         <repository>
             <id>github</id>
             <name>Releases</name>
-            <url>https://maven.pkg.github.com/javierolmo/wallascala</url>
+            <url>https://maven.pkg.github.com/javierolmo/tfg-datalake-processors</url>
         </repository>
     </distributionManagement>
 
@@ -206,7 +206,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.javi.personal.wallascala.launcher.Main</mainClass>
+                            <mainClass>com.javi.personal.tfg.processors.launcher.Main</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

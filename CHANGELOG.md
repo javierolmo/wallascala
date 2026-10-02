@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.5.0] - 2026-10-02
+### Changed
+- Renombrado del proyecto a `tfg-datalake-processors` y actualización de paquetes base a `com.javi.personal.tfg.processors`.
+
 ## [1.4.3] - 2026-10-02
 ### Fixed
 - Corrección y recuperación de fechas fuera de rango en Wallapop y sanitizado en properties_full para compatibilidad con Synapse Serverless.
